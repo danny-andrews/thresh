@@ -1,0 +1,5 @@
+extends: '@danny.andrews/eslint-config'
+rules:
+  no-console: off
+env:
+  node: true

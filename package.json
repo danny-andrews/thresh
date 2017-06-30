@@ -1,0 +1,49 @@
+{
+  "name": "@danny-andrews/circleci-weigh-in",
+  "version": "0.0.1",
+  "description": "A CircleCI integration script for tracking file size changes across deploys.",
+  "keywords": [
+    "bundle",
+    "circleci",
+    "github",
+    "size",
+    "webpack"
+  ],
+  "bin": {
+    "circleci-weigh-in": "./circleci-weigh-in"
+  },
+  "license": "MIT",
+  "author": "Danny Andrews",
+  "files": [
+    "lib"
+  ],
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danny-andrews/circleci-weigh-in.git"
+  },
+  "scripts": {
+    "build": "rm -rf lib && babel src --out-dir lib",
+    "ci": "yarn lint && yarn test",
+    "lint": "eslint . && sort-package-json"
+  },
+  "dependencies": {
+    "command-line-args": "^4.0.6",
+    "es6-promisify": "^5.0.0",
+    "filesize": "^3.5.10",
+    "humps": "^2.0.1",
+    "jsonfile": "^3.0.0",
+    "node-fetch": "^1.7.1",
+    "ramda": "^0.24.1"
+  },
+  "devDependencies": {
+    "@danny.andrews/eslint-config": "^5.0.0",
+    "babel-cli": "^6.24.1",
+    "babel-eslint": "^7.2.3",
+    "babel-plugin-transform-object-rest-spread": "^6.23.0",
+    "babel-preset-env": "^1.5.2",
+    "eslint": "^4.1.1",
+    "mkdirp": "^0.5.1",
+    "sort-package-json": "^1.6.0"
+  }
+}
