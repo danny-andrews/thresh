@@ -26,7 +26,8 @@ A CircleCI integration for tracking file size changes across deploys.
     "size": 2284786,
     "path": "webcreator_public/js/vendor.af1abaa45f10408b578e.js"
   }
-}```
+}
+```
 
 1. Generates diff of base branch file sizes with current branch.
 
