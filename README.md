@@ -4,20 +4,65 @@
 A CircleCI integration for tracking file size changes across deploys.
 
 ## What it Does
-1. Saves file containing file sizes of assets (by reading from webpack stats output) to the `CIRCLE_ARTIFACTS/circleci-weigh-in/bundle-sizes.json` directory in order to save it as an artifact for later reference.
+1. Saves file containing file sizes of assets (by reading from webpack stats output) to the `$CIRCLE_ARTIFACTS/circleci-weigh-in/bundle-sizes.json` directory in order to save it as an artifact for later reference.
 
-  This JSON file has the following structure:
-```
+  Example output:
+
+```json
 {
-    "[FILENAME]": {
-      path: [FILEPATH],
-      size: [FILESIZE]
-    }
+  "app.css": {
+    "size": 52336,
+    "path": "webcreator_public/css/app.54bbcf6f50ed582c98f5cf3841d5c837.css"
+  },
+  "app.js": {
+    "size": 408489,
+    "path": "webcreator_public/js/app.18db3f4eb6b95f3ac8ea.js"
+  },
+  "manifest.js": {
+    "size": 1463,
+    "path": "webcreator_public/js/manifest.5cb70be29d3945c8ee59.js"
+  },
+  "vendor.js": {
+    "size": 2284786,
+    "path": "webcreator_public/js/vendor.af1abaa45f10408b578e.js"
+  }
+}```
+
+1. Generates diff of base branch file sizes with current branch.
+
+1. Saves file containing that diff information to `$CIRCLE_ARTIFACTS/circleci-weigh-in/bundle-sizes-diff.json`.
+
+  Example output
+
+```json
+{
+  "app.css": {
+    "current": 52336,
+    "original": 52336,
+    "difference": 0,
+    "percentChange": 0
+  },
+  "app.js": {
+    "current": 408489,
+    "original": 408489,
+    "difference": 0,
+    "percentChange": 0
+  },
+  "manifest.js": {
+    "current": 1463,
+    "original": 1463,
+    "difference": 0,
+    "percentChange": 0
+  },
+  "vendor.js": {
+    "current": 2284786,
+    "original": 2284786,
+    "difference": 0,
+    "percentChange": 0
+  }
 }
 ```
 
-1. Generates diff of base branch file sizes with current branch.
-1. Saves file containing that diff information to `CIRCLE_ARTIFACTS/circleci-weigh-in/bundle-sizes-diff.json`.
 1. Posts that diff as a status to PR associated with the build.
 
 ## CLI Options
@@ -30,14 +75,14 @@ A CircleCI integration for tracking file size changes across deploys.
     <th>Default Value</th>
   </tr>
   <tr>
-    <td>`--stats-path`</td>
+    <td>`--stats-filepath`</td>
     <td>Filepath of the webpack stats object to read from.</td>
     <td>`String`</td>
     <td>Yes</td>
     <td></td>
   </tr>
   <tr>
-    <td>`--manifest-path`</td>
+    <td>`--manifest-filepath`</td>
     <td>Filepath of the manifest object to read from. Only required if you are fingerprinting your files. Recommended plugin for generating this manifest file: https://github.com/danethurber/webpack-manifest-plugin.</td>
     <td>`String`</td>
     <td>No</td>
@@ -60,35 +105,11 @@ A CircleCI integration for tracking file size changes across deploys.
 - CIRCLE_PROJECT_REPONAME
 - CIRCLE_SHA1
 - CI_PULL_REQUEST
+- CIRCLE_BUILD_URL
 
 ### Manual
 - GITHUB_API_TOKEN
-  - Must have read access to public repo things
-  - Must have write access to statuses
+  - Must have read access to repository (`public_repo` scope for public repos, and `repo` scope for private repos)
+  - Must have `repo:status` scope
 - CIRCLE_API_TOKEN
   - Must have 'view-builds' scope
-
-## Failure Conditions
-- Missing required env variables - Print error telling user which variable is missing
-- Can't find stats file - Print error telling user we couldn't find stats file
-- Can't parse stats file - Print error telling user we couldn't find stats file
-- Request to CircleCI fails
-  - If auth error, print error telling user to check their CIRCLE_API_TOKEN
-  - If other error, print error received from Circle
-- Request to GitHub fails
-  - If auth error, print error telling user to check their GITHUB_API_TOKEN
-  - If other error, print error received from GitHub
-- Deal with new/removed bundles
-
-## Dev Notes
-
-### Execution Steps
-1. Parse webpack stats files to retrieve size information
-1. Save size info as artifact
-1. Calculate diff:
-  * Retrieve PR's base branch: [api docs](https://developer.github.com/v3/pulls/#get-a-single-pull-request)
-  * Retrieve build number for latest build of base_branch: [api docs](https://circleci.com/docs/api/v1-reference/#recent-builds-project-branch)
-  * Get of list of artifacts for that build number: [api docs](https://circleci.com/docs/api/v1-reference/#build-artifacts)
-  * Download bundle size artifact: [api docs](https://circleci.com/docs/api/v1-reference/#download-artifact)
-  * POST status to PR: [api docs](https://developer.github.com/v3/repos/statuses/#create-a-status)
-  * Save diff as an artifact
