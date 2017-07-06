@@ -1,5 +1,5 @@
 {
-  "name": "@danny-andrews/circleci-weigh-in",
+  "name": "circleci-weigh-in",
   "version": "0.0.1",
   "description": "A CircleCI integration script for tracking file size changes across deploys.",
   "keywords": [
