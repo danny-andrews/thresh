@@ -4,7 +4,7 @@
 A CircleCI integration for tracking file size changes across deploys.
 
 ## What it Does
-1. Saves file containing file sizes of assets (by reading from webpack stats output) to the `$CIRCLE_ARTIFACTS/circleci-weigh-in/bundle-sizes.json` directory in order to save it as an artifact for later reference.
+- Saves file containing file sizes of assets (by reading from webpack stats output) to the `$CIRCLE_ARTIFACTS/circleci-weigh-in/bundle-sizes.json` directory in order to save it as an artifact for later reference.
 
   Example output:
 
@@ -29,9 +29,9 @@ A CircleCI integration for tracking file size changes across deploys.
 }
 ```
 
-1. Generates diff of base branch file sizes with current branch.
+- Generates diff of base branch file sizes with current branch.
 
-1. Saves file containing that diff information to `$CIRCLE_ARTIFACTS/circleci-weigh-in/bundle-sizes-diff.json`.
+- Saves file containing that diff information to `$CIRCLE_ARTIFACTS/circleci-weigh-in/bundle-sizes-diff.json`.
 
   Example output
 
@@ -64,7 +64,7 @@ A CircleCI integration for tracking file size changes across deploys.
 }
 ```
 
-1. Posts that diff as a status to PR associated with the build.
+- Posts that diff as a status to PR associated with the build.
 
 ## CLI Options
 <table>
