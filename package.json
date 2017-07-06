@@ -15,7 +15,8 @@
   "license": "MIT",
   "author": "Danny Andrews",
   "files": [
-    "lib"
+    "lib/",
+    "circleci-weigh-in"
   ],
   "main": "index.js",
   "repository": {
