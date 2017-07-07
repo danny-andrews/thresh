@@ -9,7 +9,20 @@ const StatusStates = {
   SUCCESS: 'success'
 };
 
-const BUNDLE_DIFF_FORMAT = '%s: %s (%+i, %+.2f%%)';
+const formatBundleDiff = opts => {
+  const {filename, difference, current, percentChange} = opts;
+
+  const {value, symbol} = filesize(difference, {output: 'object'});
+
+  return sprintf(
+    '%s: %s (%+i%s, %+.2f%%)',
+    filename,
+    filesize(current),
+    value,
+    symbol,
+    percentChange
+  );
+};
 
 export default opts => {
   const {
@@ -32,13 +45,7 @@ export default opts => {
 
   const description = toPairs(bundleDiffs)
     .map(([filename, bundleDiff]) =>
-      sprintf(
-        BUNDLE_DIFF_FORMAT,
-        filename,
-        filesize(bundleDiff.current),
-        filesize(bundleDiff.difference),
-        bundleDiff.percentChange
-      )
+      formatBundleDiff({filename, ...bundleDiff})
     ).join('; \n');
   const byteLength = Buffer.byteLength(description, UTF8);
   const payload = {
