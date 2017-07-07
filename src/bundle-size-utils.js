@@ -39,7 +39,7 @@ export const diffBundles = ({current, original}) =>
             original: originalStat.size,
             difference,
             // eslint-disable-next-line no-magic-numbers
-            percentChange: difference / 100
+            percentChange: difference / originalStat.size * 100
           }
         }
         : acc;
