@@ -76,41 +76,41 @@ A CircleCI integration for tracking file size changes across deploys.
     <th>Default Value</th>
   </tr>
   <tr>
-    <td>`--stats-filepath`</td>
+    <td><code>--stats-filepath</code></td>
     <td>Filepath of the webpack stats object to read from.</td>
-    <td>`String`</td>
+    <td><code>String</code></td>
     <td>Yes</td>
     <td></td>
   </tr>
   <tr>
-    <td>`--manifest-filepath`</td>
+    <td><code>--manifest-filepath</code></td>
     <td>Filepath of the manifest object to read from. Only required if you are fingerprinting your files. Recommended plugin for generating this manifest file: https://github.com/danethurber/webpack-manifest-plugin.</td>
-    <td>`String`</td>
+    <td><code>String</code></td>
     <td>No</td>
     <td></td>
   </tr>
   <tr>
-    <td>`--failure-threshold`</td>
-    <td>The number representing the percentage increase in bundle size at which the GitHub status will be posted as failed. Example: If you set this to `3.00` and **any** of the bundles grow by more than 3.00%, then the status check will be posted as "failure." [[link](https://developer.github.com/v3/repos/statuses/#create-a-status)]</td>
-    <td>`Number`</td>
+    <td><code>--failure-threshold</code></td>
+    <td>The number representing the percentage increase in bundle size at which the GitHub status will be posted as failed. Example: If you set this to <code>3.00</code> and <b>any</b> of the bundles grow by more than 3.00%, then the status check will be posted as "failure." <a href="https://developer.github.com/v3/repos/statuses/#create-a-status">[link]</a></td>
+    <td><code>Number</code></td>
     <td>No</td>
-    <td>`5.00`</td>
+    <td><code>5.00</code></td>
   </tr>
 </table>
 
 ## Required Environment Variables
 
 ### [CircleCI Built-ins](https://circleci.com/docs/1.0/environment-variables/)
-- CIRCLE_ARTIFACTS
-- CIRCLE_PROJECT_USERNAME
-- CIRCLE_PROJECT_REPONAME
-- CIRCLE_SHA1
-- CI_PULL_REQUEST
-- CIRCLE_BUILD_URL
+- `CIRCLE_ARTIFACTS`
+- `CIRCLE_PROJECT_USERNAME`
+- `CIRCLE_PROJECT_REPONAME`
+- `CIRCLE_SHA1`
+- `CI_PULL_REQUEST`
+- `CIRCLE_BUILD_URL`
 
 ### Manual
-- GITHUB_API_TOKEN
+- `GITHUB_API_TOKEN`
   - Must have read access to repository (`public_repo` scope for public repos, and `repo` scope for private repos)
   - Must have `repo:status` scope
-- CIRCLE_API_TOKEN
-  - Must have 'view-builds' scope
+- `CIRCLE_API_TOKEN`
+  - Must have `view-builds` scope
