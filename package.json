@@ -35,7 +35,8 @@
     "humps": "^2.0.1",
     "jsonfile": "^3.0.0",
     "node-fetch": "^1.7.1",
-    "ramda": "^0.24.1"
+    "ramda": "^0.24.1",
+    "sprintf-js": "^1.1.1"
   },
   "devDependencies": {
     "@danny.andrews/eslint-config": "^5.0.0",

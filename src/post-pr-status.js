@@ -1,7 +1,7 @@
-import {fmtPercent, fmtSigned} from './util';
 import {gitHubSerializer, makeGitHubRequest} from './requests';
-import {pipe, toPairs, values} from 'ramda';
+import {toPairs, values} from 'ramda';
 import filesize from 'filesize';
+import {sprintf} from 'sprintf-js';
 import {UTF8} from './constants';
 
 const StatusStates = {
@@ -9,10 +9,7 @@ const StatusStates = {
   SUCCESS: 'success'
 };
 
-const PERCENT_DIFF_PERCENTAGE = 2;
-
-const fmtPercentDiff = number =>
-  pipe(fmtSigned, fmtPercent)(number.toFixed(PERCENT_DIFF_PERCENTAGE));
+const BUNDLE_DIFF_FORMAT = '%s: %s (%+i, %+.2f%%)';
 
 export default opts => {
   const {
@@ -33,10 +30,16 @@ export default opts => {
     ? StatusStates.SUCCESS
     : StatusStates.FAILURE;
 
-  const description = toPairs(bundleDiffs).map(([filename, bundleDiff]) =>
-    `${filename}: ${filesize(bundleDiff.current)} `
-      + `${fmtPercentDiff(bundleDiff.percentChange)}`
-  ).join('; \n');
+  const description = toPairs(bundleDiffs)
+    .map(([filename, bundleDiff]) =>
+      sprintf(
+        BUNDLE_DIFF_FORMAT,
+        filename,
+        filesize(bundleDiff.current),
+        filesize(bundleDiff.difference),
+        bundleDiff.percentChange
+      )
+    ).join('; \n');
   const byteLength = Buffer.byteLength(description, UTF8);
   const payload = {
     state,
