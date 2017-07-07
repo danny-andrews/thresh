@@ -83,13 +83,6 @@ A CircleCI integration for tracking file size changes across deploys.
     <td></td>
   </tr>
   <tr>
-    <td><code>--manifest-filepath</code></td>
-    <td>Filepath of the manifest object to read from. Only required if you are fingerprinting your files. Recommended plugin for generating this manifest file: https://github.com/danethurber/webpack-manifest-plugin.</td>
-    <td><code>String</code></td>
-    <td>No</td>
-    <td></td>
-  </tr>
-  <tr>
     <td><code>--failure-threshold</code></td>
     <td>The number representing the percentage increase in bundle size at which the GitHub status will be posted as failed. Example: If you set this to <code>3.00</code> and <b>any</b> of the bundles grow by more than 3.00%, then the status check will be posted as "failure." <a href="https://developer.github.com/v3/repos/statuses/#create-a-status">[link]</a></td>
     <td><code>Number</code></td>

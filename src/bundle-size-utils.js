@@ -1,19 +1,28 @@
-import {flatten, map, pipe, toPairs, values} from 'ramda';
+import {map, toPairs} from 'ramda';
 import path from 'path';
 
-const assetsByFilename = webpackStats =>
-  pipe(values, flatten)(webpackStats.assetsByChunkName)
+const flattenChunkAssets = ({chunkName, filepaths}) =>
+  [].concat(filepaths)
     .reduce(
-      (acc, filepath) => ({...acc, [path.basename(filepath)]: filepath}),
-      {},
+      (acc, filepath) => ({
+        ...acc,
+        [chunkName + path.extname(filepath)]: filepath
+      }),
+      {}
     );
 
-export const bundleSizesFromWebpackStats = (webpackStats, manifest) => {
-  const assetNameFilepathMap = manifest
-    ? manifest
-    : assetsByFilename(webpackStats);
+const assetsByFilename = webpackStats =>
+  toPairs(webpackStats.assetsByChunkName)
+    .reduce(
+      (acc, [chunkName, filepaths]) => ({
+        ...acc,
+        ...flattenChunkAssets({chunkName, filepaths})
+      }),
+      {}
+    );
 
-  return map(filepath => {
+export const bundleSizesFromWebpackStats = webpackStats =>
+  map(filepath => {
     const assetStats = webpackStats.assets.find(({name}) => name === filepath);
 
     if(!assetStats) {
@@ -23,8 +32,7 @@ export const bundleSizesFromWebpackStats = (webpackStats, manifest) => {
     }
 
     return {size: assetStats.size, path: filepath};
-  }, assetNameFilepathMap);
-};
+  }, assetsByFilename(webpackStats));
 
 export const diffBundles = ({current, original}) =>
   toPairs(current).reduce(

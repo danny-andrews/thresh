@@ -31,7 +31,6 @@ const REQUIRED_ENV_VARIABLES = [
 ];
 const OPTION_DEFINITIONS = [
   {name: 'stats-filepath', type: String},
-  {name: 'manifest-filepath', type: String},
   {
     name: 'failure-threshold',
     type: Number,
@@ -56,28 +55,16 @@ const pullRequestId = last(process.env.CI_PULL_REQUEST.split('/'));
 
 const {
   'stats-filepath': statsFilepath,
-  'manifest-filepath': manifestFilepath,
   'failure-threshold': failureThreshold
 } = commandLineArgs(OPTION_DEFINITIONS);
 
 assert(statsFilepath, "'stats-filepath' option is required!");
 
-Promise.all([
-  readFile(statsFilepath).catch(e => {
-    throw new Error(`Error reading stats file: ${e}!`);
-  }),
-  ...(
-    manifestFilepath
-      ? [
-        readFile(manifestFilepath).catch(e => {
-          throw new Error(`Error reading manifest file: ${e}!`);
-        })
-      ]
-      : []
-  )
-])
+readFile(statsFilepath).catch(e => {
+  throw new Error(`Error reading stats file: ${e}!`);
+})
   .then(fileContents => {
-    bundleSizes = bundleSizesFromWebpackStats(...fileContents);
+    bundleSizes = bundleSizesFromWebpackStats(fileContents);
 
     try {
       mkdirp.sync(buildArtifactFilepath(OUTPUT_FILEPATH));
