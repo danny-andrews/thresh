@@ -1,24 +1,9 @@
-import {
-  BUNDLE_SIZES_DIFF_FILEPATH,
-  BUNDLE_SIZES_FILEPATH,
-  OUTPUT_FILEPATH
-} from './constants';
-import {bundleSizesFromWebpackStats, diffBundles} from './bundle-size-utils';
 import assert from 'assert';
+import circleciWeighIn from './';
 import commandLineArgs from 'command-line-args';
-import jsonfile from 'jsonfile';
 import {last} from 'ramda';
-import mkdirp from 'mkdirp';
-import path from 'path';
-import postPrStatus from './post-pr-status';
-import promisify from 'es6-promisify';
-import retrieveBaseBundleSizes from './retrieve-base-bundle-sizes';
-
-const readFile = promisify(jsonfile.readFile);
-const writeFile = promisify(jsonfile.writeFile);
 
 const FAILURE_THRESHOLD_DEFAULT = 5.00;
-const JSON_OUTPUT_SPACING = 2;
 const REQUIRED_ENV_VARIABLES = [
   'CIRCLE_ARTIFACTS',
   'CIRCLE_PROJECT_USERNAME',
@@ -44,13 +29,6 @@ REQUIRED_ENV_VARIABLES.forEach(variable =>
   )
 );
 
-const buildArtifactFilepath = filepath => path.resolve(
-  process.env.CIRCLE_ARTIFACTS,
-  filepath
-);
-
-let bundleSizes = null;
-
 const {
   'stats-filepath': statsFilepath,
   'failure-threshold': failureThreshold
@@ -58,61 +36,19 @@ const {
 
 assert(statsFilepath, "'stats-filepath' option is required!");
 
-readFile(statsFilepath).catch(e => {
-  throw new Error(`Error reading stats file: ${e}!`);
+const pullRequestId = process.env.CI_PULL_REQUEST
+  && last(process.env.CI_PULL_REQUEST.split('/'));
+
+circleciWeighIn({
+  statsFilepath,
+  failureThreshold,
+  repoOwner: process.env.CIRCLE_PROJECT_USERNAME,
+  repoName: process.env.CIRCLE_PROJECT_REPONAME,
+  githubApiToken: process.env.GITHUB_API_TOKEN,
+  circleApiToken: process.env.CIRCLE_API_TOKEN,
+  buildSha: process.env.CIRCLE_SHA1,
+  buildUrl: process.env.CIRCLE_BUILD_URL,
+  pullRequestId,
+  artifactsDirectory: process.env.CIRCLE_ARTIFACTS
 })
-  .then(fileContents => {
-    bundleSizes = bundleSizesFromWebpackStats(fileContents);
-
-    try {
-      mkdirp.sync(buildArtifactFilepath(OUTPUT_FILEPATH));
-    } catch(e) {
-      throw new Error(`Error creating artifact directory: ${e}!`);
-    }
-
-    return writeFile(
-      buildArtifactFilepath(BUNDLE_SIZES_FILEPATH),
-      bundleSizes,
-      {spaces: JSON_OUTPUT_SPACING}
-    )
-      .then(Promise.resolve(bundleSizes))
-      .catch(e => {
-        throw new Error(`Error writing bundle size artifact: ${e}!`);
-      });
-  })
-  .then(() =>
-    retrieveBaseBundleSizes({
-      pullRequestId: last(process.env.CI_PULL_REQUEST.split('/')),
-      repoOwner: process.env.CIRCLE_PROJECT_USERNAME,
-      repoName: process.env.CIRCLE_PROJECT_REPONAME,
-      githubApiToken: process.env.GITHUB_API_TOKEN,
-      circleApiToken: process.env.CIRCLE_API_TOKEN
-    })
-  )
-  .then(baseBundleSize => {
-    const bundleDiffs = diffBundles({
-      current: bundleSizes,
-      original: baseBundleSize
-    });
-
-    return Promise.all([
-      writeFile(
-        buildArtifactFilepath(BUNDLE_SIZES_DIFF_FILEPATH),
-        bundleDiffs,
-        {spaces: JSON_OUTPUT_SPACING}
-      ).catch(e => {
-        throw new Error(`Error writing bundle diff artifact: ${e}!`);
-      }),
-      postPrStatus({
-        sha: process.env.CIRCLE_SHA1,
-        repoOwner: process.env.CIRCLE_PROJECT_USERNAME,
-        repoName: process.env.CIRCLE_PROJECT_REPONAME,
-        githubApiToken: process.env.GITHUB_API_TOKEN,
-        targetUrl: `${process.env.CIRCLE_BUILD_URL}#artifacts`,
-        bundleDiffs,
-        failureThreshold,
-        label: 'Bundle Sizes'
-      })
-    ]);
-  })
   .catch(e => console.error(e.stack));
