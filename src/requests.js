@@ -63,11 +63,11 @@ export const makeCircleRequest = opts => {
       }
 
       throw new Error(
-        `Error making request to CircleCI ${url}: ${response.statusText}`
+        `Error making request to CircleCI ${finalUrl}: ${response.statusText}`
       );
     })
     .then(circleDeserializer)
     .catch(e => {
-      throw new Error(`Error making request to CircleCI ${url}: ${e}`);
+      throw new Error(`Error making request to CircleCI ${finalUrl}: ${e}`);
     });
 };
