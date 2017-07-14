@@ -69,7 +69,7 @@ A CircleCI integration for tracking file size changes across deploys.
 ## CLI Options
 <table>
   <tr>
-    <th>Name</th>
+    <th width="200px">Name</th>
     <th>Description</th>
     <th>Type</th>
     <th>Required?</th>
@@ -80,6 +80,13 @@ A CircleCI integration for tracking file size changes across deploys.
     <td>Filepath of the webpack stats object to read from.</td>
     <td><code>String</code></td>
     <td>Yes</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><code>--project-name</code></td>
+    <td>The name of the project for which the bundle stats will be generated. (This is useful in monorepo situations where you may want to generate bundle stats for multiple projects during the same build.) Bundle size artifact filenames (`[PROJECT_NAME]/bundle-sizes.json`/`[PROJECT_NAME]/bundle-sizes-diff.json`) and the CI status label (`Bundle Sizes: [PROJECT_NAME]`) will be updated accordingly.</td>
+    <td><code>String</code></td>
+    <td>No</td>
     <td></td>
   </tr>
   <tr>

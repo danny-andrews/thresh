@@ -4,6 +4,7 @@ import {
   OUTPUT_FILEPATH
 } from './constants';
 import {bundleSizesFromWebpackStats, diffBundles} from './bundle-size-utils';
+import {compactAndJoin} from './util';
 import jsonfile from 'jsonfile';
 import mkdirp from 'mkdirp';
 import path from 'path';
@@ -19,6 +20,7 @@ const JSON_OUTPUT_SPACING = 2;
 export default async opts => {
   const {
     statsFilepath,
+    projectName = '',
     failureThreshold,
     repoOwner,
     repoName,
@@ -32,6 +34,7 @@ export default async opts => {
 
   const buildArtifactFilepath = filepath => path.resolve(
     artifactsDirectory,
+    projectName,
     filepath
   );
 
@@ -88,7 +91,7 @@ export default async opts => {
       targetUrl: `${buildUrl}#artifacts`,
       bundleDiffs,
       failureThreshold,
-      label: 'Bundle Sizes'
+      label: compactAndJoin(': ', ['Bundle Sizes', projectName])
     })
   ]);
 };
