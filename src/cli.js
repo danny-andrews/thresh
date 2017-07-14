@@ -15,6 +15,7 @@ const REQUIRED_ENV_VARIABLES = [
 ];
 const OPTION_DEFINITIONS = [
   {name: 'stats-filepath', type: String},
+  {name: 'project-name', type: String},
   {
     name: 'failure-threshold',
     type: Number,
@@ -31,6 +32,7 @@ REQUIRED_ENV_VARIABLES.forEach(variable =>
 
 const {
   'stats-filepath': statsFilepath,
+  'project-name': projectName,
   'failure-threshold': failureThreshold
 } = commandLineArgs(OPTION_DEFINITIONS);
 
@@ -41,6 +43,7 @@ const pullRequestId = process.env.CI_PULL_REQUEST
 
 circleciWeighIn({
   statsFilepath,
+  projectName,
   failureThreshold,
   repoOwner: process.env.CIRCLE_PROJECT_USERNAME,
   repoName: process.env.CIRCLE_PROJECT_REPONAME,
