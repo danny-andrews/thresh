@@ -101,7 +101,7 @@ A CircleCI integration for tracking file size changes across deploys.
 ## Required Environment Variables
 
 ### [CircleCI Built-ins](https://circleci.com/docs/1.0/environment-variables/)
-- `CIRCLE_ARTIFACTS`
+- `CIRCLE_ARTIFACTS`<sup>[2.0](#circleci-2.0-notes)</sup>
 - `CIRCLE_PROJECT_USERNAME`
 - `CIRCLE_PROJECT_REPONAME`
 - `CIRCLE_SHA1`
@@ -114,3 +114,21 @@ A CircleCI integration for tracking file size changes across deploys.
   - Must have `repo:status` scope
 - `CIRCLE_API_TOKEN`
   - Must have `view-builds` scope
+
+### CircleCI 2.0 Notes
+The `CIRCLE_ARTIFACTS` environment variable was removed in CircleCI 2.0. To workaround this, you need to define it yourself and then move the files stored there in a `store_artifacts` step. Example config file:
+
+```yml
+version: 2
+jobs:
+  build:
+    # ...
+    environment:
+      - CIRCLE_ARTIFACTS: ./example/dist/artifacts
+    steps:
+      # ...
+      - store_artifacts:
+          # Wish I could use $CIRCLE_ARTIFACTS here :( (http://bit.ly/2vlqGiR)
+          path: ./example/dist/artifacts
+          destination: ./
+```
