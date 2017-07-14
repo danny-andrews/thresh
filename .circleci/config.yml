@@ -1,0 +1,16 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/node:7.10
+    environment:
+      - CIRCLE_ARTIFACTS: ./example/dist/artifacts
+    steps:
+      - checkout
+      - run: yarn install
+      - run: yarn build
+      - run: yarn build:example
+      - run: ./circleci-weigh-in -- --stats-filepath=example/dist/stats.json
+      - store_artifacts:
+          path: ./example/dist/artifacts
+          destination: ./
