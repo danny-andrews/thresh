@@ -14,13 +14,20 @@ const formatBundleDiff = opts => {
 
   const {value, symbol} = filesize(difference, {output: 'object'});
 
+  const diffStats = difference === 0
+    ? 'No Change'
+    : sprintf(
+      `%+i%s, %+.2f%%`,
+      value,
+      symbol,
+      percentChange
+    )
+
   return sprintf(
-    '%s: %s (%+i%s, %+.2f%%)',
+    `%s: %s (%s)`,
     filename,
-    filesize(current),
-    value,
-    symbol,
-    percentChange
+    filesize(current, {spacer: ''}),
+    diffStats
   );
 };
 
@@ -46,7 +53,7 @@ export default opts => {
   const description = toPairs(bundleDiffs)
     .map(([filename, bundleDiff]) =>
       formatBundleDiff({filename, ...bundleDiff})
-    ).join('; \n');
+    ).join(' \n');
   const byteLength = Buffer.byteLength(description, UTF8);
   const payload = {
     state,
