@@ -24,7 +24,6 @@ const REQUIRED_ENV_VARIABLES = [
   'CIRCLE_PROJECT_USERNAME',
   'CIRCLE_PROJECT_REPONAME',
   'CIRCLE_SHA1',
-  'CI_PULL_REQUEST',
   'CIRCLE_BUILD_URL',
   'GITHUB_API_TOKEN',
   'CIRCLE_API_TOKEN'
@@ -51,7 +50,6 @@ const buildArtifactFilepath = filepath => path.resolve(
 );
 
 let bundleSizes = null;
-const pullRequestId = last(process.env.CI_PULL_REQUEST.split('/'));
 
 const {
   'stats-filepath': statsFilepath,
@@ -84,7 +82,7 @@ readFile(statsFilepath).catch(e => {
   })
   .then(() =>
     retrieveBaseBundleSizes({
-      pullRequestId,
+      pullRequestId: last(process.env.CI_PULL_REQUEST.split('/')),
       repoOwner: process.env.CIRCLE_PROJECT_USERNAME,
       repoName: process.env.CIRCLE_PROJECT_REPONAME,
       githubApiToken: process.env.GITHUB_API_TOKEN,
