@@ -1,7 +1,7 @@
 import {makeCircleRequest, makeGitHubRequest} from './requests';
 import {BUNDLE_SIZES_FILEPATH} from './constants';
 
-export default opts => {
+export default async opts => {
   const {
     pullRequestId,
     repoOwner,
@@ -10,46 +10,44 @@ export default opts => {
     circleApiToken
   } = opts;
   const repoProjectPath = `${repoOwner}/${repoName}`;
-  let baseBranch = null;
-  let buildNumber = null;
 
-  return makeGitHubRequest({
+  const prData = await makeGitHubRequest({
     githubApiToken,
     path: `repos/${repoProjectPath}/pulls/${pullRequestId}`
-  }).then(responseData => {
-    baseBranch = responseData.base.ref;
+  });
 
-    return makeCircleRequest({
-      circleApiToken,
-      path: `project/github/${repoProjectPath}/tree/${baseBranch}`
-    });
-  }).then(responseData => {
-    if(responseData.length === 0) {
-      throw new Error(
-        `No recent builds found for the base branch: ${baseBranch}!`
-      );
-    }
+  const baseBranch = prData.base.ref;
 
-    buildNumber = responseData[0].buildNum;
+  const recentBuilds = await makeCircleRequest({
+    circleApiToken,
+    path: `project/github/${repoProjectPath}/tree/${baseBranch}`
+  });
 
-    return makeCircleRequest({
-      circleApiToken,
-      path: `project/github/${repoProjectPath}/${buildNumber}/artifacts`
-    });
-  }).then(responseData => {
-    const artifactPathRegExp = new RegExp(`${BUNDLE_SIZES_FILEPATH}$`);
-    const bundleSizeArtifact = responseData
-      .find(artifact => artifact.path.match(artifactPathRegExp));
-    if(!bundleSizeArtifact) {
-      throw new Error(
-        `No bundle size artifact found for latest build of: ${baseBranch}.`
-          + ` Build number: ${buildNumber}`
-      );
-    }
+  if(recentBuilds.length === 0) {
+    throw new Error(
+      `No recent builds found for the base branch: ${baseBranch}!`
+    );
+  }
 
-    return makeCircleRequest({
-      circleApiToken,
-      url: bundleSizeArtifact.url
-    });
+  const buildNumber = recentBuilds[0].buildNum;
+
+  const buildArtifacts = await makeCircleRequest({
+    circleApiToken,
+    path: `project/github/${repoProjectPath}/${buildNumber}/artifacts`
+  });
+
+  const artifactPathRegExp = new RegExp(`${BUNDLE_SIZES_FILEPATH}$`);
+  const bundleSizeArtifact = buildArtifacts
+    .find(artifact => artifact.path.match(artifactPathRegExp));
+  if(!bundleSizeArtifact) {
+    throw new Error(
+      `No bundle size artifact found for latest build of: ${baseBranch}.`
+        + ` Build number: ${buildNumber}`
+    );
+  }
+
+  return makeCircleRequest({
+    circleApiToken,
+    url: bundleSizeArtifact.url
   });
 };
