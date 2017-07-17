@@ -62,6 +62,10 @@ export default async opts => {
     throw new Error(`Error writing bundle size artifact: ${e}!`);
   }
 
+  if(!pullRequestId) {
+    return null;
+  }
+
   const baseBundleSize = await retrieveBaseBundleSizes({
     pullRequestId,
     repoOwner,
