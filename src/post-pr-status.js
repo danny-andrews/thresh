@@ -17,14 +17,14 @@ const formatBundleDiff = opts => {
   const diffStats = difference === 0
     ? 'No Change'
     : sprintf(
-      `%+i%s, %+.2f%%`,
+      '%+i%s, %+.2f%%',
       value,
       symbol,
       percentChange
-    )
+    );
 
   return sprintf(
-    `%s: %s (%s)`,
+    '%s: %s (%s)',
     filename,
     filesize(current, {spacer: ''}),
     diffStats
