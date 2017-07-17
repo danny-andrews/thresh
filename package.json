@@ -9,9 +9,6 @@
     "size",
     "webpack"
   ],
-  "bin": {
-    "circleci-weigh-in": "./circleci-weigh-in"
-  },
   "license": "MIT",
   "author": "Danny Andrews",
   "files": [
@@ -19,6 +16,9 @@
     "circleci-weigh-in"
   ],
   "main": "index.js",
+  "bin": {
+    "circleci-weigh-in": "./circleci-weigh-in"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/danny-andrews/circleci-weigh-in.git"
