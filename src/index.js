@@ -1,6 +1,6 @@
 import {
-  BUNDLE_SIZES_DIFF_FILEPATH,
-  BUNDLE_SIZES_FILEPATH,
+  BUNDLE_SIZES_DIFF_FILENAME,
+  BUNDLE_SIZES_FILENAME,
   OUTPUT_FILEPATH
 } from './constants';
 import {bundleSizesFromWebpackStats, diffBundles} from './bundle-size-utils';
@@ -32,11 +32,12 @@ export default async opts => {
     artifactsDirectory
   } = opts;
 
-  const buildArtifactFilepath = filepath => path.resolve(
-    artifactsDirectory,
-    projectName,
-    filepath
-  );
+  const buildArtifactFilepath = filename =>
+    path.resolve(
+      artifactsDirectory,
+      projectName,
+      filename
+    );
 
   let fileContents = null;
   try {
@@ -54,7 +55,7 @@ export default async opts => {
 
   try {
     await writeFile(
-      buildArtifactFilepath(BUNDLE_SIZES_FILEPATH),
+      buildArtifactFilepath(BUNDLE_SIZES_FILENAME),
       bundleSizes,
       {spaces: JSON_OUTPUT_SPACING}
     );
@@ -71,7 +72,8 @@ export default async opts => {
     repoOwner,
     repoName,
     githubApiToken,
-    circleApiToken
+    circleApiToken,
+    bundleSizesFilepath: path.join(projectName, BUNDLE_SIZES_FILENAME)
   });
 
   const bundleDiffs = diffBundles({
@@ -81,7 +83,7 @@ export default async opts => {
 
   return Promise.all([
     writeFile(
-      buildArtifactFilepath(BUNDLE_SIZES_DIFF_FILEPATH),
+      buildArtifactFilepath(BUNDLE_SIZES_DIFF_FILENAME),
       bundleDiffs,
       {spaces: JSON_OUTPUT_SPACING}
     ).catch(e => {

@@ -1,5 +1,4 @@
 import {makeCircleRequest, makeGitHubRequest} from './requests';
-import {BUNDLE_SIZES_FILEPATH} from './constants';
 
 export default async opts => {
   const {
@@ -7,7 +6,8 @@ export default async opts => {
     repoOwner,
     repoName,
     githubApiToken,
-    circleApiToken
+    circleApiToken,
+    bundleSizesFilepath
   } = opts;
   const repoProjectPath = `${repoOwner}/${repoName}`;
 
@@ -36,7 +36,7 @@ export default async opts => {
     path: `project/github/${repoProjectPath}/${buildNumber}/artifacts`
   });
 
-  const artifactPathRegExp = new RegExp(`${BUNDLE_SIZES_FILEPATH}$`);
+  const artifactPathRegExp = new RegExp(`${bundleSizesFilepath}$`);
   const bundleSizeArtifact = buildArtifacts
     .find(artifact => artifact.path.match(artifactPathRegExp));
   if(!bundleSizeArtifact) {
