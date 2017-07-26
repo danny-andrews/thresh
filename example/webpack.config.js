@@ -4,7 +4,7 @@ const {StatsWriterPlugin} = require('webpack-stats-plugin');
 
 module.exports = {
   entry: {
-    app: path.resolve(__dirname, 'index')
+    'ol-apps': path.resolve(__dirname, 'index')
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
