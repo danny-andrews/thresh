@@ -48,6 +48,7 @@ export default async opts => {
 
   return makeCircleRequest({
     circleApiToken,
-    url: bundleSizeArtifact.url
+    url: bundleSizeArtifact.url,
+    raw: true
   });
 };
