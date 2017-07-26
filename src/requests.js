@@ -50,9 +50,10 @@ export const makeGitHubRequest = ({path, fetchOpts = {}, githubApiToken}) => {
 };
 
 export const makeCircleRequest = opts => {
-  const {path, url, fetchOpts = {}, circleApiToken} = opts;
+  const {path, url, fetchOpts = {}, raw = false, circleApiToken} = opts;
   const API_ROOT = 'https://circleci.com/api/v1.1';
   const headers = {Accept: 'application/json', ...fetchOpts.headers};
+  const deserializer = raw ? a => a : circleDeserializer;
   const finalUrl = `${url || [API_ROOT, path].join('/')}`
     + `?circle-token=${circleApiToken}`;
 
@@ -66,7 +67,7 @@ export const makeCircleRequest = opts => {
         `Error making request to CircleCI ${finalUrl}: ${response.statusText}`
       );
     })
-    .then(circleDeserializer)
+    .then(deserializer)
     .catch(e => {
       throw new Error(`Error making request to CircleCI ${finalUrl}: ${e}`);
     });
