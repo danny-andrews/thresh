@@ -1,6 +1,6 @@
 {
   "name": "circleci-weigh-in",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "A CircleCI integration script for tracking file size changes across deploys.",
   "keywords": [
     "bundle",
