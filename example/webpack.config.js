@@ -19,3 +19,5 @@ module.exports = {
     new StatsWriterPlugin({fields: ['assetsByChunkName', 'assets']})
   ]
 };
+
+// Skfd
