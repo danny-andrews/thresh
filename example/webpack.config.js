@@ -4,7 +4,7 @@ const {StatsWriterPlugin} = require('webpack-stats-plugin');
 
 module.exports = {
   entry: {
-    app: path.resolve(__dirname, 'index')
+    'circleci-weigh-in': path.resolve(__dirname, 'index')
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
