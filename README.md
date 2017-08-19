@@ -72,19 +72,61 @@ A CircleCI integration for tracking file size changes across deploys.
 - Description: Filepath of the webpack stats object to read from.
 - Type: `String`
 - Required?: `true`
-- Default Value: `N/A`
 
 ### --project-name
 - Description: The name of the project for which the bundle stats will be generated. (This is useful in monorepo situations where you may want to generate bundle stats for multiple projects during the same build.) Bundle size artifact filenames (`[PROJECT_NAME]/bundle-sizes.json`/`[PROJECT_NAME]/bundle-sizes-diff.json`) and the CI status label (`Bundle Sizes: [PROJECT_NAME]`) will be updated accordingly.
 - Type: `String`
 - Required?: `false`
-- Default Value: `N/A`
 
-### --failure-threshold
-- Description: The number representing the percentage increase in bundle size at which the GitHub status will be posted as failed. Example: If you set this to `3.00` and **any** of the bundles grow by more than `3.00%`, then the status check will be posted as "failure." [[link](https://developer.github.com/v3/repos/statuses/#create-a-status)]
-- Type: `Number`
+### --failure-thresholds
+- Description: A JSON array of configuration objects used to determine the conditions under which the [GitHub status](https://developer.github.com/v3/repos/statuses/#create-a-status) will be posted as "failed." The shape of this object is described [here](#failure-threshold-config-shape).
+- Type: `String`
 - Required?: `false`
-- Default Value: `5.00`
+
+### Failure Threshold Config Shape
+```js
+{
+  title: 'Failure Threshold',
+  type: 'object',
+  properties: {
+    maxSize: {
+      type: 'number'
+    },
+    strategy: {
+      type: 'string',
+      enum: ['any', 'total'],
+      default: 'total',
+      description: `How the threshold is applied. If set to "any", it
+        will fail if any asset in the target set is above the threshold. If set
+        to "total" it will fail if the total of all assets in the set is above
+        the threshold.`
+    },
+    targets: {
+      oneOf: [
+        {type: 'string'},
+        {
+          type: 'array',
+          items: {type: 'string'}
+        }
+      ],
+      description: `The target(s) of the threshold. Each target can be either a
+        file extension (e.g. ".js" for all javascript assets), an asset path
+        "vendor.js" for the "vendor.js" asset, or the special keyword "all" for
+        all assets (default).`
+    }
+  },
+  required: ['maxSize']
+}
+```
+
+#### Example threshold config:
+```json
+[{
+  "targets": ".js",
+  "maxSize": 70000
+}]
+```
+This example would post a failed GitHub status if the total size of all javascript assets was larger than 70kB.
 
 ## Required Environment Variables
 
