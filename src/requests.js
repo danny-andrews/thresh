@@ -38,6 +38,9 @@ export const makeGitHubRequest = ({path, fetchOpts = {}, githubApiToken}) => {
           + 'Did you provide a correct GitHub Api Token? Original response:'
           + ` ${response.statusText}`);
       } else {
+        response.json().then(err => {
+          console.log(err);
+        });
         throw new Error(
           `Error making request to GitHub ${url}: ${response.statusText}`
         );

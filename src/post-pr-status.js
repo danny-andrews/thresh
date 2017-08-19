@@ -1,13 +1,15 @@
+import R from 'ramda';
 import {gitHubSerializer, makeGitHubRequest} from './requests';
-import {toPairs, values} from 'ramda';
 import filesize from 'filesize';
 import {sprintf} from 'sprintf-js';
-import {UTF8} from './constants';
+import {truncate} from './util';
 
 const StatusStates = {
   FAILURE: 'failure',
   SUCCESS: 'success'
 };
+
+const MAX_STATUS_DESCRIPTION_CHARS = 140;
 
 const formatBundleDiff = opts => {
   const {filename, difference, current, percentChange} = opts;
@@ -38,27 +40,29 @@ export default opts => {
     repoName,
     githubApiToken,
     bundleDiffs,
-    failureThreshold,
+    thresholdFailures,
     targetUrl = '',
     label
   } = opts;
+  const {state, description} = R.ifElse(
+    R.pipe(R.isEmpty, R.always)(thresholdFailures),
+    R.always({
+      state: StatusStates.SUCCESS,
+      description: R.toPairs(bundleDiffs)
+        .map(([filename, bundleDiff]) =>
+          formatBundleDiff({filename, ...bundleDiff})
+        ).join(' \n')
+    }),
+    R.always({
+      state: StatusStates.FAILURE,
+      description: thresholdFailures.map(({message}) => message).join(' \n')
+    })
+  )();
 
-  const allBelowErrorThreshold = values(bundleDiffs)
-    .every(({percentChange}) => (percentChange < failureThreshold));
-
-  const state = allBelowErrorThreshold
-    ? StatusStates.SUCCESS
-    : StatusStates.FAILURE;
-
-  const description = toPairs(bundleDiffs)
-    .map(([filename, bundleDiff]) =>
-      formatBundleDiff({filename, ...bundleDiff})
-    ).join(' \n');
-  const byteLength = Buffer.byteLength(description, UTF8);
   const payload = {
     state,
     targetUrl,
-    description: description.substring(0, byteLength),
+    description: truncate({maxSize: MAX_STATUS_DESCRIPTION_CHARS}, description),
     context: label
   };
 

@@ -27,14 +27,14 @@
     "build": "rm -rf lib && babel src --out-dir lib",
     "build:example": "yarn webpack -- --config=example/webpack.config.js",
     "ci": "yarn lint",
-    "lint": "eslint . && sort-package-json"
+    "lint": "eslint . && sort-package-json",
+    "test": "ava"
   },
   "dependencies": {
+    "ajv": "^5.2.2",
     "command-line-args": "^4.0.6",
-    "es6-promisify": "^5.0.0",
     "filesize": "^3.5.10",
     "humps": "^2.0.1",
-    "jsonfile": "^3.0.0",
     "mkdirp": "^0.5.1",
     "node-fetch": "^1.7.1",
     "ramda": "^0.24.1",
@@ -42,13 +42,20 @@
   },
   "devDependencies": {
     "@danny.andrews/eslint-config": "^5.0.0",
+    "ava": "^0.22.0",
     "babel-cli": "^6.24.1",
     "babel-eslint": "^7.2.3",
+    "babel-plugin-transform-builtin-extend": "^1.1.2",
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "babel-preset-env": "^1.5.2",
     "eslint": "^4.1.1",
     "sort-package-json": "^1.6.0",
     "webpack": "^3.2.0",
     "webpack-stats-plugin": "^0.1.5"
+  },
+  "ava": {
+    "files": ["src/*.spec.js"],
+    "require": ["babel-register"],
+    "babel": "inherit"
   }
 }
