@@ -42,7 +42,8 @@ export const diffBundles = ({current, original}) =>
 
       return originalStat
         ? {
-          ...acc, [filename]: {
+          ...acc,
+          [filename]: {
             current: fileStats.size,
             original: originalStat.size,
             difference,
