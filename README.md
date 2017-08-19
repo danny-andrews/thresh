@@ -67,36 +67,24 @@ A CircleCI integration for tracking file size changes across deploys.
 - Posts that diff as a status to PR associated with the build.
 
 ## CLI Options
-<table>
-  <tr>
-    <th width="200px">Name</th>
-    <th>Description</th>
-    <th>Type</th>
-    <th>Required?</th>
-    <th>Default Value</th>
-  </tr>
-  <tr>
-    <td><code>--stats-filepath</code></td>
-    <td>Filepath of the webpack stats object to read from.</td>
-    <td><code>String</code></td>
-    <td>Yes</td>
-    <td></td>
-  </tr>
-  <tr>
-    <td><code>--project-name</code></td>
-    <td>The name of the project for which the bundle stats will be generated. (This is useful in monorepo situations where you may want to generate bundle stats for multiple projects during the same build.) Bundle size artifact filenames (`[PROJECT_NAME]/bundle-sizes.json`/`[PROJECT_NAME]/bundle-sizes-diff.json`) and the CI status label (`Bundle Sizes: [PROJECT_NAME]`) will be updated accordingly.</td>
-    <td><code>String</code></td>
-    <td>No</td>
-    <td></td>
-  </tr>
-  <tr>
-    <td><code>--failure-threshold</code></td>
-    <td>The number representing the percentage increase in bundle size at which the GitHub status will be posted as failed. Example: If you set this to <code>3.00</code> and <b>any</b> of the bundles grow by more than 3.00%, then the status check will be posted as "failure." <a href="https://developer.github.com/v3/repos/statuses/#create-a-status">[link]</a></td>
-    <td><code>Number</code></td>
-    <td>No</td>
-    <td><code>5.00</code></td>
-  </tr>
-</table>
+
+### --stats-filepath
+- Description: Filepath of the webpack stats object to read from.
+- Type: `String`
+- Required?: `true`
+- Default Value: `N/A`
+
+### --project-name
+- Description: The name of the project for which the bundle stats will be generated. (This is useful in monorepo situations where you may want to generate bundle stats for multiple projects during the same build.) Bundle size artifact filenames (`[PROJECT_NAME]/bundle-sizes.json`/`[PROJECT_NAME]/bundle-sizes-diff.json`) and the CI status label (`Bundle Sizes: [PROJECT_NAME]`) will be updated accordingly.
+- Type: `String`
+- Required?: `false`
+- Default Value: `N/A`
+
+### --failure-threshold
+- Description: The number representing the percentage increase in bundle size at which the GitHub status will be posted as failed. Example: If you set this to `3.00` and **any** of the bundles grow by more than `3.00%`, then the status check will be posted as "failure." [[link](https://developer.github.com/v3/repos/statuses/#create-a-status)]
+- Type: `Number`
+- Required?: `false`
+- Default Value: `5.00`
 
 ## Required Environment Variables
 
