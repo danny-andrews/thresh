@@ -64,7 +64,6 @@ export default opts => {
     description: description.substring(0, byteLength),
     context: label
   };
-  console.log(payload, 'heyo');
 
   return makeGitHubRequest({
     githubApiToken,
