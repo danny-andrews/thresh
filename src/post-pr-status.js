@@ -65,6 +65,8 @@ export default opts => {
     context: label
   };
 
+  console.log(payload, 'ok');
+
   return makeGitHubRequest({
     githubApiToken,
     fetchOpts: {
