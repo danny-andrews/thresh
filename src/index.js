@@ -91,9 +91,10 @@ export default async opts => {
       R.map(([filename, {current: size}]) => ({filename, size}))
     )(bundleDiffs)
   });
-
   console.log(thresholdFailures, 'failures');
-  console.log(bundleDiffs, 'bundleDiffs');
+  if(isError(thresholdFailures)) {
+    throw thresholdFailures;
+  }
 
   const writeBundleDiffError = writeFileSync(
     buildArtifactFilepath(BUNDLE_SIZES_DIFF_FILENAME),

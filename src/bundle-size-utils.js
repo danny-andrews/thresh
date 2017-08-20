@@ -70,6 +70,8 @@ const uncheckedGetThresholdFailures = ({assetStats, failureThresholds}) => {
   const assetStatsWithFilePath = target => assetStats.filter(({filepath}) =>
     filepath === target);
 
+  console.log(assetStats, 'assetStats');
+
   return R.chain(
     threshold => {
       const {targets, maxSize, strategy} = threshold;
