@@ -69,6 +69,7 @@ const uncheckedGetThresholdFailures = ({assetStats, failureThresholds}) => {
     ({filepath}) => {
       console.log(target, 'target');
       console.log(filepath, 'filepath');
+      console.log(assetStats, 'assetStats');
 
       return new RegExp(`${target}$`).test(filepath);
     }
