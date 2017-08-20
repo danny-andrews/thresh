@@ -28,3 +28,9 @@ export const mkdirpSync = unthrow(mkdirp.sync);
 export const SchemaValidator = () => new Ajv({allErrors: true});
 
 export const isError = maybeError => type(maybeError) === 'Error';
+
+export const truncate = ({maxSize, contSuffix = '...'}, string) => (
+  string.length > maxSize
+    ? string.substring(0, maxSize - contSuffix.length)
+    : string
+);

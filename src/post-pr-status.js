@@ -2,6 +2,7 @@ import R from 'ramda';
 import {gitHubSerializer, makeGitHubRequest} from './requests';
 import filesize from 'filesize';
 import {sprintf} from 'sprintf-js';
+import {truncate} from './util';
 
 const StatusStates = {
   FAILURE: 'failure',
@@ -61,7 +62,7 @@ export default opts => {
   const payload = {
     state,
     targetUrl,
-    description: description.substring(0, MAX_STATUS_DESCRIPTION_CHARS),
+    description: truncate({maxSize: MAX_STATUS_DESCRIPTION_CHARS}, description),
     context: label
   };
 
