@@ -43,7 +43,7 @@ export default opts => {
     label
   } = opts;
   const {state, description} = R.ifElse(
-    R.pipe(R.isEmpty, R.always)(thresholdFailures.length),
+    R.pipe(R.isEmpty, R.always)(thresholdFailures),
     R.always({
       state: StatusStates.SUCCESS,
       description: R.toPairs(bundleDiffs)
