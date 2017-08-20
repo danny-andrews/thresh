@@ -89,7 +89,7 @@ const uncheckedGetThresholdFailures = ({assetStats, failureThresholds}) => {
         }
 
         const message = sprintf(
-          '"%s" (%s) must be <= (%s)!',
+          '"%s" (%s) must be less than or equal to %s!',
           asset.filepath,
           formatFilesize(asset.size),
           formatFilesize(maxSize),
@@ -108,7 +108,7 @@ const uncheckedGetThresholdFailures = ({assetStats, failureThresholds}) => {
           .map(({filepath}) => `"${filepath}"`).join(', ');
 
         const message = sprintf(
-          'The total size of [%s] (%s) must be less than or equal to (%s)!',
+          'The total size of [%s] (%s) must be less than or equal to %s!',
           offendingAssetPaths,
           formatFilesize(total),
           formatFilesize(maxSize),
