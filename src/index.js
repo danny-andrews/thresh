@@ -92,6 +92,8 @@ export default async opts => {
     )(bundleDiffs)
   });
 
+  console.log(thresholdFailures, 'failures');
+
   const writeBundleDiffError = writeFileSync(
     buildArtifactFilepath(BUNDLE_SIZES_DIFF_FILENAME),
     JSON.stringify(
