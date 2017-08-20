@@ -55,7 +55,7 @@ export default opts => {
       state: StatusStates.FAILURE,
       description: thresholdFailures.map(({message}) => message).join(' \n')
     })
-  );
+  )();
 
   const byteLength = Buffer.byteLength(description, UTF8);
   const payload = {
