@@ -92,11 +92,6 @@ export default async opts => {
       R.map(([filename, {current: size}]) => ({filename, size}))
     )(bundleDiffs)
   });
-  console.log('thresh failures', thresholdFailures);
-  console.log('asset stats', R.pipe(
-    R.toPairs,
-    R.map(([filename, {current: size}]) => ({filename, size}))
-  )(bundleDiffs));
 
   const writeBundleDiffError = writeFileSync(
     buildArtifactFilepath(BUNDLE_SIZES_DIFF_FILENAME),
@@ -114,7 +109,7 @@ export default async opts => {
     repoName,
     githubApiToken,
     bundleDiffs,
-    failureThresholds,
+    thresholdFailures,
     sha: buildSha,
     targetUrl: `${buildUrl}#artifacts`,
     label: compactAndJoin(': ', ['Bundle Sizes', projectName])
