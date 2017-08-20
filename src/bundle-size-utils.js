@@ -81,7 +81,7 @@ const uncheckedGetThresholdFailures = ({assetStats, failureThresholds}) => {
       const buildFailureObject = ({message, offendingAssets}) => ({
         message,
         threshold,
-        offendingAssets
+        offendingAssets: offendingAssets.map(({filepath}) => filepath)
       });
       const anyStrategy = R.chain(asset => {
         if(isWithinThreshold(asset.size)) {
