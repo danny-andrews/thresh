@@ -11,7 +11,7 @@ jobs:
       - run: yarn ci
       - run: yarn build
       - run: yarn build:example
-      - run: './circleci-weigh-in -- --stats-filepath=example/dist/stats.json --project-name="circleci-weigh-in" --failure-thresholds="[{ \"targets\": \".js\", \"maxSize\": 700 }]"'
+      - run: './circleci-weigh-in -- --stats-filepath=example/dist/stats.json --project-name="circleci-weigh-in" --failure-thresholds="[{ \"targets\": \".js\", \"maxSize\": 7 }]"'
       - store_artifacts:
           path: ./example/dist/artifacts
           destination: ./
