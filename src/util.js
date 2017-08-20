@@ -31,6 +31,6 @@ export const isError = maybeError => type(maybeError) === 'Error';
 
 export const truncate = ({maxSize, contSuffix = '...'}, string) => (
   string.length > maxSize
-    ? string.substring(0, maxSize - contSuffix.length)
+    ? [string.substring(0, maxSize - contSuffix.length), contSuffix].join('')
     : string
 );
