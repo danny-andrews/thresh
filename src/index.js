@@ -58,8 +58,7 @@ export default async opts => {
 
   const fileWriteError = writeFileSync(
     buildArtifactFilepath(BUNDLE_SIZES_FILENAME),
-    JSON.stringify(bundleSizes),
-    {spaces: JSON_OUTPUT_SPACING}
+    JSON.stringify(bundleSizes, null, JSON_OUTPUT_SPACING)
   );
   if(isError(fileWriteError)) {
     throw new Error(
@@ -95,8 +94,11 @@ export default async opts => {
 
   const writeBundleDiffError = writeFileSync(
     buildArtifactFilepath(BUNDLE_SIZES_DIFF_FILENAME),
-    JSON.stringify({diffs: bundleDiffs, failures: thresholdFailures}),
-    {spaces: JSON_OUTPUT_SPACING}
+    JSON.stringify(
+      {diffs: bundleDiffs, failures: thresholdFailures},
+      null,
+      JSON_OUTPUT_SPACING
+    )
   );
   if(isError(writeBundleDiffError)) {
     throw new Error(
