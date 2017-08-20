@@ -100,7 +100,7 @@ export default async opts => {
   );
   if(isError(writeBundleDiffError)) {
     throw new Error(
-      `Error writing bundle diff artifact: ${writeBundleDiffError.message}!`
+      `Error  writing bundle diff artifact: ${writeBundleDiffError.message}!`
     );
   }
 
