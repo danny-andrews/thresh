@@ -89,8 +89,7 @@ const uncheckedGetThresholdFailures = ({assetStats, failureThresholds}) => {
         }
 
         const message = sprintf(
-          'Asset "%s" size (%s) is above the maximum allowed (%s) by one of '
-            + 'your failure thresholds',
+          '"%s" (%s) must be <= (%s)!',
           asset.filepath,
           formatFilesize(asset.size),
           formatFilesize(maxSize),
@@ -109,8 +108,7 @@ const uncheckedGetThresholdFailures = ({assetStats, failureThresholds}) => {
           .map(({filepath}) => `"${filepath}"`).join(', ');
 
         const message = sprintf(
-          'The total size of assets [%s] (%s) is above the maximum (%s) '
-            + 'allowed by one of your failure thresholds',
+          'The total size of [%s] (%s) must be less than or equal to (%s)!',
           offendingAssetPaths,
           formatFilesize(total),
           formatFilesize(maxSize),
