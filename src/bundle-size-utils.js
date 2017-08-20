@@ -1,5 +1,7 @@
 import R from 'ramda';
 import path from 'path';
+import {sprintf} from 'sprintf-js';
+import filesize from 'filesize';
 import {
   FAILURE_THRESHOLD_TARGET_ALL,
   FailureThresholdStategies
@@ -70,26 +72,31 @@ const uncheckedGetThresholdFailures = ({assetStats, failureThresholds}) => {
   );
   const assetStatsWithFilePath = target => assetStats.filter(({filepath}) =>
     filepath === target);
+  const formatFilesize = size => filesize(size, {spacer: ''});
 
   return R.chain(
     threshold => {
       const {targets, maxSize, strategy} = threshold;
       const isWithinThreshold = R.gt(maxSize);
-      const buildFailureObject = ({message, assets}) => ({
+      const buildFailureObject = ({message, offendingAssets}) => ({
         message,
         threshold,
-        offendingAssets: [].concat(assets)
+        offendingAssets
       });
       const anyStrategy = R.chain(asset => {
         if(isWithinThreshold(asset.size)) {
           return [];
         }
 
-        return buildFailureObject({
-          message: `Asset ${asset.filepath} size (${asset.size}) is above the \
-maximum allowed (${maxSize}) by one of your failure thresholds`,
-          assets: asset
-        });
+        const message = sprintf(
+          'Asset "%s" size (%s) is above the maximum allowed (%s) by one of '
+            + 'your failure thresholds',
+          asset.filepath,
+          formatFilesize(asset.size),
+          formatFilesize(maxSize),
+        );
+
+        return buildFailureObject({message, offendingAssets: [asset]});
       });
       const allStrategy = targetSet => {
         const total =
@@ -98,14 +105,18 @@ maximum allowed (${maxSize}) by one of your failure thresholds`,
           return [];
         }
 
-        const offendingAssetPaths = targetSet.map(({filepath}) => filepath);
+        const offendingAssetPaths = targetSet
+          .map(({filepath}) => `"${filepath}"`).join(', ');
 
-        return buildFailureObject({
-          message: `The total size of assets \
-[${offendingAssetPaths.join(',')}] (${total}) is above the maximum \
-(${maxSize}) allowed by one of your failure thresholds`,
-          assets: targetSet
-        });
+        const message = sprintf(
+          'The total size of assets [%s] (%s) is above the maximum (%s) '
+            + 'allowed by one of your failure thresholds',
+          offendingAssetPaths,
+          formatFilesize(total),
+          formatFilesize(maxSize),
+        );
+
+        return buildFailureObject({message, offendingAssets: targetSet});
       };
 
       return R.pipe(
