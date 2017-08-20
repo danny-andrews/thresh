@@ -88,7 +88,7 @@ const uncheckedGetThresholdFailures = ({assetStats, failureThresholds}) => {
         return buildFailureObject({
           message: `Asset ${asset.filepath} size (${asset.size}) is above the \
 maximum allowed (${maxSize}) by one of your failure thresholds`,
-          asset
+          assets: asset
         });
       });
       const allStrategy = targetSet => {
@@ -104,7 +104,7 @@ maximum allowed (${maxSize}) by one of your failure thresholds`,
           message: `The total size of assets \
 [${offendingAssetPaths.join(',')}] (${total}) is above the maximum \
 (${maxSize}) allowed by one of your failure thresholds`,
-          targetSet
+          assets: targetSet
         });
       };
 
