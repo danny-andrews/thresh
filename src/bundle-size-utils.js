@@ -65,8 +65,9 @@ export const diffBundles = ({current, original}) =>
 const uncheckedGetThresholdFailures = ({assetStats, failureThresholds}) => {
   const isFileExtensionTarget = target => target[0] === '.';
   const isAllTarget = target => target === FAILURE_THRESHOLD_TARGET_ALL;
-  const assetStatsWithExt = target => assetStats.filter(({filepath}) =>
-    new RegExp(`${target}$`).test(filepath));
+  const assetStatsWithExt = target => assetStats.filter(
+    ({filepath}) => new RegExp(`${target}$`).test(filepath)
+  );
   const assetStatsWithFilePath = target => assetStats.filter(({filepath}) =>
     filepath === target);
 
@@ -117,6 +118,7 @@ maximum allowed (${maxSize}) by one of your failure thresholds`,
             [isAllTarget, assetStats],
             [R.T, assetStatsWithFilePath]
           ])(target);
+          console.log(target, 'target');
 
           if(R.isEmpty(targetSet)) {
             // Wouldn't normally throw in a helper method, but it's the only way
