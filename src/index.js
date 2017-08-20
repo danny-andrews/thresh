@@ -88,10 +88,9 @@ export default async opts => {
     failureThresholds,
     assetStats: R.pipe(
       R.toPairs,
-      R.map(([filename, {current: size}]) => ({filename, size}))
+      R.map(([filepath, {current: size}]) => ({filepath, size}))
     )(bundleDiffs)
   });
-  console.log(thresholdFailures, 'failures');
   if(isError(thresholdFailures)) {
     throw thresholdFailures;
   }

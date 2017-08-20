@@ -66,18 +66,10 @@ const uncheckedGetThresholdFailures = ({assetStats, failureThresholds}) => {
   const isFileExtensionTarget = target => target[0] === '.';
   const isAllTarget = target => target === FAILURE_THRESHOLD_TARGET_ALL;
   const assetStatsWithExt = target => assetStats.filter(
-    ({filepath}) => {
-      console.log(target, 'target');
-      console.log(filepath, 'filepath');
-      console.log(assetStats, 'assetStats');
-
-      return new RegExp(`${target}$`).test(filepath);
-    }
+    ({filepath}) => new RegExp(`${target}$`).test(filepath)
   );
   const assetStatsWithFilePath = target => assetStats.filter(({filepath}) =>
     filepath === target);
-
-  console.log(assetStats, 'assetStats');
 
   return R.chain(
     threshold => {
