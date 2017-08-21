@@ -1,27 +1,32 @@
 import {
   BUNDLE_SIZES_DIFF_FILENAME,
   BUNDLE_SIZES_FILENAME,
+  JSON_OUTPUT_SPACING,
   OUTPUT_FILEPATH
 } from './constants';
-import {bundleSizesFromWebpackStats, diffBundles} from './bundle-size-utils';
-import {compactAndJoin} from './util';
-import jsonfile from 'jsonfile';
-import mkdirp from 'mkdirp';
+import R from 'ramda';
+import {
+  bundleSizesFromWebpackStats,
+  diffBundles,
+  getThresholdFailures
+} from './bundle-size-utils';
+import {
+  compactAndJoin,
+  readFileSync,
+  writeFileSync,
+  mkdirpSync,
+  isError,
+  parseJSON
+} from './util';
 import path from 'path';
 import postPrStatus from './post-pr-status';
-import promisify from 'es6-promisify';
 import retrieveBaseBundleSizes from './retrieve-base-bundle-sizes';
-
-const readFile = promisify(jsonfile.readFile);
-const writeFile = promisify(jsonfile.writeFile);
-
-const JSON_OUTPUT_SPACING = 2;
 
 export default async opts => {
   const {
     statsFilepath,
     projectName = '',
-    failureThreshold,
+    failureThresholds,
     repoOwner,
     repoName,
     githubApiToken,
@@ -38,36 +43,34 @@ export default async opts => {
       projectName,
       filename
     );
-
-  let fileContents = null;
-  try {
-    fileContents = await readFile(statsFilepath);
-  } catch(e) {
-    throw new Error(`Error reading stats file: ${e}!`);
+  const fileContents = R.pipe(readFileSync, parseJSON)(statsFilepath);
+  if(isError(fileContents)) {
+    throw new Error(`Error reading stats file: ${fileContents}!`);
   }
 
   const bundleSizes = bundleSizesFromWebpackStats(fileContents);
-  try {
-    mkdirp.sync(buildArtifactFilepath(OUTPUT_FILEPATH));
-  } catch(e) {
-    throw new Error(`Error creating artifact directory: ${e}!`);
+  const mkdirResponse = mkdirpSync(buildArtifactFilepath(OUTPUT_FILEPATH));
+  if(isError(mkdirResponse)) {
+    throw new Error(
+      `Error creating artifact directory: ${mkdirResponse.message}`
+    );
   }
 
-  try {
-    await writeFile(
-      buildArtifactFilepath(BUNDLE_SIZES_FILENAME),
-      bundleSizes,
-      {spaces: JSON_OUTPUT_SPACING}
+  const fileWriteError = writeFileSync(
+    buildArtifactFilepath(BUNDLE_SIZES_FILENAME),
+    JSON.stringify(bundleSizes, null, JSON_OUTPUT_SPACING)
+  );
+  if(isError(fileWriteError)) {
+    throw new Error(
+      `Error writing bundle size artifact: ${fileWriteError.message}`
     );
-  } catch(e) {
-    throw new Error(`Error writing bundle size artifact: ${e}!`);
   }
 
   if(!pullRequestId) {
     return null;
   }
 
-  const baseBundleSize = await retrieveBaseBundleSizes({
+  const baseBundleSizes = await retrieveBaseBundleSizes({
     pullRequestId,
     repoOwner,
     repoName,
@@ -78,26 +81,42 @@ export default async opts => {
 
   const bundleDiffs = diffBundles({
     current: bundleSizes,
-    original: baseBundleSize
+    original: baseBundleSizes
   });
 
-  return Promise.all([
-    writeFile(
-      buildArtifactFilepath(BUNDLE_SIZES_DIFF_FILENAME),
-      bundleDiffs,
-      {spaces: JSON_OUTPUT_SPACING}
-    ).catch(e => {
-      throw new Error(`Error writing bundle diff artifact: ${e}!`);
-    }),
-    postPrStatus({
-      sha: buildSha,
-      repoOwner,
-      repoName,
-      githubApiToken,
-      targetUrl: `${buildUrl}#artifacts`,
-      bundleDiffs,
-      failureThreshold,
-      label: compactAndJoin(': ', ['Bundle Sizes', projectName])
-    })
-  ]);
+  const thresholdFailures = getThresholdFailures({
+    failureThresholds,
+    assetStats: R.pipe(
+      R.toPairs,
+      R.map(([filepath, {current: size}]) => ({filepath, size}))
+    )(bundleDiffs)
+  });
+  if(isError(thresholdFailures)) {
+    throw thresholdFailures;
+  }
+
+  const writeBundleDiffError = writeFileSync(
+    buildArtifactFilepath(BUNDLE_SIZES_DIFF_FILENAME),
+    JSON.stringify(
+      {diffs: bundleDiffs, failures: thresholdFailures},
+      null,
+      JSON_OUTPUT_SPACING
+    )
+  );
+  if(isError(writeBundleDiffError)) {
+    throw new Error(
+      `Error  writing bundle diff artifact: ${writeBundleDiffError.message}!`
+    );
+  }
+
+  return postPrStatus({
+    repoOwner,
+    repoName,
+    githubApiToken,
+    bundleDiffs,
+    thresholdFailures,
+    sha: buildSha,
+    targetUrl: `${buildUrl}#artifacts`,
+    label: compactAndJoin(': ', ['Bundle Sizes', projectName])
+  });
 };
