@@ -2,8 +2,10 @@ import {isNil, last} from 'ramda';
 import assert from 'assert';
 import circleciWeighIn from './';
 import commandLineArgs from 'command-line-args';
-import {DFAULT_FAILURE_THRESHOLD_STRATEGY} from './constants';
-import {failureThresholdListSchema} from './schemas';
+import {
+  failureThresholdListSchema,
+  DFAULT_FAILURE_THRESHOLD_STRATEGY
+} from './schemas';
 import {SchemaValidator, parseJSON, isError} from './util';
 
 const requiredEnvVariables = [

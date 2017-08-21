@@ -12,6 +12,3 @@ export const FailureThresholdStategies = {
 };
 
 export const FAILURE_THRESHOLD_TARGET_ALL = 'all';
-
-export const DFAULT_FAILURE_THRESHOLD_STRATEGY =
-  FailureThresholdStategies.ANY;

@@ -5,11 +5,8 @@ import {
   OUTPUT_FILEPATH
 } from './constants';
 import R from 'ramda';
-import {
-  bundleSizesFromWebpackStats,
-  diffBundles,
-  getThresholdFailures
-} from './bundle-size-utils';
+import {bundleSizesFromWebpackStats, diffBundles} from './bundle-size-utils';
+import getThresholdFailures from './get-threshold-failures';
 import {
   compactAndJoin,
   readFileSync,

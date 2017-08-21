@@ -1,7 +1,4 @@
-import {
-  DFAULT_FAILURE_THRESHOLD_STRATEGY,
-  FailureThresholdStategies
-} from './constants';
+import {FailureThresholdStategies} from './constants';
 
 const failureThresholdSchema = {
   title: 'Failure Threshold',
@@ -13,7 +10,7 @@ const failureThresholdSchema = {
     strategy: {
       type: 'string',
       enum: [FailureThresholdStategies.ANY, FailureThresholdStategies.TOTAL],
-      default: DFAULT_FAILURE_THRESHOLD_STRATEGY,
+      default: FailureThresholdStategies.ANY,
       description: `How the threshold is applied. If set to "any", it
         will fail if any asset in the target set is above the threshold. If set
         to "total" it will fail if the total of all assets in the set is above
@@ -41,3 +38,6 @@ export const failureThresholdListSchema = {
   type: 'array',
   items: failureThresholdSchema
 };
+
+export const DFAULT_FAILURE_THRESHOLD_STRATEGY =
+  failureThresholdSchema.properties.strategy.default;
