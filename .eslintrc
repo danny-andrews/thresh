@@ -1,5 +1,6 @@
 extends: '@danny.andrews/eslint-config'
 rules:
   no-console: off
+  sort-imports: off
 env:
   node: true

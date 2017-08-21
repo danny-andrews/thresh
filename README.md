@@ -67,36 +67,66 @@ A CircleCI integration for tracking file size changes across deploys.
 - Posts that diff as a status to PR associated with the build.
 
 ## CLI Options
-<table>
-  <tr>
-    <th width="200px">Name</th>
-    <th>Description</th>
-    <th>Type</th>
-    <th>Required?</th>
-    <th>Default Value</th>
-  </tr>
-  <tr>
-    <td><code>--stats-filepath</code></td>
-    <td>Filepath of the webpack stats object to read from.</td>
-    <td><code>String</code></td>
-    <td>Yes</td>
-    <td></td>
-  </tr>
-  <tr>
-    <td><code>--project-name</code></td>
-    <td>The name of the project for which the bundle stats will be generated. (This is useful in monorepo situations where you may want to generate bundle stats for multiple projects during the same build.) Bundle size artifact filenames (`[PROJECT_NAME]/bundle-sizes.json`/`[PROJECT_NAME]/bundle-sizes-diff.json`) and the CI status label (`Bundle Sizes: [PROJECT_NAME]`) will be updated accordingly.</td>
-    <td><code>String</code></td>
-    <td>No</td>
-    <td></td>
-  </tr>
-  <tr>
-    <td><code>--failure-threshold</code></td>
-    <td>The number representing the percentage increase in bundle size at which the GitHub status will be posted as failed. Example: If you set this to <code>3.00</code> and <b>any</b> of the bundles grow by more than 3.00%, then the status check will be posted as "failure." <a href="https://developer.github.com/v3/repos/statuses/#create-a-status">[link]</a></td>
-    <td><code>Number</code></td>
-    <td>No</td>
-    <td><code>5.00</code></td>
-  </tr>
-</table>
+
+### --stats-filepath
+- Description: Filepath of the webpack stats object to read from.
+- Type: `String`
+- Required?: `true`
+
+### --project-name
+- Description: The name of the project for which the bundle stats will be generated. (This is useful in monorepo situations where you may want to generate bundle stats for multiple projects during the same build.) Bundle size artifact filenames (`[PROJECT_NAME]/bundle-sizes.json`/`[PROJECT_NAME]/bundle-sizes-diff.json`) and the CI status label (`Bundle Sizes: [PROJECT_NAME]`) will be updated accordingly.
+- Type: `String`
+- Required?: `false`
+
+### --failure-thresholds
+- Description: A JSON array of configuration objects used to determine the conditions under which the [GitHub status](https://developer.github.com/v3/repos/statuses/#create-a-status) will be posted as "failed." The shape of this object is described [here](#failure-threshold-config-shape).
+- Type: `String`
+- Required?: `false`
+
+### Failure Threshold Config Shape
+```js
+{
+  title: 'Failure Threshold',
+  type: 'object',
+  properties: {
+    maxSize: {
+      type: 'number'
+    },
+    strategy: {
+      type: 'string',
+      enum: ['any', 'total'],
+      default: 'total',
+      description: `How the threshold is applied. If set to "any", it
+        will fail if any asset in the target set is above the threshold. If set
+        to "total" it will fail if the total of all assets in the set is above
+        the threshold.`
+    },
+    targets: {
+      oneOf: [
+        {type: 'string'},
+        {
+          type: 'array',
+          items: {type: 'string'}
+        }
+      ],
+      description: `The target(s) of the threshold. Each target can be either a
+        file extension (e.g. ".js" for all javascript assets), an asset path
+        "vendor.js" for the "vendor.js" asset, or the special keyword "all" for
+        all assets (default).`
+    }
+  },
+  required: ['maxSize']
+}
+```
+
+#### Example threshold config:
+```json
+[{
+  "targets": ".js",
+  "maxSize": 70000
+}]
+```
+This example would post a failed GitHub status if the total size of all javascript assets was larger than 70kB.
 
 ## Required Environment Variables
 
