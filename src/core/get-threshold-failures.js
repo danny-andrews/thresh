@@ -5,8 +5,8 @@ import {
   FAILURE_THRESHOLD_TARGET_ALL,
   FailureThresholdStategies
 } from './constants';
-import {InvalidFailureThresholdError} from './errors';
-import {unthrow} from './util';
+import {InvalidFailureThresholdErr} from './errors';
+import {unthrow} from '../shared';
 
 const uncheckedGetThresholdFailures = ({assetStats, failureThresholds}) => {
   const isFileExtensionTarget = target => target[0] === '.';
@@ -73,10 +73,7 @@ const uncheckedGetThresholdFailures = ({assetStats, failureThresholds}) => {
           if(R.isEmpty(targetSet)) {
             // Wouldn't normally throw in a helper method, but it's the only way
             //   to exit a non-for-loop.
-            throw new InvalidFailureThresholdError(
-              `Invalid failure threshold provided. No targets found for target:
-                [${target}]`
-            );
+            throw InvalidFailureThresholdErr(target);
           }
 
           return targetSet;
@@ -90,8 +87,5 @@ const uncheckedGetThresholdFailures = ({assetStats, failureThresholds}) => {
 };
 
 // Just wrap uncheckedGetThresholdFailures and return Error object rather than
-//   rely on exception bubbling.
-export default unthrow(
-  uncheckedGetThresholdFailures,
-  error => !R.is(InvalidFailureThresholdError, error)
-);
+//   relying on exception bubbling.
+export default unthrow(uncheckedGetThresholdFailures);

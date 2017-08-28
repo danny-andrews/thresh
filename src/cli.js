@@ -1,12 +1,22 @@
 import {isNil, last} from 'ramda';
 import assert from 'assert';
-import circleciWeighIn from './';
+import circleciWeighIn from './circleci-weigh-in';
 import commandLineArgs from 'command-line-args';
+import path from 'path';
+import fetch from 'node-fetch';
 import {
   failureThresholdListSchema,
   DFAULT_FAILURE_THRESHOLD_STRATEGY
-} from './schemas';
-import {SchemaValidator, parseJSON, isError} from './util';
+} from './core/schemas';
+import {
+  SchemaValidator,
+  parseJSON,
+  mkdir,
+  writeFile,
+  readFile
+} from './shared';
+import {InvalidFailureThresholdOptionErr} from './core/errors';
+import {Maybe} from 'monet';
 
 const requiredEnvVariables = [
   'CIRCLE_ARTIFACTS',
@@ -42,14 +52,14 @@ const failureThresholds = isNil(failureThresholdsString)
   ? []
   : parseJSON(failureThresholdsString);
 assert(
-  !isError(failureThresholds),
+  failureThresholds.isRight(),
   "'failure-thresholds' option is not valid JSON!"
 );
 
 const validator = SchemaValidator();
 const isfailureThresholdsValid = validator.validate(
   failureThresholdListSchema,
-  failureThresholds
+  failureThresholds.right()
 );
 
 if(!isfailureThresholdsValid) {
@@ -57,12 +67,10 @@ if(!isfailureThresholdsValid) {
     validator.errors,
     {separator: '\n'}
   );
-  throw new Error(
-    `'failure-thresholds' option is invalid! Problem(s):\n${validationMessage}`
-  );
+  throw InvalidFailureThresholdOptionErr(validationMessage);
 }
 
-const decoratedFailureThresholds = failureThresholds.map(
+const decoratedFailureThresholds = failureThresholds.right().map(
   threshold => ({
     strategy: DFAULT_FAILURE_THRESHOLD_STRATEGY,
     ...threshold
@@ -75,13 +83,19 @@ const pullRequestId = process.env.CI_PULL_REQUEST
 circleciWeighIn({
   statsFilepath,
   projectName,
-  pullRequestId,
+  pullRequestId: Maybe.fromNull(pullRequestId),
   failureThresholds: decoratedFailureThresholds,
-  repoOwner: process.env.CIRCLE_PROJECT_USERNAME,
-  repoName: process.env.CIRCLE_PROJECT_REPONAME,
-  githubApiToken: process.env.GITHUB_API_TOKEN,
-  circleApiToken: process.env.CIRCLE_API_TOKEN,
   buildSha: process.env.CIRCLE_SHA1,
   buildUrl: process.env.CIRCLE_BUILD_URL,
   artifactsDirectory: process.env.CIRCLE_ARTIFACTS
-}).catch(e => console.error(e.stack));
+}).run({
+  writeFile,
+  readFile,
+  resolve: path.resolve,
+  request: fetch,
+  mkdir,
+  repoOwner: process.env.CIRCLE_PROJECT_USERNAME,
+  repoName: process.env.CIRCLE_PROJECT_REPONAME,
+  githubApiToken: process.env.GITHUB_API_TOKEN,
+  circleApiToken: process.env.CIRCLE_API_TOKEN
+});
