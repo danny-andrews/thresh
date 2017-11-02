@@ -131,7 +131,7 @@ This example would post a failed GitHub status if the total size of all javascri
 ## Required Environment Variables
 
 ### [CircleCI Built-ins](https://circleci.com/docs/1.0/environment-variables/)
-- `CIRCLE_ARTIFACTS`<sup>[2.0](#circleci-2.0-notes)</sup>
+- `CIRCLE_ARTIFACTS`<sup>[2.0](#circleci-20-notes)</sup>
 - `CIRCLE_PROJECT_USERNAME`
 - `CIRCLE_PROJECT_REPONAME`
 - `CIRCLE_SHA1`
