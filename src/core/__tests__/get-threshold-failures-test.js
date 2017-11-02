@@ -1,8 +1,8 @@
 import test from 'ava';
 import expect from 'expect';
 import R from 'ramda';
-import {InvalidFailureThresholdError} from '../src/errors';
-import getThresholdFailures from '../src/get-threshold-failures';
+import {Err} from '../errors';
+import subject from '../get-threshold-failures';
 
 const testSets = [{
   title: 'singleton target, asset with size > maxSize',
@@ -169,7 +169,7 @@ const testSets = [{
 {
   title: 'no matching asset',
   expected: actual => {
-    expect(R.is(InvalidFailureThresholdError, actual)).toBe(true);
+    expect(actual.left().constructor).toBe(Err);
   },
   input: {
     assetStats: [{
@@ -232,16 +232,16 @@ const testSets = [{
 R.forEach(
   ({expected: expecteds, input, title}) => {
     test(title, () => {
-      const actuals = getThresholdFailures(input);
+      const actuals = subject(input);
       if(R.type(expecteds) === 'Function') {
         expecteds(actuals);
       } else {
-        expect(actuals.length).toBe(expecteds.length);
+        expect(actuals.right().length).toBe(expecteds.length);
 
         R.forEach(
           ([actual, expected]) =>
             expect(actual.offendingAssets).toEqual(expected.offendingAssets),
-          R.zip(actuals, expecteds)
+          R.zip(actuals.right(), expecteds)
         );
       }
     });
