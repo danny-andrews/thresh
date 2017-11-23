@@ -4,14 +4,13 @@ import {Reader} from 'monet';
 import {
   BUNDLE_SIZES_DIFF_FILENAME,
   BUNDLE_SIZES_FILENAME,
-  JSON_OUTPUT_SPACING,
   OUTPUT_FILEPATH
 } from './core/constants';
 import bundleSizesFromWebpackStats
   from './core/bundle-sizes-from-webpack-stats';
 import diffBundles from './core/diff-bundles';
 import getThresholdFailures from './core/get-threshold-failures';
-import {compactAndJoin, parseJSON} from './shared';
+import {compactAndJoin, parseJSON, serializeForFile} from './shared';
 import postPrStatus from './post-pr-status';
 import retrieveBaseBundleSizes from './retrieve-base-bundle-sizes';
 import {
@@ -44,7 +43,7 @@ const writeBundleSizes = ({filepath, bundleSizes}) =>
   ReaderPromise.fromReaderFn(({writeFile}) =>
     writeFile(
       filepath,
-      JSON.stringify(bundleSizes, null, JSON_OUTPUT_SPACING)
+      serializeForFile(bundleSizes)
     ).catch(error => Promise.reject(ErrorWritingBundleSizeArtifactErr(error)))
   );
 
@@ -52,11 +51,7 @@ const writeBundleDiff = ({filepath, bundleDiffs, thresholdFailures}) =>
   ReaderPromise.fromReaderFn(({writeFile}) =>
     writeFile(
       filepath,
-      JSON.stringify(
-        {diffs: bundleDiffs, failures: thresholdFailures},
-        null,
-        JSON_OUTPUT_SPACING
-      )
+      serializeForFile({diffs: bundleDiffs, failures: thresholdFailures})
     ).catch(error => Promise.reject(ErrorWritingBundleDiffArtifactErr(error)))
   );
 
@@ -71,13 +66,17 @@ export default opts => {
     artifactsDirectory
   } = opts;
 
-  const buildArtifactFilepath = filename =>
-    Reader(({resolve}) =>
-      Promise.resolve(resolve(artifactsDirectory, projectName, filename))
-    );
+  const buildArtifactFilepath = (...args) => Reader(
+    ({resolve}) => R.pipe(resolve, a => Promise.resolve(a))(
+      artifactsDirectory,
+      OUTPUT_FILEPATH,
+      projectName,
+      ...args
+    )
+  );
 
   const mkArtifactDir2 = () => ReaderPromise(
-    buildArtifactFilepath(OUTPUT_FILEPATH)
+    buildArtifactFilepath()
   ).chain(mkArtifactDir);
 
   const writeBundleSizes2 = bundleSizes =>
