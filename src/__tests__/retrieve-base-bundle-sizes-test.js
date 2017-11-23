@@ -1,6 +1,6 @@
 import test from 'ava';
 import R from 'ramda';
-import expect from 'expect';
+import expect, {createSpy} from 'expect';
 import retrieveBaseBundleSizes from '../retrieve-base-bundle-sizes';
 import {PrResource, BuildResource, ArtifactResource} from './shared/factories';
 import {FakeFetch} from './shared/helpers';
@@ -71,6 +71,35 @@ test('happy path (returns artifact body)', async () => {
   });
 
   expect(artifact).toBe('artifact text');
+});
+
+test('uses most recent successful build if latest was unsuccessful', async () => {
+  const getArtifactsSpy = createSpy().andReturn([
+    ArtifactResource({
+      path: '8932hfdlsajlf/thing/dist/my-file.js',
+      url: 'http://circle-artifacts/my-url/fj3298hf.json'
+    })
+  ]);
+
+  await subject({
+    bundleSizesFilepath: 'dist/my-file.js',
+    responseData: {
+      getRecentBuildsResponse: [
+        BuildResource({
+          buildNum: '935',
+          status: 'failure',
+          previousSuccessfulBuild: BuildResource({buildNum: '452'})
+        }),
+        BuildResource({
+          buildNum: '452',
+          status: 'success'
+        })
+      ],
+      getArtifactsResponse: getArtifactsSpy
+    }
+  });
+
+  expect(getArtifactsSpy.calls[0].arguments[0]).toMatch(/.*\/452\/artifacts/);
 });
 
 test('returns error when there are no recent builds for the base branch', () =>

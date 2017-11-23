@@ -1,6 +1,7 @@
 import makeGitHubRequest from './make-github-request';
 import makeCircleRequest from './make-circle-request';
 import ReaderPromise from './core/reader-promise';
+import {CircleCiBuildStatuses} from './core/constants';
 
 export default ({pullRequestId, bundleSizesFilepath}) =>
   ReaderPromise.fromReaderFn(config => {
@@ -33,7 +34,10 @@ export default ({pullRequestId, bundleSizesFilepath}) =>
           );
         }
 
-        const buildNumber = recentBuilds[0].buildNum;
+        const [firstItem] = recentBuilds;
+        const buildNumber = firstItem.status === CircleCiBuildStatuses.SUCCESS
+          ? firstItem.buildNum
+          : firstItem.previousSuccessfulBuild.buildNum;
 
         return getBuildArtifacts(buildNumber).chain(buildArtifacts => {
           const artifactPathRegExp = new RegExp(`${bundleSizesFilepath}$`);

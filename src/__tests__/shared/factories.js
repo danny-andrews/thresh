@@ -11,7 +11,8 @@ export const PrResource = ({ref = '93hg8h4h22'} = {}) => ({
 });
 
 export const BuildResource = Factory({
-  buildNum: '92'
+  buildNum: '92',
+  status: 'success'
 });
 
 export const ArtifactResource = Factory({
