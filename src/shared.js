@@ -4,6 +4,7 @@ import fs from 'fs';
 import mkdirp from 'mkdirp';
 import {Either} from 'monet';
 import {promisify} from 'util';
+import {JSON_OUTPUT_SPACING} from './core/constants';
 
 export const compact = list => R.reject(item => !item, list);
 
@@ -40,3 +41,6 @@ export const PromiseError = R.pipe(
   (...args) => new Error(...args),
   a => Promise.reject(a)
 );
+
+export const serializeForFile = val =>
+  JSON.stringify(val, null, JSON_OUTPUT_SPACING);

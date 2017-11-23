@@ -1,10 +1,10 @@
 import test from 'ava';
-import expect from 'expect';
+import expect, {createSpy} from 'expect';
 import subject from '../post-pr-status';
-import {fetchSpyFac} from './factories';
+import {ResponsePromise} from './shared/helpers';
 
 test('makes request to post pr status to GitHub', () => {
-  const spy = fetchSpyFac();
+  const spy = createSpy().andReturn(ResponsePromise({}));
   subject({
     sha: 'h8g94hg9',
     bundleDiffs: {},

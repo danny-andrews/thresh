@@ -1,15 +1,15 @@
 import test from 'ava';
-import expect from 'expect';
+import expect, {createSpy} from 'expect';
 import R from 'ramda';
 import subject from '../make-circle-request';
-import {fetchSpyFac} from './factories';
+import {ResponsePromise} from './shared/helpers';
 
 const optsFac = (opts = {}) => ({path: 'hey', token: 'jfdsa03f', ...opts});
 
 const fac = R.pipe(optsFac, subject);
 
 test('sends request to url, if given', () => {
-  const spy = fetchSpyFac();
+  const spy = createSpy().andReturn(ResponsePromise({}));
   fac({url: 'circleci.artifacts/my-artifact.json'})
     .run({request: spy, circleApiToken: '4dfasg'});
 
@@ -19,7 +19,7 @@ test('sends request to url, if given', () => {
 });
 
 test('sends request to https://circleci.com/api/v1.1 + path', () => {
-  const spy = fetchSpyFac();
+  const spy = createSpy().andReturn(ResponsePromise({}));
   fac({path: 'my-account/my-repo'})
     .run({request: spy, circleApiToken: '4dfasg'});
 
@@ -28,7 +28,7 @@ test('sends request to https://circleci.com/api/v1.1 + path', () => {
 });
 
 test('sets Accept header to application/json', () => {
-  const spy = fetchSpyFac();
+  const spy = createSpy().andReturn(ResponsePromise({}));
   fac().run({request: spy});
 
   const [, {headers: actual}] = spy.calls[0].arguments;
@@ -36,7 +36,7 @@ test('sets Accept header to application/json', () => {
 });
 
 test('accepts additional headers', () => {
-  const spy = fetchSpyFac();
+  const spy = createSpy().andReturn(ResponsePromise({}));
   fac({
     fetchOpts: {
       headers: {
@@ -54,7 +54,7 @@ test('accepts additional headers', () => {
 });
 
 test('accepts other fetch optioms', () => {
-  const spy = fetchSpyFac();
+  const spy = createSpy().andReturn(ResponsePromise({}));
   fac({
     fetchOpts: {
       body: 'hi',
@@ -70,7 +70,7 @@ test('accepts other fetch optioms', () => {
 
 test('camelizes response', async () => {
   // eslint-disable-next-line camelcase
-  const spy = fetchSpyFac({my_msg: 'hello'});
+  const spy = createSpy().andReturn(ResponsePromise({my_msg: 'hello'}));
   const actual = await fac().run({request: spy});
 
   expect(actual).toEqual({myMsg: 'hello'});
@@ -78,21 +78,21 @@ test('camelizes response', async () => {
 
 test("if raw is true, it doesn't deserialize response", async () => {
   // eslint-disable-next-line camelcase
-  const spy = fetchSpyFac({my_msg: 'hello'});
+  const spy = createSpy().andReturn(ResponsePromise({my_msg: 'hello'}));
   const actual = await fac({raw: true}).run({request: spy});
 
   expect(actual).toEqual({my_msg: 'hello'}); // eslint-disable-line camelcase
 });
 
 test.skip('returns Error if response fails', async () => {
-  const spy = fetchSpyFac();
+  const spy = createSpy().andReturn(ResponsePromise({}));
   const actual = await fac({raw: true}).run({request: spy});
 
   expect(actual).toEqual('hi');
 });
 
 test.skip('returns error if non-200 status code received', async () => {
-  const spy = fetchSpyFac();
+  const spy = createSpy().andReturn(ResponsePromise({}));
   const actual = await fac({raw: true}).run({request: spy});
 
   expect(actual).toEqual('hi');

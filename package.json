@@ -61,7 +61,7 @@
   "ava": {
     "files": [
       "src/**/__tests__/**/*.js",
-      "!**/factories.js"
+      "!**/shared/**"
     ],
     "require": [
       "babel-register"

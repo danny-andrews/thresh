@@ -1,8 +1,15 @@
 import test from 'ava';
 import R from 'ramda';
 import expect from 'expect';
-import subject from '../retrieve-base-bundle-sizes';
-import {prInfoFac, buildFac, artifactFac, integrationFetchSpyFac} from './factories';
+import retrieveBaseBundleSizes from '../retrieve-base-bundle-sizes';
+import {PrResource, BuildResource, ArtifactResource} from './shared/factories';
+import {FakeFetch} from './shared/helpers';
+import {
+  GetBaseBranchHandler,
+  GetRecentBuildsHandler,
+  GetArtifactsHandler,
+  GetArtifactHandler
+} from './shared/requests';
 
 const optsFac = (opts = {}) => ({
   pullRequestId: '45',
@@ -10,87 +17,85 @@ const optsFac = (opts = {}) => ({
   ...opts
 });
 
-const fac = R.pipe(optsFac, subject);
+export const createResponseSequence = (opts = {}) => {
+  const {
+    getBaseBranchResponse,
+    getRecentBuildsResponse,
+    getArtifactsResponse,
+    getArtifactResponse,
+    ref,
+    buildNum,
+    buildStatus,
+    artifactPath,
+    artifactUrl,
+    artifactBody
+  } = opts;
 
-const getNamedCalls = spy => {
-  const [
-    getBaseBranchCall,
-    getRecentBuildsCall,
-    getArtifactsCall,
-    getArtifactCall
-  ] = spy.calls;
-
-  return {
-    getBaseBranchCall,
-    getRecentBuildsCall,
-    getArtifactsCall,
-    getArtifactCall
-  };
+  return [
+    GetBaseBranchHandler(getBaseBranchResponse || PrResource({ref})),
+    GetRecentBuildsHandler(getRecentBuildsResponse || [
+      BuildResource({buildNum, status: buildStatus})
+    ]),
+    GetArtifactsHandler(getArtifactsResponse || [
+      ArtifactResource({path: artifactPath, url: artifactUrl})
+    ]),
+    GetArtifactHandler(getArtifactResponse || {
+      response: artifactBody,
+      matcher: new RegExp(artifactUrl)
+    })
+  ];
 };
 
-test('happy path (makes all requests and returns artifact body)', async () => {
-  const spy = integrationFetchSpyFac({
-    getBaseBranchResponse: prInfoFac({ref: 'hof893f32g'}),
-    getRecentBuildsResponse: [buildFac({buildNum: '935'})],
-    getArtifactsResponse: [
-      artifactFac({
-        path: '8932hfdlsajlf/thing/dist/vendor.js',
-        url: 'http://circle-artifacts/my-url/fj3298hf.json'
-      })
-    ],
-    getArtifactResponse: 'this is the artifact, yo!'
+// Factory which makes this easy to test.
+const subject = ({responseData, repoOwner, repoName, ...opts} = {}) => {
+  const fakeFetch = R.pipe(createResponseSequence, FakeFetch)({
+    artifactPath: 'blah8372blah/dist/app.js',
+    ...responseData
   });
 
-  const artifact = await subject({
-    pullRequestId: '45',
-    repoOwner: 'me',
-    repoName: 'my-repo',
-    bundleSizesFilepath: 'dist/vendor.js'
+  return R.pipe(optsFac, retrieveBaseBundleSizes)({
+    bundleSizesFilepath: 'dist/app.js',
+    ...opts
   }).run({
-    request: spy,
-    githubApiToken: '438943hgr3',
-    circleApiToken: '743qhy973f',
-    repoOwner: 'me',
-    repoName: 'my-repo'
+    request: fakeFetch,
+    repoOwner,
+    repoName
+  });
+};
+
+test('happy path (returns artifact body)', async () => {
+  const artifact = await subject({
+    responseData: {
+      artifactBody: 'artifact text'
+    }
   });
 
-  const {
-    getBaseBranchCall,
-    getRecentBuildsCall,
-    getArtifactsCall,
-    getArtifactCall
-  } = getNamedCalls(spy);
-
-  expect(getBaseBranchCall.arguments[0]).toBe('https://api.github.com/repos/me/my-repo/pulls/45');
-  expect(getRecentBuildsCall.arguments[0]).toBe('https://circleci.com/api/v1.1/project/github/me/my-repo/tree/hof893f32g?circle-token=743qhy973f');
-  expect(getArtifactsCall.arguments[0]).toBe('https://circleci.com/api/v1.1/project/github/me/my-repo/935/artifacts?circle-token=743qhy973f');
-  expect(getArtifactCall.arguments[0]).toBe('http://circle-artifacts/my-url/fj3298hf.json?circle-token=743qhy973f');
-  expect(artifact).toBe('this is the artifact, yo!');
+  expect(artifact).toBe('artifact text');
 });
 
-test('returns error when there are no recent builds for the base branch', () => {
-  const spy = integrationFetchSpyFac({
-    getRecentBuildsResponse: [],
-    getBaseBranchResponse: prInfoFac({ref: 'fjd0823rf2'})
-  });
-
-  return fac().run({request: spy}).catch(error => {
+test('returns error when there are no recent builds for the base branch', () =>
+  subject({
+    responseData: {
+      ref: 'fjd0823rf2',
+      getRecentBuildsResponse: []
+    }
+  }).catch(error => {
     expect(error).toBeA(Error);
     expect(error.message)
       .toBe('No recent builds found for the base branch: fjd0823rf2!');
-  });
-});
+  })
+);
 
-test('returns error when there are no bundle size artifacts found for latest build of base branch', () => {
-  const spy = integrationFetchSpyFac({
-    getBaseBranchResponse: prInfoFac({ref: 'lq3i7t42ug'}),
-    getRecentBuildsResponse: [buildFac({buildNum: '6390'})],
-    getArtifactsResponse: []
-  });
-
-  return fac().run({request: spy}).catch(error => {
+test('returns error when there are no bundle size artifacts found for latest build of base branch', () =>
+  subject({
+    responseData: {
+      ref: 'lq3i7t42ug',
+      buildNum: '6390',
+      getArtifactsResponse: []
+    }
+  }).catch(error => {
     expect(error).toBeA(Error);
     expect(error.message)
       .toBe('No bundle size artifact found for latest build of: lq3i7t42ug. Build number: 6390');
-  });
-});
+  })
+);

@@ -1,8 +1,8 @@
 import test from 'ava';
-import expect from 'expect';
+import expect, {createSpy} from 'expect';
 import R from 'ramda';
 import subject from '../make-github-request';
-import {fetchSpyFac} from './factories';
+import {ResponsePromise} from './shared/helpers';
 
 const optsFac = (opts = {}) => ({
   path: 'owner/repo',
@@ -12,7 +12,7 @@ const optsFac = (opts = {}) => ({
 const fac = R.pipe(optsFac, subject);
 
 test('sends request to https://api.github.com + path', () => {
-  const spy = fetchSpyFac();
+  const spy = createSpy().andReturn(ResponsePromise({}));
   fac({path: 'me/my-repo'}).run({request: spy});
 
   const [actual] = spy.calls[0].arguments;
@@ -20,7 +20,7 @@ test('sends request to https://api.github.com + path', () => {
 });
 
 test('sets Accept header to application/vnd.github.v3+json', () => {
-  const spy = fetchSpyFac();
+  const spy = createSpy().andReturn(ResponsePromise({}));
   fac().run({request: spy});
 
   const [, {headers}] = spy.calls[0].arguments;
@@ -28,7 +28,7 @@ test('sets Accept header to application/vnd.github.v3+json', () => {
 });
 
 test('sets Authorization header to token + apiToken', () => {
-  const spy = fetchSpyFac();
+  const spy = createSpy().andReturn(ResponsePromise({}));
   fac().run({request: spy, githubApiToken: 'fdlsy892'});
 
   const [, {headers}] = spy.calls[0].arguments;
@@ -36,7 +36,7 @@ test('sets Authorization header to token + apiToken', () => {
 });
 
 test('accepts additional headers', () => {
-  const spy = fetchSpyFac();
+  const spy = createSpy().andReturn(ResponsePromise({}));
   fac({
     fetchOpts: {
       headers: {
@@ -52,7 +52,7 @@ test('accepts additional headers', () => {
 });
 
 test('accepts other fetch optioms', () => {
-  const spy = fetchSpyFac();
+  const spy = createSpy().andReturn(ResponsePromise({}));
   fac({
     fetchOpts: {
       method: 'POST'
@@ -66,7 +66,7 @@ test('accepts other fetch optioms', () => {
 
 test('decamelizes and stringifies body', () => {
   // eslint-disable-next-line camelcase
-  const spy = fetchSpyFac({my_msg: 'hello'});
+  const spy = createSpy().andReturn(ResponsePromise({my_msg: 'hello'}));
   fac({
     fetchOpts: {
       body: {
@@ -81,28 +81,28 @@ test('decamelizes and stringifies body', () => {
 
 test('camelizes response', async () => {
   // eslint-disable-next-line camelcase
-  const spy = fetchSpyFac({my_msg: 'hello'});
+  const spy = createSpy().andReturn(ResponsePromise({my_msg: 'hello'}));
   const actual = await fac().run({request: spy});
 
   expect(actual).toEqual({myMsg: 'hello'});
 });
 
 test.skip('returns Error if response fails', async () => {
-  const spy = fetchSpyFac();
+  const spy = createSpy().andReturn(ResponsePromise({}));
   const actual = await fac({raw: true}).run({request: spy});
 
   expect(actual).toEqual('hi');
 });
 
 test.skip('returns Error if response fails due to authorization', async () => {
-  const spy = fetchSpyFac();
+  const spy = createSpy().andReturn(ResponsePromise({}));
   const actual = await fac({raw: true}).run({request: spy});
 
   expect(actual).toEqual('hi');
 });
 
 test.skip('returns error if non-200 status code received', async () => {
-  const spy = fetchSpyFac();
+  const spy = createSpy().andReturn(ResponsePromise({}));
   const actual = await fac({raw: true}).run({request: spy});
 
   expect(actual).toEqual('hi');

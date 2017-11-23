@@ -2,7 +2,14 @@ import test from 'ava';
 import expect, {createSpy} from 'expect';
 import R from 'ramda';
 import subject from '../circleci-weigh-in';
-import {artifactFac, integrationFetchSpyFac} from './factories';
+import {FakeFetch} from './shared/helpers';
+import {
+  GetBaseBranchHandler,
+  GetRecentBuildsHandler,
+  GetArtifactsHandler,
+  GetArtifactHandler
+} from './shared/requests';
+import {ArtifactResource, BuildResource, PrResource} from './shared/factories';
 import {Maybe} from 'monet';
 import {
   StatsFileReadErr,
@@ -24,6 +31,25 @@ const optsFac = (opts = {}) => ({
 
 const fac = R.pipe(optsFac, subject);
 
+export const createResponseSequence = ({artifactPath} = {}) => {
+  const artifactUrl = 'dist/stats.js';
+
+  return [
+    GetBaseBranchHandler(PrResource()),
+    GetRecentBuildsHandler([
+      BuildResource()
+    ]),
+    GetArtifactsHandler([
+      ArtifactResource({path: artifactPath, url: artifactUrl})
+    ]),
+    GetArtifactHandler({
+      response: '',
+      matcher: new RegExp(artifactUrl)
+    }),
+    {response: '', matcher: () => true}
+  ];
+};
+
 const configFac = (config = {}) => {
   const writeFileSpy = () => Promise.resolve();
   const mkdirSpy = () => Promise.resolve();
@@ -40,11 +66,7 @@ const configFac = (config = {}) => {
     }),
     writeFile: writeFileSpy,
     mkdir: mkdirSpy,
-    request: integrationFetchSpyFac({
-      getArtifactsResponse: [
-        artifactFac({path: 'my-project/bundle-sizes.json'})
-      ]
-    }),
+    request: FakeFetch(createResponseSequence()),
     resolve: fakeResolve,
     repoOwner: 'me',
     repoName: 'my-repo',
@@ -54,11 +76,15 @@ const configFac = (config = {}) => {
   };
 };
 
-test('happy path', () => {
+test('happy path (makes artifact directory, writes bundle stats to file, and writes bundle diffs to file)', () => {
+  const fakeFetch = FakeFetch(
+    createResponseSequence({
+      artifactPath: 'my-project/bundle-sizes.json'
+    })
+  );
   const writeFileSpy = createSpy().andReturn(Promise.resolve());
   const mkdirSpy = createSpy().andReturn(Promise.resolve());
-  const fakeResolve = (...args) => ['/root', 'builds', args.join('/')].join('/');
-  const config = {
+  const config = configFac({
     readFile: () => R.pipe(JSON.stringify, a => Promise.resolve(a))({
       assetsByChunkName: {
         app: 'dist/app.js'
@@ -69,36 +95,30 @@ test('happy path', () => {
     }),
     writeFile: writeFileSpy,
     mkdir: mkdirSpy,
-    request: integrationFetchSpyFac({
-      getArtifactsResponse: [
-        artifactFac({path: 'my-project/bundle-sizes.json'})
-      ]
-    }),
-    resolve: fakeResolve
-  };
+    request: fakeFetch,
+    resolve: (...args) => ['/root', 'builds', args.join('/')].join('/')
+  });
 
   return fac().run(config).then(() => {
-    const expectedStats = {
+    const serialize = val => JSON.stringify(val, null, 2);
+    const expectedStats = serialize({
       'app.js': {
         size: 452,
         path: 'dist/app.js'
       }
-    };
-    const expectedFailures = {diffs: {}, failures: []};
+    });
+    const expectedFailures = serialize({diffs: {}, failures: []});
 
-    const [{
-      arguments: [bundleStatsPath, bundleStatsContents]
-    },
-    {
-      arguments: [bundleDiffPath, bundleDiffContents]
-    }] = writeFileSpy.calls;
+    const [
+      {arguments: [bundleStatsPath, bundleStatsContents]},
+      {arguments: [bundleDiffPath, bundleDiffContents]}
+    ] = writeFileSpy.calls;
 
-    expect(mkdirSpy).toHaveBeenCalledWith('/root/builds/lfjk3208hohefi4/artifacts/my-project/circleci-weigh-in');
-    expect(bundleStatsPath).toBe('/root/builds/lfjk3208hohefi4/artifacts/my-project/bundle-sizes.json');
-    expect(bundleStatsContents).toEqual(JSON.stringify(expectedStats, null, 2));
-    expect(bundleDiffPath).toBe('/root/builds/lfjk3208hohefi4/artifacts/my-project/bundle-sizes-diff.json');
-    expect(bundleDiffContents)
-      .toEqual(JSON.stringify(expectedFailures, null, 2));
+    expect(mkdirSpy).toHaveBeenCalledWith('/root/builds/lfjk3208hohefi4/artifacts/circleci-weigh-in/my-project');
+    expect(bundleStatsPath).toBe('/root/builds/lfjk3208hohefi4/artifacts/circleci-weigh-in/my-project/bundle-sizes.json');
+    expect(bundleStatsContents).toEqual(expectedStats);
+    expect(bundleDiffPath).toBe('/root/builds/lfjk3208hohefi4/artifacts/circleci-weigh-in/my-project/bundle-sizes-diff.json');
+    expect(bundleDiffContents).toEqual(expectedFailures);
   });
 });
 

@@ -10,18 +10,18 @@ export default ({pullRequestId, bundleSizesFilepath}) =>
       path: `repos/${repoProjectPath}/pulls/${pullRequestId}`
     });
 
-    const getRecentBuilds = baseBranch => makeCircleRequest({
-      path: `project/github/${repoProjectPath}/tree/${baseBranch}`
-    });
+    const getRecentBuilds = baseBranch =>
+      makeCircleRequest({
+        path: `project/github/${repoProjectPath}/tree/${baseBranch}`
+      });
 
-    const getBuildArtifacts = buildNumber => makeCircleRequest({
-      path: `project/github/${repoProjectPath}/${buildNumber}/artifacts`
-    });
+    const getBuildArtifacts = buildNumber =>
+      makeCircleRequest({
+        path: `project/github/${repoProjectPath}/${buildNumber}/artifacts`
+      });
 
-    const getBundleSizeArtifact = bundleSizeArtifactUrl => makeCircleRequest({
-      url: bundleSizeArtifactUrl,
-      raw: true
-    });
+    const getBundleSizeArtifact = bundleSizeArtifactUrl =>
+      makeCircleRequest({url: bundleSizeArtifactUrl, raw: true});
 
     return getBaseBranch.chain(prData => {
       const baseBranch = prData.base.ref;
