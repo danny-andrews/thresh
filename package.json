@@ -26,11 +26,11 @@
   "scripts": {
     "build": "rm -rf lib && babel src --out-dir lib",
     "build:example": "yarn webpack -- --config=example/webpack.config.js",
-    "ci": "yarn lint && yarn test && yarn stats",
+    "ci": "yarn lint && yarn test:coverage && yarn stats",
     "lint": "eslint . && sort-package-json",
     "stats": "echo 'LOC IN PROJECT...' && find src -name '*.js' -not -path '**/__tests__/*' | xargs wc -l",
     "test": "BABEL_ENV=test ava",
-    "test:coverage": "nyc yarn test"
+    "test:coverage": "nyc --reporter=lcov yarn test"
   },
   "dependencies": {
     "ajv": "^5.2.2",
