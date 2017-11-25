@@ -30,7 +30,7 @@
     "lint": "eslint . && sort-package-json",
     "stats": "echo 'LOC IN PROJECT...' && find src -name '*.js' -not -path '**/__tests__/*' | xargs wc -l",
     "test": "BABEL_ENV=test ava",
-    "test:coverage": "nyc --reporter=lcov yarn test"
+    "test:coverage": "nyc yarn test"
   },
   "dependencies": {
     "ajv": "^5.2.2",
@@ -74,6 +74,15 @@
     "include": [
       "src"
     ],
-    "all": true
+    "all": true,
+    "reporter": [
+      "html",
+      "text"
+    ],
+    "check-coverage": true,
+    "per-file": false,
+    "lines": 95,
+    "statements": 95,
+    "branches": 95
   }
 }

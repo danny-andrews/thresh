@@ -29,8 +29,6 @@ export const mkdir = promisify(mkdirp);
 
 export const SchemaValidator = () => new Ajv({allErrors: true});
 
-export const isError = maybeError => R.type(maybeError) === 'Error';
-
 export const truncate = R.curry(({maxSize, contSuffix = '...'}, string) => (
   string.length > maxSize
     ? [string.substring(0, maxSize - contSuffix.length), contSuffix].join('')

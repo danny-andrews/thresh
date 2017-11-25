@@ -1,17 +1,30 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
-import R from 'ramda';
-import subject from '../make-circle-request';
+import {PromiseError} from '../shared';
+import makeCircleRequest from '../make-circle-request';
 import {ResponsePromise} from './shared/helpers';
 
-const optsFac = (opts = {}) => ({path: 'hey', token: 'jfdsa03f', ...opts});
+const subject = (opts = {}) => {
+  const {
+    circleApiToken,
+    request,
+    ...rest
+  } = {
+    circleApiToken: '894fuhg',
+    path: 'hey',
+    ...opts
+  };
 
-const fac = R.pipe(optsFac, subject);
+  return makeCircleRequest(rest).run({circleApiToken, request});
+};
 
 test('sends request to url, if given', () => {
   const spy = createSpy().andReturn(ResponsePromise({}));
-  fac({url: 'circleci.artifacts/my-artifact.json'})
-    .run({request: spy, circleApiToken: '4dfasg'});
+  subject({
+    url: 'circleci.artifacts/my-artifact.json',
+    request: spy,
+    circleApiToken: '4dfasg'
+  });
 
   const [actual] = spy.calls[0].arguments;
   expect(actual)
@@ -20,8 +33,7 @@ test('sends request to url, if given', () => {
 
 test('sends request to https://circleci.com/api/v1.1 + path', () => {
   const spy = createSpy().andReturn(ResponsePromise({}));
-  fac({path: 'my-account/my-repo'})
-    .run({request: spy, circleApiToken: '4dfasg'});
+  subject({path: 'my-account/my-repo', request: spy, circleApiToken: '4dfasg'});
 
   const [actual] = spy.calls[0].arguments;
   expect(actual).toBe('https://circleci.com/api/v1.1/my-account/my-repo?circle-token=4dfasg');
@@ -29,7 +41,7 @@ test('sends request to https://circleci.com/api/v1.1 + path', () => {
 
 test('sets Accept header to application/json', () => {
   const spy = createSpy().andReturn(ResponsePromise({}));
-  fac().run({request: spy});
+  subject({request: spy});
 
   const [, {headers: actual}] = spy.calls[0].arguments;
   expect(actual).toEqual({Accept: 'application/json'});
@@ -37,14 +49,15 @@ test('sets Accept header to application/json', () => {
 
 test('accepts additional headers', () => {
   const spy = createSpy().andReturn(ResponsePromise({}));
-  fac({
+  subject({
     fetchOpts: {
       headers: {
         Accept: 'application/my-mime',
         'Content-Type': 'application/json'
       }
-    }
-  }).run({request: spy});
+    },
+    request: spy
+  });
 
   const [, {headers: actual}] = spy.calls[0].arguments;
   expect(actual).toEqual({
@@ -55,12 +68,13 @@ test('accepts additional headers', () => {
 
 test('accepts other fetch optioms', () => {
   const spy = createSpy().andReturn(ResponsePromise({}));
-  fac({
+  subject({
     fetchOpts: {
       body: 'hi',
       method: 'POST'
-    }
-  }).run({request: spy});
+    },
+    request: spy
+  });
 
   const [, {method, body}] = spy.calls[0].arguments;
 
@@ -71,7 +85,7 @@ test('accepts other fetch optioms', () => {
 test('camelizes response', async () => {
   // eslint-disable-next-line camelcase
   const spy = createSpy().andReturn(ResponsePromise({my_msg: 'hello'}));
-  const actual = await fac().run({request: spy});
+  const actual = await subject({request: spy});
 
   expect(actual).toEqual({myMsg: 'hello'});
 });
@@ -79,21 +93,29 @@ test('camelizes response', async () => {
 test("if raw is true, it doesn't deserialize response", async () => {
   // eslint-disable-next-line camelcase
   const spy = createSpy().andReturn(ResponsePromise({my_msg: 'hello'}));
-  const actual = await fac({raw: true}).run({request: spy});
+  const actual = await subject({raw: true, request: spy});
 
   expect(actual).toEqual({my_msg: 'hello'}); // eslint-disable-line camelcase
 });
 
-test.skip('returns Error if response fails', async () => {
-  const spy = createSpy().andReturn(ResponsePromise({}));
-  const actual = await fac({raw: true}).run({request: spy});
+test('returns Error if request fails', () => {
+  const spy = createSpy().andReturn(PromiseError('oh no'));
 
-  expect(actual).toEqual('hi');
+  return subject({request: spy, circleApiToken: 'fdlsar32'})
+    .catch(actual => {
+      expect(actual).toBeA(Error);
+      expect(actual.message).toBe('Error making request to CircleCI https://circleci.com/api/v1.1/hey?circle-token=fdlsar32: oh no');
+    });
 });
 
-test.skip('returns error if non-200 status code received', async () => {
-  const spy = createSpy().andReturn(ResponsePromise({}));
-  const actual = await fac({raw: true}).run({request: spy});
+test('returns error if non-200 status code received', () => {
+  const spy = createSpy().andReturn(
+    ResponsePromise('oh no', {status: 500, statusText: 'Internal Server Error'})
+  );
 
-  expect(actual).toEqual('hi');
+  return subject({request: spy, circleApiToken: 'djklay32r'})
+    .catch(actual => {
+      expect(actual).toBeA(Error);
+      expect(actual.message).toBe('Error making request to CircleCI https://circleci.com/api/v1.1/hey?circle-token=djklay32r: Internal Server Error');
+    });
 });

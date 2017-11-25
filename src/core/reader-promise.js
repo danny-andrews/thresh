@@ -31,10 +31,7 @@ ReaderPromise.fromPromise = R.pipe(
   ReaderPromise
 );
 
-ReaderPromise.of = R.pipe(
-  a => Promise.resolve(a),
-  ReaderPromise.fromPromise,
-);
+ReaderPromise.of = ReaderPromise;
 
 ReaderPromise.fromError = R.pipe(
   a => Promise.reject(a),
