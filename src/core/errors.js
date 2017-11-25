@@ -19,3 +19,5 @@ export const ErrorCreatingArtifactDirectoryErr = Err('Error creating artifact di
 export const ErrorWritingBundleSizeArtifactErr = Err('Error writing bundle size artifact: %s');
 
 export const ErrorWritingBundleDiffArtifactErr = Err('Error writing bundle diff artifact: %s!');
+
+export const NoOpenPullRequestFoundErr = Err('No open pull request found. Skipping bundle diff step.');

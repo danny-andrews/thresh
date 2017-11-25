@@ -17,7 +17,8 @@ import {
   StatsFileReadErr,
   ErrorWritingBundleSizeArtifactErr,
   ErrorCreatingArtifactDirectoryErr,
-  ErrorWritingBundleDiffArtifactErr
+  ErrorWritingBundleDiffArtifactErr,
+  NoOpenPullRequestFoundErr
 } from './core/errors';
 import ReaderPromise from './core/reader-promise';
 
@@ -84,7 +85,7 @@ export default opts => {
       .chain(filepath => writeBundleSizes({filepath, bundleSizes}));
 
   const retrieveBaseBundleSizes2 = () => pullRequestId.toEither().cata(
-    ReaderPromise.of,
+    () => ReaderPromise.fromError(NoOpenPullRequestFoundErr()),
     prId => retrieveBaseBundleSizes({
       pullRequestId: prId,
       bundleSizesFilepath: path.join(projectName, BUNDLE_SIZES_FILENAME)

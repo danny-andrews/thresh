@@ -2,8 +2,7 @@ import R from 'ramda';
 import {Response} from 'node-fetch';
 
 export const ResponsePromise = R.pipe(
-  JSON.stringify,
-  a => new Response(a),
+  (body, opts) => new Response(JSON.stringify(body), opts),
   a => Promise.resolve(a),
 );
 

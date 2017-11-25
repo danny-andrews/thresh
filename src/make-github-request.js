@@ -1,6 +1,6 @@
 import {camelizeKeys, decamelizeKeys} from 'humps';
 import R from 'ramda';
-import {isError, PromiseError} from './shared';
+import {PromiseError} from './shared';
 import ReaderPromise from './core/reader-promise';
 
 /* eslint-disable no-magic-numbers */
@@ -34,24 +34,26 @@ export default ({path, fetchOpts = {}}) => {
       headers,
       body,
       ...R.omit(['headers', 'body'], fetchOpts)
-    }).then(response => {
-      if(response.ok) {
-        return response.json();
-      } else if(isAuthError(response.status)) {
-        return PromiseError(
-          `Authorization failed for request to GitHub ${url}. `
-            + 'Did you provide a correct GitHub Api Token? Original '
-            + `response: ${response.statusText}`
-        );
-      } else if(isError(response)) {
-        return PromiseError(
+    })
+      .catch(response =>
+        PromiseError(
           `Error making request to GitHub ${url}: ${response}`
-        );
-      }
+        )
+      )
+      .then(response => {
+        if(response.ok) {
+          return response.json();
+        } else if(isAuthError(response.status)) {
+          return PromiseError(
+            `Authorization failed for request to GitHub ${url}. `
+              + 'Did you provide a correct GitHub Api Token? Original '
+              + `response: ${response.statusText}`
+          );
+        }
 
-      return PromiseError(
-        `Error making request to GitHub ${url}: ${response.statusText}`
-      );
-    }).then(deserializer);
+        return PromiseError(
+          `Error making request to GitHub ${url}: ${response.statusText}`
+        );
+      }).then(deserializer);
   });
 };

@@ -14,7 +14,9 @@ import {Maybe} from 'monet';
 import {
   StatsFileReadErr,
   ErrorWritingBundleSizeArtifactErr,
-  ErrorCreatingArtifactDirectoryErr
+  ErrorWritingBundleDiffArtifactErr,
+  ErrorCreatingArtifactDirectoryErr,
+  NoOpenPullRequestFoundErr
 } from '../core/errors';
 import {parseJSON, PromiseError} from '../shared';
 
@@ -66,7 +68,9 @@ const configFac = (config = {}) => {
     }),
     writeFile: writeFileSpy,
     mkdir: mkdirSpy,
-    request: FakeFetch(createResponseSequence()),
+    request: FakeFetch(createResponseSequence({
+      artifactPath: 'my-project/bundle-sizes.json'
+    })),
     resolve: fakeResolve,
     repoOwner: 'me',
     repoName: 'my-repo',
@@ -122,6 +126,12 @@ test('happy path (makes artifact directory, writes bundle stats to file, and wri
   });
 });
 
+test('handles case where no open pull request is found', () =>
+  fac({pullRequestId: Maybe.None()}).run(configFac()).catch(err => {
+    expect(err.message).toBe(NoOpenPullRequestFoundErr().message);
+  })
+);
+
 test('surfaces errors reading stats file', () => {
   const config = configFac({
     readFile: () => PromiseError('oh noes')
@@ -163,5 +173,20 @@ test('surfaces errors writing bundle sizes', () => {
   return fac().run(config).catch(err => {
     expect(err.message)
       .toBe(ErrorWritingBundleSizeArtifactErr('Error: uh oh').message);
+  });
+});
+
+test('surfaces errors writing bundle diffs', () => {
+  const config = configFac({
+    writeFile: path => (
+      path.match(/bundle-sizes-diff\.json/)
+        ? PromiseError('uh oh')
+        : Promise.resolve()
+    )
+  });
+
+  return fac().run(config).catch(err => {
+    expect(err.message)
+      .toBe(ErrorWritingBundleDiffArtifactErr('Error: uh oh').message);
   });
 });
