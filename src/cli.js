@@ -16,7 +16,7 @@ import {
   readFile
 } from './shared';
 import {InvalidFailureThresholdOptionErr} from './core/errors';
-import {Maybe} from 'monet';
+import {Maybe, Either} from 'monet';
 
 const requiredEnvVariables = [
   'CIRCLE_ARTIFACTS',
@@ -49,8 +49,9 @@ const {
 assert(!isNil(statsFilepath), "'stats-filepath' option is required!");
 
 const failureThresholds = isNil(failureThresholdsString)
-  ? []
+  ? Either.Right([])
   : parseJSON(failureThresholdsString);
+
 assert(
   failureThresholds.isRight(),
   "'failure-thresholds' option is not valid JSON!"
