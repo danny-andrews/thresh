@@ -1,22 +1,11 @@
 import {isNil, last} from 'ramda';
 import assert from 'assert';
-import circleciWeighIn from './circleci-weigh-in';
 import commandLineArgs from 'command-line-args';
 import path from 'path';
 import fetch from 'node-fetch';
-import {
-  failureThresholdListSchema,
-  DFAULT_FAILURE_THRESHOLD_STRATEGY
-} from './core/schemas';
-import {
-  SchemaValidator,
-  parseJSON,
-  mkdir,
-  writeFile,
-  readFile
-} from './shared';
-import {InvalidFailureThresholdOptionErr} from './core/errors';
-import {Maybe, Either} from 'monet';
+import {Maybe} from 'monet';
+import {parseJSON, mkdir, writeFile, readFile} from './shared';
+import circleciWeighIn from './circleci-weigh-in';
 
 const requiredEnvVariables = [
   'CIRCLE_ARTIFACTS',
@@ -30,7 +19,7 @@ const requiredEnvVariables = [
 const optionDefinitions = [
   {name: 'stats-filepath', type: String},
   {name: 'project-name', type: String},
-  {name: 'failure-thresholds', type: String}
+  {name: 'failure-thresholds', type: String, defaultValue: '[]'}
 ];
 
 requiredEnvVariables.forEach(variable =>
@@ -48,34 +37,11 @@ const {
 
 assert(!isNil(statsFilepath), "'stats-filepath' option is required!");
 
-const failureThresholds = isNil(failureThresholdsString)
-  ? Either.Right([])
-  : parseJSON(failureThresholdsString);
+const failureThresholds = parseJSON(failureThresholdsString);
 
 assert(
   failureThresholds.isRight(),
   "'failure-thresholds' option is not valid JSON!"
-);
-
-const validator = SchemaValidator();
-const isfailureThresholdsValid = validator.validate(
-  failureThresholdListSchema,
-  failureThresholds.right()
-);
-
-if(!isfailureThresholdsValid) {
-  const validationMessage = validator.errorsText(
-    validator.errors,
-    {separator: '\n'}
-  );
-  throw InvalidFailureThresholdOptionErr(validationMessage);
-}
-
-const decoratedFailureThresholds = failureThresholds.right().map(
-  threshold => ({
-    strategy: DFAULT_FAILURE_THRESHOLD_STRATEGY,
-    ...threshold
-  })
 );
 
 const pullRequestId = process.env.CI_PULL_REQUEST
@@ -85,7 +51,7 @@ circleciWeighIn({
   statsFilepath,
   projectName,
   pullRequestId: Maybe.fromNull(pullRequestId),
-  failureThresholds: decoratedFailureThresholds,
+  failureThresholds: failureThresholds.right(),
   buildSha: process.env.CIRCLE_SHA1,
   buildUrl: process.env.CIRCLE_BUILD_URL,
   artifactsDirectory: process.env.CIRCLE_ARTIFACTS

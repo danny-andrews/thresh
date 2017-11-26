@@ -10,7 +10,8 @@ import bundleSizesFromWebpackStats
   from './core/bundle-sizes-from-webpack-stats';
 import diffBundles from './core/diff-bundles';
 import getThresholdFailures from './core/get-threshold-failures';
-import {compactAndJoin, parseJSON, serializeForFile} from './shared';
+import {compactAndJoin, parseJSON, serializeForFile, SchemaValidator}
+  from './shared';
 import postPrStatus from './post-pr-status';
 import retrieveBaseBundleSizes from './retrieve-base-bundle-sizes';
 import {
@@ -18,9 +19,14 @@ import {
   ErrorWritingBundleSizeArtifactErr,
   ErrorCreatingArtifactDirectoryErr,
   ErrorWritingBundleDiffArtifactErr,
-  NoOpenPullRequestFoundErr
+  NoOpenPullRequestFoundErr,
+  InvalidFailureThresholdOptionErr
 } from './core/errors';
 import ReaderPromise from './core/reader-promise';
+import {
+  failureThresholdListSchema,
+  DFAULT_FAILURE_THRESHOLD_STRATEGY
+} from './core/schemas';
 
 const readStats = statsFilepath =>
   ReaderPromise.fromReaderFn(({readFile}) =>
@@ -60,12 +66,31 @@ export default opts => {
   const {
     statsFilepath,
     projectName = '',
-    failureThresholds,
     buildSha,
     buildUrl,
     pullRequestId,
     artifactsDirectory
   } = opts;
+  const failureThresholds = opts.failureThresholds.map(
+    threshold => ({
+      strategy: DFAULT_FAILURE_THRESHOLD_STRATEGY,
+      ...threshold
+    })
+  );
+
+  const validator = SchemaValidator();
+  const isfailureThresholdsValid = validator.validate(
+    failureThresholdListSchema,
+    failureThresholds
+  );
+
+  if(!isfailureThresholdsValid) {
+    return R.pipe(
+      validator.errorsText,
+      InvalidFailureThresholdOptionErr,
+      ReaderPromise.fromError
+    )(validator.errors, {separator: '\n'});
+  }
 
   const buildArtifactFilepath = (...args) => Reader(
     ({resolve}) => R.pipe(resolve, a => Promise.resolve(a))(
