@@ -2,7 +2,7 @@ import test from 'ava';
 import expect, {createSpy} from 'expect';
 import {PromiseError} from '../shared';
 import makeGithubRequest from '../make-github-request';
-import {ResponsePromise} from './shared/helpers';
+import {ResponsePromise} from '../test/helpers';
 
 const subject = (opts = {}) => {
   const {

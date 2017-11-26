@@ -1,7 +1,7 @@
-import makeGitHubRequest from './make-github-request';
-import makeCircleRequest from './make-circle-request';
-import ReaderPromise from './core/reader-promise';
-import {CircleCiBuildStatuses} from './core/constants';
+import makeGitHubRequest from '../make-github-request';
+import makeCircleRequest from '../make-circle-request';
+import ReaderPromise from '../core/reader-promise';
+import {CircleCiBuildStatuses} from '../core/constants';
 
 export default ({pullRequestId, bundleSizesFilepath}) =>
   ReaderPromise.fromReaderFn(config => {

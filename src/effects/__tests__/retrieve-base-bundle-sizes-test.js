@@ -2,14 +2,14 @@ import test from 'ava';
 import R from 'ramda';
 import expect, {createSpy} from 'expect';
 import retrieveBaseBundleSizes from '../retrieve-base-bundle-sizes';
-import {PrResource, BuildResource, ArtifactResource} from './shared/factories';
-import {FakeFetch} from './shared/helpers';
+import {FakeFetch} from '../../test/helpers';
+import {PrResource, BuildResource, ArtifactResource} from '../../test/factories';
 import {
   GetBaseBranchHandler,
   GetRecentBuildsHandler,
   GetArtifactsHandler,
   GetArtifactHandler
-} from './shared/requests';
+} from '../../test/requests';
 
 const optsFac = (opts = {}) => ({
   pullRequestId: '45',
