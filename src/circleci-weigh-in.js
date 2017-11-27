@@ -1,6 +1,5 @@
 import R from 'ramda';
 import path from 'path';
-import {Reader} from 'monet';
 import {
   BUNDLE_SIZES_DIFF_FILENAME,
   BUNDLE_SIZES_FILENAME,
@@ -10,57 +9,20 @@ import bundleSizesFromWebpackStats
   from './core/bundle-sizes-from-webpack-stats';
 import diffBundles from './core/diff-bundles';
 import getThresholdFailures from './core/get-threshold-failures';
-import {compactAndJoin, parseJSON, serializeForFile, SchemaValidator}
-  from './shared';
-import postPrStatus from './post-pr-status';
-import retrieveBaseBundleSizes from './retrieve-base-bundle-sizes';
-import {
-  StatsFileReadErr,
-  ErrorWritingBundleSizeArtifactErr,
-  ErrorCreatingArtifactDirectoryErr,
-  ErrorWritingBundleDiffArtifactErr,
-  NoOpenPullRequestFoundErr,
-  InvalidFailureThresholdOptionErr
-} from './core/errors';
+import {compactAndJoin, SchemaValidator} from './shared';
+import {NoOpenPullRequestFoundErr, InvalidFailureThresholdOptionErr}
+  from './core/errors';
 import ReaderPromise from './core/reader-promise';
+import {failureThresholdListSchema, DFAULT_FAILURE_THRESHOLD_STRATEGY}
+  from './core/schemas';
 import {
-  failureThresholdListSchema,
-  DFAULT_FAILURE_THRESHOLD_STRATEGY
-} from './core/schemas';
-
-const readStats = statsFilepath =>
-  ReaderPromise.fromReaderFn(({readFile}) =>
-    readFile(statsFilepath)
-      .catch(error => Promise.reject(StatsFileReadErr(error)))
-      .then(contents =>
-        parseJSON(contents).cata(
-          error => Promise.reject(StatsFileReadErr(error)),
-          R.identity
-        )
-      )
-  );
-
-const mkArtifactDir = filepath =>
-  ReaderPromise.fromReaderFn(({mkdir}) =>
-    mkdir(filepath)
-      .catch(error => Promise.reject(ErrorCreatingArtifactDirectoryErr(error)))
-  );
-
-const writeBundleSizes = ({filepath, bundleSizes}) =>
-  ReaderPromise.fromReaderFn(({writeFile}) =>
-    writeFile(
-      filepath,
-      serializeForFile(bundleSizes)
-    ).catch(error => Promise.reject(ErrorWritingBundleSizeArtifactErr(error)))
-  );
-
-const writeBundleDiff = ({filepath, bundleDiffs, thresholdFailures}) =>
-  ReaderPromise.fromReaderFn(({writeFile}) =>
-    writeFile(
-      filepath,
-      serializeForFile({diffs: bundleDiffs, failures: thresholdFailures})
-    ).catch(error => Promise.reject(ErrorWritingBundleDiffArtifactErr(error)))
-  );
+  makeArtifactDirectory,
+  postPrStatus,
+  readStats,
+  retrieveBaseBundleSizes,
+  writeBundleDiff,
+  writeBundleSizes
+} from './effects';
 
 export default opts => {
   const {
@@ -69,7 +31,15 @@ export default opts => {
     buildSha,
     buildUrl,
     pullRequestId,
-    artifactsDirectory
+    artifactsDirectory,
+    effects = {
+      retrieveBaseBundleSizes,
+      postPrStatus,
+      readStats,
+      makeArtifactDirectory,
+      writeBundleSizes,
+      writeBundleDiff
+    }
   } = opts;
   const failureThresholds = opts.failureThresholds.map(
     threshold => ({
@@ -92,7 +62,7 @@ export default opts => {
     )(validator.errors, {separator: '\n'});
   }
 
-  const buildArtifactFilepath = (...args) => Reader(
+  const buildArtifactFilepath = (...args) => ReaderPromise.fromReaderFn(
     ({resolve}) => R.pipe(resolve, a => Promise.resolve(a))(
       artifactsDirectory,
       OUTPUT_FILEPATH,
@@ -101,21 +71,21 @@ export default opts => {
     )
   );
 
-  const mkArtifactDir2 = () => ReaderPromise(
-    buildArtifactFilepath()
-  ).chain(mkArtifactDir);
+  const makeArtifactDirectory2 = () => buildArtifactFilepath()
+    .chain(effects.makeArtifactDirectory);
 
   const writeBundleSizes2 = bundleSizes =>
-    ReaderPromise(buildArtifactFilepath(BUNDLE_SIZES_FILENAME))
-      .chain(filepath => writeBundleSizes({filepath, bundleSizes}));
+    buildArtifactFilepath(BUNDLE_SIZES_FILENAME)
+      .chain(filepath => effects.writeBundleSizes({filepath, bundleSizes}));
 
-  const retrieveBaseBundleSizes2 = () => pullRequestId.toEither().cata(
-    () => ReaderPromise.fromError(NoOpenPullRequestFoundErr()),
-    prId => retrieveBaseBundleSizes({
-      pullRequestId: prId,
-      bundleSizesFilepath: path.join(projectName, BUNDLE_SIZES_FILENAME)
-    })
-  );
+  const retrieveBaseBundleSizes2 = () =>
+    pullRequestId.toEither().cata(
+      () => ReaderPromise.fromError(NoOpenPullRequestFoundErr()),
+      prId => effects.retrieveBaseBundleSizes({
+        pullRequestId: prId,
+        bundleSizesFilepath: path.join(projectName, BUNDLE_SIZES_FILENAME)
+      })
+    );
 
   const createBundleDiff = ({bundleSizes, baseBundleSizes}) => diffBundles({
     current: bundleSizes,
@@ -131,23 +101,26 @@ export default opts => {
   });
 
   const writeBundleDiff2 = ({bundleDiffs, thresholdFailures}) =>
-    ReaderPromise(buildArtifactFilepath(BUNDLE_SIZES_DIFF_FILENAME))
+    buildArtifactFilepath(BUNDLE_SIZES_DIFF_FILENAME)
       .chain(filepath =>
-        writeBundleDiff({filepath, bundleDiffs, thresholdFailures})
+        effects.writeBundleDiff({filepath, bundleDiffs, thresholdFailures})
       );
 
-  const postPrStatus2 = ({bundleDiffs, thresholdFailures}) => postPrStatus({
-    bundleDiffs,
-    thresholdFailures,
-    sha: buildSha,
-    targetUrl: `${buildUrl}#artifacts`,
-    label: compactAndJoin(': ', ['Bundle Sizes', projectName])
-  });
+  const postPrStatus2 = ({bundleDiffs, thresholdFailures}) =>
+    effects.postPrStatus({
+      bundleDiffs,
+      thresholdFailures,
+      sha: buildSha,
+      targetUrl: `${buildUrl}#artifacts`,
+      label: compactAndJoin(': ', ['Bundle Sizes', projectName])
+    });
 
-  return readStats(statsFilepath)
+  const readStats2 = () => effects.readStats(statsFilepath);
+
+  return readStats2()
     .map(bundleSizesFromWebpackStats)
     .chain(bundleSizes =>
-      mkArtifactDir2()
+      makeArtifactDirectory2()
         .chain(() => writeBundleSizes2(bundleSizes))
         .chain(() => retrieveBaseBundleSizes2())
         .map(baseBundleSizes =>

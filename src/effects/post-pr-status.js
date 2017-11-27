@@ -1,6 +1,6 @@
-import makeGitHubRequest from './make-github-request';
-import getPrStatusPayload from './core/get-pr-status-payload';
-import ReaderPromise from './core/reader-promise';
+import makeGitHubRequest from '../make-github-request';
+import getPrStatusPayload from '../core/get-pr-status-payload';
+import ReaderPromise from '../core/reader-promise';
 
 export default ({sha, bundleDiffs, thresholdFailures, targetUrl, label}) =>
   ReaderPromise.fromReaderFn(config =>

@@ -1,7 +1,7 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
 import subject from '../post-pr-status';
-import {ResponsePromise} from './shared/helpers';
+import {ResponsePromise} from '../../test/helpers';
 
 test('makes request to post pr status to GitHub', () => {
   const spy = createSpy().andReturn(ResponsePromise({}));
