@@ -1,5 +1,5 @@
 export {default as makeArtifactDirectory} from './make-artifact-directory';
-export {default as postPrStatus} from './post-pr-status';
+export {postFinalPrStatus, postPendingPrStatus} from './post-pr-status';
 export {default as readStats} from './read-stats';
 export {default as retrieveBaseBundleSizes} from './retrieve-base-bundle-sizes';
 export {default as writeBundleDiff} from './write-bundle-diff';

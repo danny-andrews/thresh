@@ -35,7 +35,8 @@ const subject = (opts = {}) =>
     artifactsDirectory: 'lfjk3208hohefi4/artifacts',
     effects: {
       retrieveBaseBundleSizes: () => ReaderPromise.of(''),
-      postPrStatus: () => ReaderPromise.of(),
+      postFinalPrStatus: () => ReaderPromise.of(),
+      postPendingPrStatus: () => ReaderPromise.of(),
       readStats: () => ReaderPromise.of({
         assetsByChunkName: {
           app: 'dist/app.js'

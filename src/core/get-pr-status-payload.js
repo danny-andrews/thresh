@@ -4,9 +4,10 @@ import formatBundleDiff from './format-bundle-diff';
 
 const MAX_DESCRIPTION_LENGTH = 140;
 
-const StatusStates = {
+export const StatusStates = {
   FAILURE: 'failure',
-  SUCCESS: 'success'
+  SUCCESS: 'success',
+  PENDING: 'pending'
 };
 
 export default ({bundleDiffs, thresholdFailures, targetUrl = '', label}) => ({
