@@ -65,4 +65,4 @@ circleciWeighIn({
   repoName: process.env.CIRCLE_PROJECT_REPONAME,
   githubApiToken: process.env.GITHUB_API_TOKEN,
   circleApiToken: process.env.CIRCLE_API_TOKEN
-});
+}).catch(err => console.error(err.message));
