@@ -73,9 +73,6 @@ export default opts => {
     )
   );
 
-  const makeArtifactDirectory2 = () => buildArtifactFilepath()
-    .chain(effects.makeArtifactDirectory);
-
   const writeBundleSizes2 = bundleSizes =>
     buildArtifactFilepath(BUNDLE_SIZES_FILENAME)
       .chain(filepath => effects.writeBundleSizes({filepath, bundleSizes}));
@@ -88,11 +85,6 @@ export default opts => {
         bundleSizesFilepath: path.join(projectName, BUNDLE_SIZES_FILENAME)
       })
     );
-
-  const createBundleDiff = ({bundleSizes, baseBundleSizes}) => diffBundles({
-    current: bundleSizes,
-    original: baseBundleSizes
-  });
 
   const getThresholdFailures2 = bundleDiffs => getThresholdFailures({
     failureThresholds,
@@ -114,31 +106,37 @@ export default opts => {
     label: compactAndJoin(': ', ['Bundle Sizes', projectName])
   };
 
-  const readStats2 = () => effects.readStats(statsFilepath);
-
-  return effects.postPendingPrStatus(prStatusParams)
-    .chain(readStats2)
-    .map(bundleSizesFromWebpackStats)
-    .chain(bundleSizes =>
-      makeArtifactDirectory2()
-        .chain(() => writeBundleSizes2(bundleSizes))
-        .chain(() => retrieveBaseBundleSizes2())
-        .map(baseBundleSizes =>
-          createBundleDiff({bundleSizes, baseBundleSizes})
-        ).map(bundleDiffs =>
-          getThresholdFailures2(bundleDiffs).cata(
-            R.identity,
-            thresholdFailures => ({bundleDiffs, thresholdFailures})
-          )
-        ).chain(({bundleDiffs, thresholdFailures}) =>
-          writeBundleDiff2({bundleDiffs, thresholdFailures})
-            .chain(() =>
-              effects.postFinalPrStatus({
-                bundleDiffs,
-                thresholdFailures,
-                ...prStatusParams
-              })
-            )
-        )
+  return ReaderPromise.fromReaderFn(
+    config => Promise.all([
+      effects.postPendingPrStatus(prStatusParams).run(config),
+      buildArtifactFilepath()
+        .chain(effects.makeArtifactDirectory)
+        .run(config),
+      effects.readStats(statsFilepath)
+        .map(bundleSizesFromWebpackStats)
+        .run(config),
+      retrieveBaseBundleSizes2().run(config)
+    ])
+  ).chain(([,, bundleSizes, baseBundleSizes]) => {
+    const bundleDiffs = diffBundles({
+      current: bundleSizes,
+      original: baseBundleSizes
+    });
+    const thresholdFailures = getThresholdFailures2(bundleDiffs).cata(
+      R.identity,
+      R.identity
     );
+
+    return ReaderPromise.fromReaderFn(
+      config => Promise.all([
+        writeBundleSizes2(bundleSizes).run(config),
+        writeBundleDiff2({bundleDiffs, thresholdFailures}).run(config),
+        effects.postFinalPrStatus({
+          bundleDiffs,
+          thresholdFailures,
+          ...prStatusParams
+        }).run(config)
+      ])
+    );
+  });
 };

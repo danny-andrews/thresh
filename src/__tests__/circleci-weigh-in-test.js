@@ -34,7 +34,7 @@ const subject = (opts = {}) =>
     pullRequestId: Maybe.of('f820yf3h'),
     artifactsDirectory: 'lfjk3208hohefi4/artifacts',
     effects: {
-      retrieveBaseBundleSizes: () => ReaderPromise.of(''),
+      retrieveBaseBundleSizes: () => ReaderPromise.of({}),
       postFinalPrStatus: () => ReaderPromise.of(),
       postPendingPrStatus: () => ReaderPromise.of(),
       readStats: () => ReaderPromise.of({
@@ -158,6 +158,7 @@ test('surfaces errors writing bundle diffs', () =>
       )
     }
   }).run(configFac()).catch(err => {
+    console.log(err);
     expect(err.message)
       .toBe(ErrorWritingBundleDiffArtifactErr('Error: uh oh').message);
   })
