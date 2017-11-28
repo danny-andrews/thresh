@@ -17,7 +17,8 @@ import {failureThresholdListSchema, DFAULT_FAILURE_THRESHOLD_STRATEGY}
   from './core/schemas';
 import {
   makeArtifactDirectory,
-  postPrStatus,
+  postFinalPrStatus,
+  postPendingPrStatus,
   readStats,
   retrieveBaseBundleSizes,
   writeBundleDiff,
@@ -34,7 +35,8 @@ export default opts => {
     artifactsDirectory,
     effects = {
       retrieveBaseBundleSizes,
-      postPrStatus,
+      postFinalPrStatus,
+      postPendingPrStatus,
       readStats,
       makeArtifactDirectory,
       writeBundleSizes,
@@ -106,18 +108,16 @@ export default opts => {
         effects.writeBundleDiff({filepath, bundleDiffs, thresholdFailures})
       );
 
-  const postPrStatus2 = ({bundleDiffs, thresholdFailures}) =>
-    effects.postPrStatus({
-      bundleDiffs,
-      thresholdFailures,
-      sha: buildSha,
-      targetUrl: `${buildUrl}#artifacts`,
-      label: compactAndJoin(': ', ['Bundle Sizes', projectName])
-    });
+  const prStatusParams = {
+    sha: buildSha,
+    targetUrl: `${buildUrl}#artifacts`,
+    label: compactAndJoin(': ', ['Bundle Sizes', projectName])
+  };
 
   const readStats2 = () => effects.readStats(statsFilepath);
 
-  return readStats2()
+  return effects.postPendingPrStatus(prStatusParams)
+    .chain(readStats2)
     .map(bundleSizesFromWebpackStats)
     .chain(bundleSizes =>
       makeArtifactDirectory2()
@@ -133,7 +133,11 @@ export default opts => {
         ).chain(({bundleDiffs, thresholdFailures}) =>
           writeBundleDiff2({bundleDiffs, thresholdFailures})
             .chain(() =>
-              postPrStatus2({bundleDiffs, thresholdFailures})
+              effects.postFinalPrStatus({
+                bundleDiffs,
+                thresholdFailures,
+                ...prStatusParams
+              })
             )
         )
     );

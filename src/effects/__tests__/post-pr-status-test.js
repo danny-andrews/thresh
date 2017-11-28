@@ -1,16 +1,16 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
-import subject from '../post-pr-status';
+import {postFinalPrStatus, postPendingPrStatus} from '../post-pr-status';
 import {ResponsePromise} from '../../test/helpers';
 
-test('makes request to post pr status to GitHub', () => {
+test('postFinalPrStatus makes request to post pr status to GitHub', () => {
   const spy = createSpy().andReturn(ResponsePromise({}));
-  subject({
+  postFinalPrStatus({
     sha: 'h8g94hg9',
     bundleDiffs: {},
     thresholdFailures: [],
-    targetUrl: 'hi bro',
-    label: 'ok'
+    targetUrl: 'info.com/53',
+    label: 'interesting info'
   }).run({
     request: spy,
     githubApiToken: 'h832hfo',
@@ -22,6 +22,37 @@ test('makes request to post pr status to GitHub', () => {
   expect(headers.Authorization).toBe('token h832hfo');
   expect(headers['Content-Type']).toBe('application/json');
   expect(method).toBe('POST');
-  expect(body).toBe('{"state":"success","target_url":"hi bro","description":"","context":"ok"}');
+  expect(JSON.parse(body)).toEqual({
+    state: 'success',
+    target_url: 'info.com/53', // eslint-disable-line camelcase
+    description: '',
+    context: 'interesting info'
+  });
+  expect(url).toBe('https://api.github.com/repos/me/my-repo/statuses/h8g94hg9');
+});
+
+test('postPendingPrStatus makes request to post pending pr status to GitHub', () => {
+  const spy = createSpy().andReturn(ResponsePromise({}));
+  postPendingPrStatus({
+    sha: 'h8g94hg9',
+    targetUrl: 'info.com/53',
+    label: 'interesting info'
+  }).run({
+    request: spy,
+    githubApiToken: 'h832hfo',
+    repoOwner: 'me',
+    repoName: 'my-repo'
+  });
+
+  const [url, {headers, method, body}] = spy.calls[0].arguments;
+  expect(headers.Authorization).toBe('token h832hfo');
+  expect(headers['Content-Type']).toBe('application/json');
+  expect(method).toBe('POST');
+  expect(JSON.parse(body)).toEqual({
+    state: 'pending',
+    target_url: 'info.com/53', // eslint-disable-line camelcase
+    description: 'Calculating bundle diffs and threshold failures (if any)...',
+    context: 'interesting info'
+  });
   expect(url).toBe('https://api.github.com/repos/me/my-repo/statuses/h8g94hg9');
 });
