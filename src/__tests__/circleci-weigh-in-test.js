@@ -11,18 +11,13 @@ import {
 } from '../core/errors';
 import {parseJSON, PromiseError} from '../shared';
 
-const configFac = (config = {}) => {
-  const fakeResolve = (...args) => ['/root', 'builds', args.join('/')].join('/');
-
-  return {
-    resolve: fakeResolve,
-    repoOwner: 'me',
-    repoName: 'my-repo',
-    githubApiToken: 'jd80hrouf',
-    circleApiToken: 'djfsayr3h2',
-    ...config
-  };
-};
+const configFac = (config = {}) => ({
+  repoOwner: 'me',
+  repoName: 'my-repo',
+  githubApiToken: 'jd80hrouf',
+  circleApiToken: 'djfsayr3h2',
+  ...config
+});
 
 const subject = (opts = {}) =>
   circleciWeighIn({
@@ -45,6 +40,7 @@ const subject = (opts = {}) =>
           {name: 'dist/app.js', size: 452}
         ]
       }),
+      resolve: (...args) => ReaderPromise.of(['/root/builds', args.join('/')].join('/')),
       makeArtifactDirectory: () => ReaderPromise.of(),
       writeBundleSizes: () => ReaderPromise.of(),
       writeBundleDiff: () => ReaderPromise.of(),
@@ -72,29 +68,39 @@ test('happy path (makes artifact directory, writes bundle stats to file, and wri
         ]
       })
     }
-  }).run(configFac({
-    resolve: (...args) => ['/root', 'builds', args.join('/')].join('/')
-  })).then(() => {
+  }).run(configFac()).then(() => {
     const firstCallFirstArgument = R.path(['calls', 0, 'arguments', 0]);
-    const {filepath: bundleStatsPath, bundleSizes: bundleStatsContents} =
-      firstCallFirstArgument(writeBundleSizesSpy);
+    const {
+      rootPath: bundleStatsRootPath,
+      projectName: bundleStatsProjectName,
+      bundleSizes: bundleStatsContents
+    } = firstCallFirstArgument(writeBundleSizesSpy);
 
     const {
-      filepath: bundleDiffPath,
+      rootPath: bundleDiffRootPath,
+      projectName: bundleDiffProjectName,
       bundleDiffs: bundleDiffContents,
       thresholdFailures
     } = firstCallFirstArgument(writeBundleDiffSpy);
 
-    expect(makeArtifactDirectorySpy).toHaveBeenCalledWith('/root/builds/lfjk3208hohefi4/artifacts/circleci-weigh-in/my-project');
-    expect(bundleStatsPath).toBe('/root/builds/lfjk3208hohefi4/artifacts/circleci-weigh-in/my-project/bundle-sizes.json');
+    expect(makeArtifactDirectorySpy).toHaveBeenCalledWith({
+      rootPath: 'lfjk3208hohefi4/artifacts',
+      projectName: 'my-project'
+    });
+
+    expect(bundleStatsRootPath).toEqual('lfjk3208hohefi4/artifacts');
+    expect(bundleStatsProjectName).toEqual('my-project');
     expect(bundleStatsContents).toEqual({
       'app.js': {
         size: 452,
         path: 'dist/app.js'
       }
     });
-    expect(bundleDiffPath).toBe('/root/builds/lfjk3208hohefi4/artifacts/circleci-weigh-in/my-project/bundle-sizes-diff.json');
+
+    expect(bundleDiffRootPath).toEqual('lfjk3208hohefi4/artifacts');
+    expect(bundleDiffProjectName).toEqual('my-project');
     expect(bundleDiffContents).toEqual({});
+
     expect(thresholdFailures).toEqual([]);
   });
 });
