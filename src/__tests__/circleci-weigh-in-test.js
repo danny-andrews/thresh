@@ -135,20 +135,20 @@ test('surfaces JSON parse errors for stats file', () => {
 test('surfaces errors making artifact directory', () =>
   subject({
     effects: {
-      makeArtifactDirectory: () => ReaderPromise.Error('oh noes')
+      makeArtifactDirectory: () => ReaderPromise.fromError('oh noes')
     }
   }).run(configFac()).catch(err => {
-    expect(err.message).toBe('oh noes');
+    expect(err).toBe('oh noes');
   })
 );
 
 test('surfaces errors writing bundle sizes', () =>
   subject({
     effects: {
-      writeBundleSizes: () => ReaderPromise.Error('uh oh')
+      writeBundleSizes: () => ReaderPromise.fromError('uh oh')
     }
   }).run(configFac()).catch(err => {
-    expect(err.message).toBe('uh oh');
+    expect(err).toBe('uh oh');
   })
 );
 

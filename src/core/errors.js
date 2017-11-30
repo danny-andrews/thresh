@@ -39,5 +39,6 @@ export const GitHubInvalidResponseErr = Err('Error making request to GitHub %s: 
 // Warnings
 export const NoOpenPullRequestFoundErr = Err('No open pull request found. Skipping bundle diff step.');
 
-// `No recent builds found for the base branch: ${baseBranch}!`
-// `No bundle size artifact found for latest build of: ${baseBranch}. Build number: ${buildNumber}`
+export const NoRecentBuildsFoundErr = Err('No recent builds found for the base branch: %s!');
+
+export const NoBundleSizeArtifactFoundErr = Err('No bundle size artifact found for latest build of: %s. Build number: %s');
