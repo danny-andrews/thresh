@@ -2,6 +2,7 @@ import test from 'ava';
 import expect, {createSpy} from 'expect';
 import makeCircleRequest from '../make-circle-request';
 import {ResponsePromise} from '../test/helpers';
+import {CircleCiFetchErr, CircleCiInvalidResponseErr} from '../core/errors';
 
 const subject = (opts = {}) => {
   const {
@@ -102,7 +103,12 @@ test('returns Error if request fails', () => {
 
   return subject({request: spy, circleApiToken: 'fdlsar32'})
     .catch(actual => {
-      expect(actual.message).toBe('Error making request to CircleCI https://circleci.com/api/v1.1/hey?circle-token=fdlsar32: oh no');
+      expect(actual.message).toBe(
+        CircleCiFetchErr(
+          'https://circleci.com/api/v1.1/hey?circle-token=fdlsar32',
+          'oh no'
+        ).message
+      );
     });
 });
 
@@ -113,6 +119,11 @@ test('returns error if non-200 status code received', () => {
 
   return subject({request: spy, circleApiToken: 'djklay32r'})
     .catch(actual => {
-      expect(actual.message).toBe('Error making request to CircleCI https://circleci.com/api/v1.1/hey?circle-token=djklay32r: Internal Server Error');
+      expect(actual.message).toBe(
+        CircleCiInvalidResponseErr(
+          'https://circleci.com/api/v1.1/hey?circle-token=djklay32r',
+          'Internal Server Error'
+        ).message
+      );
     });
 });
