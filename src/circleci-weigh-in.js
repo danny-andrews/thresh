@@ -1,10 +1,6 @@
 import R from 'ramda';
 import path from 'path';
-import {
-  BUNDLE_SIZES_DIFF_FILENAME,
-  BUNDLE_SIZES_FILENAME,
-  OUTPUT_FILEPATH
-} from './core/constants';
+import {BUNDLE_SIZES_FILENAME} from './core/constants';
 import bundleSizesFromWebpackStats
   from './core/bundle-sizes-from-webpack-stats';
 import diffBundles from './core/diff-bundles';
@@ -64,19 +60,6 @@ export default opts => {
     )(validator.errors, {separator: '\n'});
   }
 
-  const buildArtifactFilepath = (...args) => ReaderPromise.fromReaderFn(
-    ({resolve}) => R.pipe(resolve, a => Promise.resolve(a))(
-      artifactsDirectory,
-      OUTPUT_FILEPATH,
-      projectName,
-      ...args
-    )
-  );
-
-  const writeBundleSizes2 = bundleSizes =>
-    buildArtifactFilepath(BUNDLE_SIZES_FILENAME)
-      .chain(filepath => effects.writeBundleSizes({filepath, bundleSizes}));
-
   const retrieveBaseBundleSizes2 = () =>
     pullRequestId.toEither().cata(
       () => ReaderPromise.fromError(NoOpenPullRequestFoundErr()),
@@ -86,57 +69,57 @@ export default opts => {
       })
     );
 
-  const getThresholdFailures2 = bundleDiffs => getThresholdFailures({
-    failureThresholds,
-    assetStats: R.pipe(
-      R.toPairs,
-      R.map(([filepath, {current: size}]) => ({filepath, size}))
-    )(bundleDiffs)
-  });
-
-  const writeBundleDiff2 = ({bundleDiffs, thresholdFailures}) =>
-    buildArtifactFilepath(BUNDLE_SIZES_DIFF_FILENAME)
-      .chain(filepath =>
-        effects.writeBundleDiff({filepath, bundleDiffs, thresholdFailures})
-      );
-
   const prStatusParams = {
     sha: buildSha,
     targetUrl: `${buildUrl}#artifacts`,
     label: compactAndJoin(': ', ['Bundle Sizes', projectName])
   };
 
+  const writeArtifactParams = {
+    rootPath: artifactsDirectory,
+    projectName
+  };
+
   return ReaderPromise.fromReaderFn(
     config => Promise.all([
       effects.postPendingPrStatus(prStatusParams).run(config),
-      buildArtifactFilepath()
-        .chain(effects.makeArtifactDirectory)
+      effects.makeArtifactDirectory({rootPath: artifactsDirectory, projectName})
         .run(config),
       effects.readStats(statsFilepath)
         .map(bundleSizesFromWebpackStats)
         .run(config),
       retrieveBaseBundleSizes2().run(config)
-    ])
-  ).chain(([,, bundleSizes, baseBundleSizes]) => {
-    const bundleDiffs = diffBundles({
-      current: bundleSizes,
-      original: baseBundleSizes
-    });
-    const thresholdFailures = getThresholdFailures2(bundleDiffs).cata(
-      R.identity,
-      R.identity
-    );
+    ]).then(([,, bundleSizes, baseBundleSizes]) => {
+      const bundleDiffs = diffBundles({
+        current: bundleSizes,
+        original: baseBundleSizes
+      });
 
-    return ReaderPromise.fromReaderFn(
-      config => Promise.all([
-        writeBundleSizes2(bundleSizes).run(config),
-        writeBundleDiff2({bundleDiffs, thresholdFailures}).run(config),
-        effects.postFinalPrStatus({
-          bundleDiffs,
-          thresholdFailures,
-          ...prStatusParams
-        }).run(config)
-      ])
-    );
-  });
+      return getThresholdFailures({
+        failureThresholds,
+        assetStats: R.pipe(
+          R.toPairs,
+          R.map(([filepath, {current: size}]) => ({filepath, size}))
+        )(bundleDiffs)
+      }).cata(a => Promise.reject(a), a => Promise.resolve(a))
+        .then(thresholdFailures =>
+          Promise.all([
+            effects.writeBundleSizes({
+              ...writeArtifactParams,
+              bundleSizes
+            }).run(config),
+            effects.writeBundleDiff({
+              ...writeArtifactParams,
+              bundleDiffs,
+              thresholdFailures
+            }).run(config),
+            effects.postFinalPrStatus({
+              ...prStatusParams,
+              bundleDiffs,
+              thresholdFailures
+            }).run(config)
+          ])
+        );
+    })
+  );
 };
