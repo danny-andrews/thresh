@@ -120,6 +120,11 @@ export default opts => {
             }).run(config)
           ])
         );
+    }).catch(err => {
+      if(R.type(Error, err)) config.logError(err);
+      else config.logMessage(err.message);
+
+      return Promise.reject(err);
     })
   );
 };

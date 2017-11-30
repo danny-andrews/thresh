@@ -12,10 +12,8 @@ import {
 import {parseJSON, PromiseError} from '../shared';
 
 const configFac = (config = {}) => ({
-  repoOwner: 'me',
-  repoName: 'my-repo',
-  githubApiToken: 'jd80hrouf',
-  circleApiToken: 'djfsayr3h2',
+  logMessage: () => {},
+  logError: () => {},
   ...config
 });
 
