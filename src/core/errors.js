@@ -26,11 +26,15 @@ export const MissingCliOptionErr = Err("'%s' option is required!");
 
 export const CliOptionInvalidJsonErr = Err("'%s' option is not valid JSON!");
 
-// `Error making request to CircleCI ${finalUrl}: ${response.message}`
-// `Error making request to CircleCI ${finalUrl}: ${response.statusText}`
-// `Error making request to GitHub ${url}: ${response}`
-// `Authorization failed for request to GitHub ${url}. Did you provide a correct GitHub Api Token? Original response: ${response.statusText}`
-// `Error making request to GitHub ${url}: ${response.statusText}`
+export const CircleCiFetchErr = Err('Error making request to CircleCI %s: %s');
+
+export const CircleCiInvalidResponseErr = Err('Error making request to CircleCI %s: %s');
+
+export const GitHubFetchErr = Err('Error making request to GitHub %s: %s');
+
+export const GitHubAuthorizationErr = Err('Authorization failed for request to GitHub %s. Did you provide a correct GitHub Api Token? Original response: %s');
+
+export const GitHubInvalidResponseErr = Err('Error making request to GitHub %s: %s');
 
 // Warnings
 export const NoOpenPullRequestFoundErr = Err('No open pull request found. Skipping bundle diff step.');

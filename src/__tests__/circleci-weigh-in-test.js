@@ -9,7 +9,7 @@ import {
   ErrorWritingBundleDiffArtifactErr,
   NoOpenPullRequestFoundErr
 } from '../core/errors';
-import {parseJSON, PromiseError} from '../shared';
+import {parseJSON} from '../shared';
 
 const configFac = (config = {}) => ({
   logMessage: () => {},
@@ -112,7 +112,7 @@ test('handles case where no open pull request is found', () =>
 test('surfaces errors reading stats file', () =>
   subject({
     effects: {
-      readFile: () => PromiseError('oh noes')
+      readFile: () => Promise.reject('oh noes')
     }
   }).run(configFac()).catch(err => {
     expect(err.message).toBe(StatsFileReadErr('Error: oh noes').message);
@@ -157,7 +157,7 @@ test('surfaces errors writing bundle diffs', () =>
     effects: {
       writeFile: path => (
         path.match(/bundle-sizes-diff\.json/)
-          ? PromiseError('uh oh')
+          ? Promise.reject('uh oh')
           : Promise.resolve()
       )
     }

@@ -11,5 +11,6 @@ rules:
       asyncArrow: always
   curly: [error, multi-line]
   lines-around-comment: off
+  prefer-promise-reject-errors: off
 env:
   node: true

@@ -1,6 +1,5 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
-import {PromiseError} from '../shared';
 import makeGithubRequest from '../make-github-request';
 import {ResponsePromise} from '../test/helpers';
 
@@ -98,12 +97,11 @@ test('camelizes response', async () => {
 });
 
 test('returns Error if response fails', () => {
-  const spy = createSpy().andReturn(PromiseError('oh no'));
+  const spy = createSpy().andReturn(Promise.reject('oh no'));
 
   return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
     .catch(actual => {
-      expect(actual).toBeA(Error);
-      expect(actual.message).toBe('Error making request to GitHub https://api.github.com/owner/repo: Error: oh no');
+      expect(actual.message).toBe('Error making request to GitHub https://api.github.com/owner/repo: oh no');
     });
 });
 
@@ -114,7 +112,6 @@ test('returns error if non-200 status code received', () => {
 
   return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
     .catch(actual => {
-      expect(actual).toBeA(Error);
       expect(actual.message).toBe('Error making request to GitHub https://api.github.com/owner/repo: Internal Server Error');
     });
 });
@@ -126,7 +123,6 @@ test('returns authorization error if UNATHORIZED status received', () => {
 
   return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
     .catch(actual => {
-      expect(actual).toBeA(Error);
       expect(actual.message).toBe('Authorization failed for request to GitHub https://api.github.com/owner/repo. Did you provide a correct GitHub Api Token? Original response: Internal Server Error');
     });
 });
@@ -138,7 +134,6 @@ test('returns authorization error if FORBIDDEN status received', () => {
 
   return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
     .catch(actual => {
-      expect(actual).toBeA(Error);
       expect(actual.message).toBe('Authorization failed for request to GitHub https://api.github.com/owner/repo. Did you provide a correct GitHub Api Token? Original response: Internal Server Error');
     });
 });
