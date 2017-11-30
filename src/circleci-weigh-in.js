@@ -121,8 +121,7 @@ export default opts => {
           ])
         );
     }).catch(err => {
-      console.log(err, 'heyo');
-      if(R.type(Error, err)) config.logError(err);
+      if(R.is(Error, err)) config.logError(err);
       else config.logMessage(err.message);
 
       return Promise.reject(err);
