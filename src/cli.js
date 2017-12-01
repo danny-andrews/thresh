@@ -72,6 +72,6 @@ main.run({
   repoName: process.env.CIRCLE_PROJECT_REPONAME,
   githubApiToken: process.env.GITHUB_API_TOKEN,
   circleApiToken: process.env.CIRCLE_API_TOKEN,
-  logMessage: logger(console.log),
-  logError: logger(console.error)
+  logMessage: console.log,
+  logError: console.error
 }).catch(() => process.exit(1)); // eslint-disable-line no-process-exit
