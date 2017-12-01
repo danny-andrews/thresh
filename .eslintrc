@@ -12,5 +12,6 @@ rules:
   curly: [error, multi-line]
   lines-around-comment: off
   prefer-promise-reject-errors: off
+  no-confusing-arrow: off
 env:
   node: true

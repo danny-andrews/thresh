@@ -1,4 +1,4 @@
-import {isNil, last} from 'ramda';
+import R from 'ramda';
 import assert from 'assert';
 import commandLineArgs from 'command-line-args';
 import path from 'path';
@@ -34,7 +34,7 @@ const {
   'failure-thresholds': failureThresholdsString
 } = commandLineArgs(optionDefinitions);
 
-assert(!isNil(statsFilepath), MissingCliOptionErr('stats-filepath').message);
+assert(!R.isNil(statsFilepath), MissingCliOptionErr('stats-filepath').message);
 
 const failureThresholds = parseJSON(failureThresholdsString);
 
@@ -44,7 +44,7 @@ assert(
 );
 
 const pullRequestId = process.env.CI_PULL_REQUEST
-  && last(process.env.CI_PULL_REQUEST.split('/'));
+  && R.last(process.env.CI_PULL_REQUEST.split('/'));
 
 const main = circleciWeighIn({
   statsFilepath,
@@ -56,6 +56,12 @@ const main = circleciWeighIn({
   artifactsDirectory: process.env.CIRCLE_ARTIFACTS
 });
 
+const logger = logMethod => thing => (
+  R.is('Function', thing.show)
+    ? logMethod(thing.show())
+    : logMethod(thing)
+);
+
 main.run({
   writeFile,
   readFile,
@@ -66,6 +72,6 @@ main.run({
   repoName: process.env.CIRCLE_PROJECT_REPONAME,
   githubApiToken: process.env.GITHUB_API_TOKEN,
   circleApiToken: process.env.CIRCLE_API_TOKEN,
-  logMessage: console.log,
-  logError: console.error
+  logMessage: logger(console.log),
+  logError: logger(console.error)
 }).catch(() => process.exit(1)); // eslint-disable-line no-process-exit

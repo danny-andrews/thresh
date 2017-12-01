@@ -1,7 +1,7 @@
 import test from 'ava';
 import expect from 'expect';
 import subject from '../bundle-sizes-from-webpack-stats';
-import {Err} from '../errors';
+import {FilepathNotFoundInStatsErr} from '../errors';
 
 test('full example', () => {
   const expected = {
@@ -36,7 +36,7 @@ test('no asset stat found', () => {
   });
 
   expect(actual.length).toBe(1);
-  expect(actual[0].constructor).toBe(Err);
+  expect(actual[0].constructor).toBe(FilepathNotFoundInStatsErr);
 });
 
 test('single chunk asset', () => {

@@ -1,6 +1,6 @@
 import {sprintf} from 'sprintf-js';
 
-export const Err = ({messageTemplate, constructor}) => (...args) => {
+const Err = ({messageTemplate, constructor}) => (...args) => {
   const message = sprintf(messageTemplate, ...args);
 
   return ({
@@ -10,93 +10,93 @@ export const Err = ({messageTemplate, constructor}) => (...args) => {
   });
 };
 
-/* eslint-disable max-len, no-use-before-define */
-export const InvalidFailureThresholdOptionErr = Err({
+/* eslint-disable max-len */
+export const InvalidFailureThresholdOptionErr = (...args) => Err({
   messageTemplate: "failure-thresholds' option is invalid. Problem(s):\n%s",
   constructor: InvalidFailureThresholdOptionErr
-});
+})(...args);
 
-export const InvalidFailureThresholdErr = Err({
+export const InvalidFailureThresholdErr = (...args) => Err({
   messageTemplate: 'Invalid failure threshold provided. No targets found for target: [%s]',
   constructor: InvalidFailureThresholdErr
-});
+})(...args);
 
-export const FilepathNotFoundInStatsErr = Err({
+export const FilepathNotFoundInStatsErr = (...args) => Err({
   messageTemplate: 'Could not find %s listed in given webpack stats!',
   constructor: FilepathNotFoundInStatsErr
-});
+})(...args);
 
-export const StatsFileReadErr = Err({
+export const StatsFileReadErr = (...args) => Err({
   messageTemplate: 'Error reading stats file: %s!',
   constructor: StatsFileReadErr
-});
+})(...args);
 
-export const ErrorCreatingArtifactDirectoryErr = Err({
+export const ErrorCreatingArtifactDirectoryErr = (...args) => Err({
   messageTemplate: 'Error creating artifact directory: %s',
   constructor: ErrorCreatingArtifactDirectoryErr
-});
+})(...args);
 
-export const ErrorWritingBundleSizeArtifactErr = Err({
+export const ErrorWritingBundleSizeArtifactErr = (...args) => Err({
   messageTemplate: 'Error writing bundle size artifact: %s',
   constructor: ErrorWritingBundleSizeArtifactErr
-});
+})(...args);
 
-export const ErrorWritingBundleDiffArtifactErr = Err({
+export const ErrorWritingBundleDiffArtifactErr = (...args) => Err({
   messageTemplate: 'Error writing bundle diff artifact: %s!',
   constructor: ErrorWritingBundleDiffArtifactErr
-});
+})(...args);
 
-export const MissingEnvVarErr = Err({
+export const MissingEnvVarErr = (...args) => Err({
   messageTemplate: 'Environment variable %s is required!',
   constructor: MissingEnvVarErr
-});
+})(...args);
 
-export const MissingCliOptionErr = Err({
+export const MissingCliOptionErr = (...args) => Err({
   messageTemplate: "'%s' option is required!",
   constructor: MissingCliOptionErr
-});
+})(...args);
 
-export const CliOptionInvalidJsonErr = Err({
+export const CliOptionInvalidJsonErr = (...args) => Err({
   messageTemplate: "'%s' option is not valid JSON!",
   constructor: CliOptionInvalidJsonErr
-});
+})(...args);
 
-export const CircleCiFetchErr = Err({
+export const CircleCiFetchErr = (...args) => Err({
   messageTemplate: 'Error making request to CircleCI %s: %s',
   constructor: CircleCiFetchErr
-});
+})(...args);
 
-export const CircleCiInvalidResponseErr = Err({
+export const CircleCiInvalidResponseErr = (...args) => Err({
   messageTemplate: 'Error making request to CircleCI %s: %s',
   constructor: CircleCiInvalidResponseErr
-});
+})(...args);
 
-export const GitHubFetchErr = Err({
+export const GitHubFetchErr = (...args) => Err({
   messageTemplate: 'Error making request to GitHub %s: %s',
   constructor: GitHubFetchErr
-});
+})(...args);
 
-export const GitHubAuthorizationErr = Err({
+export const GitHubAuthorizationErr = (...args) => Err({
   messageTemplate: 'Authorization failed for request to GitHub %s. Did you provide a correct GitHub Api Token? Original response: %s',
   constructor: GitHubAuthorizationErr
-});
+})(...args);
 
-export const GitHubInvalidResponseErr = Err({
+export const GitHubInvalidResponseErr = (...args) => Err({
   messageTemplate: 'Error making request to GitHub %s: %s',
   constructor: GitHubInvalidResponseErr
-});
+})(...args);
 
-export const NoOpenPullRequestFoundErr = Err({
+export const NoOpenPullRequestFoundErr = (...args) => Err({
   messageTemplate: 'No open pull request found. Skipping bundle diff step.',
   constructor: NoOpenPullRequestFoundErr
-});
+})(...args);
 
-export const NoRecentBuildsFoundErr = Err({
+export const NoRecentBuildsFoundErr = (...args) => Err({
   messageTemplate: 'No recent builds found for the base branch: %s!',
   constructor: NoRecentBuildsFoundErr
-});
+})(...args);
 
-export const NoBundleSizeArtifactFoundErr = Err({
+export const NoBundleSizeArtifactFoundErr = (...args) => Err({
   messageTemplate: 'No bundle size artifact found for latest build of: %s. Build number: %s',
   constructor: NoBundleSizeArtifactFoundErr
-});
+})(...args);

@@ -31,7 +31,7 @@ const warningTypes = [
   NoBundleSizeArtifactFoundErr
 ];
 
-const isWarningType = err => R.any(Type => R.is(err, Type), warningTypes);
+const isWarningType = err => R.any(Type => R.is(Type, err), warningTypes);
 
 export default opts => {
   const {

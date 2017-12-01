@@ -4,11 +4,8 @@ import expect, {createSpy} from 'expect';
 import circleciWeighIn from '../circleci-weigh-in';
 import ReaderPromise from '../core/reader-promise';
 import {Maybe} from 'monet';
-import {
-  StatsFileReadErr,
-  ErrorWritingBundleDiffArtifactErr,
-  NoOpenPullRequestFoundErr
-} from '../core/errors';
+import {StatsFileReadErr, ErrorWritingBundleDiffArtifactErr}
+  from '../core/errors';
 import {parseJSON} from '../shared';
 
 const configFac = (config = {}) => ({
@@ -104,9 +101,7 @@ test('happy path (makes artifact directory, writes bundle stats to file, and wri
 });
 
 test('handles case where no open pull request is found', () =>
-  subject({pullRequestId: Maybe.None()}).run(configFac()).catch(err => {
-    expect(err.message).toBe(NoOpenPullRequestFoundErr().message);
-  })
+  subject({pullRequestId: Maybe.None()}).run(configFac())
 );
 
 test('surfaces errors reading stats file', () =>
