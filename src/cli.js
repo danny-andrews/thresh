@@ -56,12 +56,6 @@ const main = circleciWeighIn({
   artifactsDirectory: process.env.CIRCLE_ARTIFACTS
 });
 
-const logger = logMethod => thing => (
-  R.type('Function', thing.show)
-    ? logMethod(thing.show())
-    : logMethod(thing)
-);
-
 main.run({
   writeFile,
   readFile,
