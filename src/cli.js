@@ -57,7 +57,7 @@ const main = circleciWeighIn({
 });
 
 const logger = logMethod => thing => (
-  R.is('Function', thing.show)
+  R.type('Function', thing.show)
     ? logMethod(thing.show())
     : logMethod(thing)
 );
