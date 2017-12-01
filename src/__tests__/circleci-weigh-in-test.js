@@ -4,18 +4,13 @@ import expect, {createSpy} from 'expect';
 import circleciWeighIn from '../circleci-weigh-in';
 import ReaderPromise from '../core/reader-promise';
 import {Maybe} from 'monet';
-import {
-  StatsFileReadErr,
-  ErrorWritingBundleDiffArtifactErr,
-  NoOpenPullRequestFoundErr
-} from '../core/errors';
-import {parseJSON, PromiseError} from '../shared';
+import {StatsFileReadErr, ErrorWritingBundleDiffArtifactErr}
+  from '../core/errors';
+import {parseJSON} from '../shared';
 
 const configFac = (config = {}) => ({
-  repoOwner: 'me',
-  repoName: 'my-repo',
-  githubApiToken: 'jd80hrouf',
-  circleApiToken: 'djfsayr3h2',
+  logMessage: () => {},
+  logError: () => {},
   ...config
 });
 
@@ -106,15 +101,13 @@ test('happy path (makes artifact directory, writes bundle stats to file, and wri
 });
 
 test('handles case where no open pull request is found', () =>
-  subject({pullRequestId: Maybe.None()}).run(configFac()).catch(err => {
-    expect(err.message).toBe(NoOpenPullRequestFoundErr().message);
-  })
+  subject({pullRequestId: Maybe.None()}).run(configFac())
 );
 
 test('surfaces errors reading stats file', () =>
   subject({
     effects: {
-      readFile: () => PromiseError('oh noes')
+      readFile: () => Promise.reject('oh noes')
     }
   }).run(configFac()).catch(err => {
     expect(err.message).toBe(StatsFileReadErr('Error: oh noes').message);
@@ -137,20 +130,20 @@ test('surfaces JSON parse errors for stats file', () => {
 test('surfaces errors making artifact directory', () =>
   subject({
     effects: {
-      makeArtifactDirectory: () => ReaderPromise.Error('oh noes')
+      makeArtifactDirectory: () => ReaderPromise.fromError('oh noes')
     }
   }).run(configFac()).catch(err => {
-    expect(err.message).toBe('oh noes');
+    expect(err).toBe('oh noes');
   })
 );
 
 test('surfaces errors writing bundle sizes', () =>
   subject({
     effects: {
-      writeBundleSizes: () => ReaderPromise.Error('uh oh')
+      writeBundleSizes: () => ReaderPromise.fromError('uh oh')
     }
   }).run(configFac()).catch(err => {
-    expect(err.message).toBe('uh oh');
+    expect(err).toBe('uh oh');
   })
 );
 
@@ -159,7 +152,7 @@ test('surfaces errors writing bundle diffs', () =>
     effects: {
       writeFile: path => (
         path.match(/bundle-sizes-diff\.json/)
-          ? PromiseError('uh oh')
+          ? Promise.reject('uh oh')
           : Promise.resolve()
       )
     }

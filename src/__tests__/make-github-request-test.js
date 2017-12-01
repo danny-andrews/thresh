@@ -1,8 +1,12 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
-import {PromiseError} from '../shared';
 import makeGithubRequest from '../make-github-request';
 import {ResponsePromise} from '../test/helpers';
+import {
+  GitHubFetchErr,
+  GitHubAuthorizationErr,
+  GitHubInvalidResponseErr
+} from '../core/errors';
 
 const subject = (opts = {}) => {
   const {
@@ -98,12 +102,13 @@ test('camelizes response', async () => {
 });
 
 test('returns Error if response fails', () => {
-  const spy = createSpy().andReturn(PromiseError('oh no'));
+  const spy = createSpy().andReturn(Promise.reject('oh no'));
 
   return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
     .catch(actual => {
-      expect(actual).toBeA(Error);
-      expect(actual.message).toBe('Error making request to GitHub https://api.github.com/owner/repo: Error: oh no');
+      expect(actual.message).toBe(
+        GitHubFetchErr('https://api.github.com/owner/repo', 'oh no').message
+      );
     });
 });
 
@@ -114,31 +119,43 @@ test('returns error if non-200 status code received', () => {
 
   return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
     .catch(actual => {
-      expect(actual).toBeA(Error);
-      expect(actual.message).toBe('Error making request to GitHub https://api.github.com/owner/repo: Internal Server Error');
+      expect(actual.message).toBe(
+        GitHubInvalidResponseErr(
+          'https://api.github.com/owner/repo',
+          'Internal Server Error'
+        ).message
+      );
     });
 });
 
 test('returns authorization error if UNATHORIZED status received', () => {
   const spy = createSpy().andReturn(
-    ResponsePromise('oh no', {status: 401, statusText: 'Internal Server Error'})
+    ResponsePromise('oh no', {status: 401, statusText: 'Unathorized'})
   );
 
   return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
     .catch(actual => {
-      expect(actual).toBeA(Error);
-      expect(actual.message).toBe('Authorization failed for request to GitHub https://api.github.com/owner/repo. Did you provide a correct GitHub Api Token? Original response: Internal Server Error');
+      expect(actual.message).toBe(
+        GitHubAuthorizationErr(
+          'https://api.github.com/owner/repo',
+          'Unathorized'
+        ).message
+      );
     });
 });
 
 test('returns authorization error if FORBIDDEN status received', () => {
   const spy = createSpy().andReturn(
-    ResponsePromise('oh no', {status: 403, statusText: 'Internal Server Error'})
+    ResponsePromise('oh no', {status: 403, statusText: 'Forbidden'})
   );
 
   return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
     .catch(actual => {
-      expect(actual).toBeA(Error);
-      expect(actual.message).toBe('Authorization failed for request to GitHub https://api.github.com/owner/repo. Did you provide a correct GitHub Api Token? Original response: Internal Server Error');
+      expect(actual.message).toBe(
+        GitHubAuthorizationErr(
+          'https://api.github.com/owner/repo',
+          'Forbidden'
+        ).message
+      );
     });
 });

@@ -35,10 +35,5 @@ export const truncate = R.curry(({maxSize, contSuffix = '...'}, string) => (
     : string
 ));
 
-export const PromiseError = R.pipe(
-  (...args) => new Error(...args),
-  a => Promise.reject(a)
-);
-
 export const serializeForFile = val =>
   JSON.stringify(val, null, JSON_OUTPUT_SPACING);

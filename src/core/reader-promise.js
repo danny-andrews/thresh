@@ -41,11 +41,6 @@ ReaderPromise.fromError = R.pipe(
   ReaderPromise.fromPromise,
 );
 
-ReaderPromise.Error = R.pipe(
-  a => new Error(a),
-  ReaderPromise.fromError
-);
-
 ReaderPromise.fromReaderFn = R.pipe(
   Reader,
   ReaderPromise

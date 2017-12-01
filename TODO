@@ -9,3 +9,5 @@ Replace Promises with Flutures.
 Write tests for ReaderPromise.
 
 Move ReaderPromise into seperate repo.
+
+Use named parameters for error message sprintf.
