@@ -1,4 +1,4 @@
-import {isNil, last} from 'ramda';
+import R from 'ramda';
 import assert from 'assert';
 import commandLineArgs from 'command-line-args';
 import path from 'path';
@@ -6,6 +6,8 @@ import fetch from 'node-fetch';
 import {Maybe} from 'monet';
 import {parseJSON, mkdir, writeFile, readFile} from './shared';
 import circleciWeighIn from './circleci-weigh-in';
+import {MissingEnvVarErr, CliOptionInvalidJsonErr, MissingCliOptionErr}
+  from './core/errors';
 
 const requiredEnvVariables = [
   'CIRCLE_ARTIFACTS',
@@ -23,10 +25,7 @@ const optionDefinitions = [
 ];
 
 requiredEnvVariables.forEach(variable =>
-  assert(
-    process.env[variable],
-    `Environment variable ${variable} is required!`
-  )
+  assert(process.env[variable], MissingEnvVarErr(variable).message)
 );
 
 const {
@@ -35,19 +34,19 @@ const {
   'failure-thresholds': failureThresholdsString
 } = commandLineArgs(optionDefinitions);
 
-assert(!isNil(statsFilepath), "'stats-filepath' option is required!");
+assert(!R.isNil(statsFilepath), MissingCliOptionErr('stats-filepath').message);
 
 const failureThresholds = parseJSON(failureThresholdsString);
 
 assert(
   failureThresholds.isRight(),
-  "'failure-thresholds' option is not valid JSON!"
+  CliOptionInvalidJsonErr('failure-thresholds').message
 );
 
 const pullRequestId = process.env.CI_PULL_REQUEST
-  && last(process.env.CI_PULL_REQUEST.split('/'));
+  && R.last(process.env.CI_PULL_REQUEST.split('/'));
 
-circleciWeighIn({
+const main = circleciWeighIn({
   statsFilepath,
   projectName,
   pullRequestId: Maybe.fromNull(pullRequestId),
@@ -55,7 +54,9 @@ circleciWeighIn({
   buildSha: process.env.CIRCLE_SHA1,
   buildUrl: process.env.CIRCLE_BUILD_URL,
   artifactsDirectory: process.env.CIRCLE_ARTIFACTS
-}).run({
+});
+
+main.run({
   writeFile,
   readFile,
   resolve: path.resolve,
@@ -64,5 +65,7 @@ circleciWeighIn({
   repoOwner: process.env.CIRCLE_PROJECT_USERNAME,
   repoName: process.env.CIRCLE_PROJECT_REPONAME,
   githubApiToken: process.env.GITHUB_API_TOKEN,
-  circleApiToken: process.env.CIRCLE_API_TOKEN
-}).catch(err => console.error(err.message));
+  circleApiToken: process.env.CIRCLE_API_TOKEN,
+  logMessage: console.log,
+  logError: console.error
+}).catch(() => process.exit(1)); // eslint-disable-line no-process-exit

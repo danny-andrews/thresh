@@ -1,7 +1,7 @@
 import test from 'ava';
 import expect from 'expect';
 import R from 'ramda';
-import {Err} from '../errors';
+import {InvalidFailureThresholdErr} from '../errors';
 import subject from '../get-threshold-failures';
 
 const testSets = [{
@@ -169,7 +169,7 @@ const testSets = [{
 {
   title: 'no matching asset',
   expected: actual => {
-    expect(actual.left().constructor).toBe(Err);
+    expect(actual.left().constructor).toBe(InvalidFailureThresholdErr);
   },
   input: {
     assetStats: [{
