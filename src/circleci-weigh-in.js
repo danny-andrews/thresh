@@ -6,8 +6,12 @@ import bundleSizesFromWebpackStats
 import diffBundles from './core/diff-bundles';
 import getThresholdFailures from './core/get-threshold-failures';
 import {compactAndJoin, SchemaValidator} from './shared';
-import {NoOpenPullRequestFoundErr, InvalidFailureThresholdOptionErr}
-  from './core/errors';
+import {
+  NoOpenPullRequestFoundErr,
+  InvalidFailureThresholdOptionErr,
+  NoRecentBuildsFoundErr,
+  NoBundleSizeArtifactFoundErr
+} from './core/errors';
 import ReaderPromise from './core/reader-promise';
 import {failureThresholdListSchema, DFAULT_FAILURE_THRESHOLD_STRATEGY}
   from './core/schemas';
@@ -20,6 +24,14 @@ import {
   writeBundleDiff,
   writeBundleSizes
 } from './effects';
+
+const warningTypes = [
+  NoOpenPullRequestFoundErr,
+  NoRecentBuildsFoundErr,
+  NoBundleSizeArtifactFoundErr
+];
+
+const isWarningType = err => R.any(Type => R.is(err, Type), warningTypes);
 
 export default opts => {
   const {
@@ -121,8 +133,17 @@ export default opts => {
           ])
         );
     }).catch(err => {
-      if(R.is(Error, err)) config.logError(err);
-      else config.logMessage(err.message);
+      if(isWarningType(err)) {
+        config.logMessage(err.message);
+
+        return Promise.resolve();
+      }
+
+      if(R.is(Error, err)) {
+        config.logError(err);
+      } else {
+        config.logError(err.message);
+      }
 
       return Promise.reject(err);
     })
