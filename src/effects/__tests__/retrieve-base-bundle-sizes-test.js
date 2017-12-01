@@ -10,6 +10,8 @@ import {
   GetArtifactsHandler,
   GetArtifactHandler
 } from '../../test/requests';
+import {NoRecentBuildsFoundErr, NoBundleSizeArtifactFoundErr}
+  from '../../core/errors';
 
 const optsFac = (opts = {}) => ({
   pullRequestId: '45',
@@ -109,9 +111,7 @@ test('returns error when there are no recent builds for the base branch', () =>
       getRecentBuildsResponse: []
     }
   }).catch(error => {
-    expect(error).toBeA(Error);
-    expect(error.message)
-      .toBe('No recent builds found for the base branch: fjd0823rf2!');
+    expect(error.message).toBe(NoRecentBuildsFoundErr('fjd0823rf2').message);
   })
 );
 
@@ -123,8 +123,7 @@ test('returns error when there are no bundle size artifacts found for latest bui
       getArtifactsResponse: []
     }
   }).catch(error => {
-    expect(error).toBeA(Error);
     expect(error.message)
-      .toBe('No bundle size artifact found for latest build of: lq3i7t42ug. Build number: 6390');
+      .toBe(NoBundleSizeArtifactFoundErr('lq3i7t42ug', '6390').message);
   })
 );

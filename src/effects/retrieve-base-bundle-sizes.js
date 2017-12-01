@@ -1,7 +1,10 @@
+import R from 'ramda';
 import makeGitHubRequest from '../make-github-request';
 import makeCircleRequest from '../make-circle-request';
 import ReaderPromise from '../core/reader-promise';
 import {CircleCiBuildStatuses} from '../core/constants';
+import {NoRecentBuildsFoundErr, NoBundleSizeArtifactFoundErr}
+  from '../core/errors';
 
 export default ({pullRequestId, bundleSizesFilepath}) =>
   ReaderPromise.fromReaderFn(config => {
@@ -29,8 +32,8 @@ export default ({pullRequestId, bundleSizesFilepath}) =>
 
       return getRecentBuilds(baseBranch).chain(recentBuilds => {
         if(recentBuilds.length === 0) {
-          return ReaderPromise.Error(
-            `No recent builds found for the base branch: ${baseBranch}!`
+          return R.pipe(NoRecentBuildsFoundErr, ReaderPromise.fromError)(
+            baseBranch
           );
         }
 
@@ -44,8 +47,10 @@ export default ({pullRequestId, bundleSizesFilepath}) =>
           const bundleSizeArtifact = buildArtifacts
             .find(artifact => artifact.path.match(artifactPathRegExp));
           if(!bundleSizeArtifact) {
-            return ReaderPromise.Error('No bundle size artifact found for '
-              + `latest build of: ${baseBranch}. Build number: ${buildNumber}`);
+            return R.pipe(
+              NoBundleSizeArtifactFoundErr,
+              ReaderPromise.fromError
+            )(baseBranch, buildNumber);
           }
 
           return getBundleSizeArtifact(bundleSizeArtifact.url);

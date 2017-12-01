@@ -1,7 +1,11 @@
 import {camelizeKeys, decamelizeKeys} from 'humps';
 import R from 'ramda';
-import {PromiseError} from './shared';
 import ReaderPromise from './core/reader-promise';
+import {
+  GitHubFetchErr,
+  GitHubAuthorizationErr,
+  GitHubInvalidResponseErr
+} from './core/errors';
 
 /* eslint-disable no-magic-numbers */
 const Statuses = {
@@ -36,23 +40,20 @@ export default ({path, fetchOpts = {}}) => {
       ...R.omit(['headers', 'body'], fetchOpts)
     })
       .catch(response =>
-        PromiseError(
-          `Error making request to GitHub ${url}: ${response}`
-        )
-      )
-      .then(response => {
+        R.pipe(GitHubFetchErr, a => Promise.reject(a))(url, response)
+      ).then(response => {
         if(response.ok) {
           return response.json();
         } else if(isAuthError(response.status)) {
-          return PromiseError(
-            `Authorization failed for request to GitHub ${url}. `
-              + 'Did you provide a correct GitHub Api Token? Original '
-              + `response: ${response.statusText}`
+          return R.pipe(GitHubAuthorizationErr, a => Promise.reject(a))(
+            url,
+            response.statusText
           );
         }
 
-        return PromiseError(
-          `Error making request to GitHub ${url}: ${response.statusText}`
+        return R.pipe(GitHubInvalidResponseErr, a => Promise.reject(a))(
+          url,
+          response.statusText
         );
       }).then(deserializer);
   });

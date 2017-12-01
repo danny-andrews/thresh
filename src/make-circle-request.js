@@ -1,7 +1,7 @@
 import {camelizeKeys} from 'humps';
 import R from 'ramda';
-import {PromiseError} from './shared';
 import ReaderPromise from './core/reader-promise';
+import {CircleCiFetchErr, CircleCiInvalidResponseErr} from './core/errors';
 
 const circleDeserializer = payload => camelizeKeys(payload);
 
@@ -17,17 +17,14 @@ export default ({path, url, fetchOpts = {}, raw = false}) =>
       ...R.omit('headers', fetchOpts)
     })
       .catch(response =>
-        PromiseError(
-          `Error making request to CircleCI ${finalUrl}: ${response.message}`
-        )
+        R.pipe(CircleCiFetchErr, a => Promise.reject(a))(finalUrl, response)
       )
       .then(response => {
-        if(response.ok) {
-          return response.json();
-        }
+        if(response.ok) return response.json();
 
-        return PromiseError(
-          `Error making request to CircleCI ${finalUrl}: ${response.statusText}`
+        return R.pipe(CircleCiInvalidResponseErr, a => Promise.reject(a))(
+          finalUrl,
+          response.statusText
         );
       })
       .then(raw ? a => a : circleDeserializer);
