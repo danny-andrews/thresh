@@ -1,13 +1,13 @@
-Give ReaderPromise an unwrap method, and use that instead of hijacking the
-underlying Reader's run method.
+Expand test coverage.
+
+Replace Promises with Flutures.
+
+Use named parameters for error message sprintf.
 
 Stats should passed around as a list, not an object. Currently, we have to do a
 bunch of conversions back and forth (see bundle sizes from webpack stats).
 
-Replace Promises with Flutures.
-
-Write tests for ReaderPromise.
-
 Move ReaderPromise into seperate repo.
 
-Use named parameters for error message sprintf.
+Give ReaderPromise an unwrap method, and use that instead of hijacking the
+underlying Reader's run method.
