@@ -85,7 +85,7 @@ export default opts => {
 
   const retrieveBaseBundleSizes2 = () =>
     pullRequestId.toEither().cata(
-      () => ReaderPromise.fromError(NoOpenPullRequestFoundErr()),
+      () => ReaderPromise.of(NoOpenPullRequestFoundErr()),
       prId => effects.retrieveBaseBundleSizes({
         pullRequestId: prId,
         bundleSizesFilepath: path.join(projectName, BUNDLE_SIZES_FILENAME)
@@ -113,6 +113,14 @@ export default opts => {
         .run(config),
       retrieveBaseBundleSizes2().run(config)
     ]).then(([,, bundleSizes, baseBundleSizes]) => {
+      const writeBundleSizes2 = effects.writeBundleSizes({
+        ...writeArtifactParams,
+        bundleSizes
+      }).run(config);
+      if(baseBundleSizes.constructor === NoOpenPullRequestFoundErr) {
+        return writeBundleSizes2.then(() => Promise.reject(baseBundleSizes));
+      }
+
       const bundleDiffs = diffBundles({
         current: bundleSizes,
         original: baseBundleSizes
@@ -127,10 +135,7 @@ export default opts => {
       }).cata(a => Promise.reject(a), a => Promise.resolve(a))
         .then(thresholdFailures =>
           Promise.all([
-            effects.writeBundleSizes({
-              ...writeArtifactParams,
-              bundleSizes
-            }).run(config),
+            writeBundleSizes2,
             effects.writeBundleDiff({
               ...writeArtifactParams,
               bundleDiffs,
