@@ -1,6 +1,4 @@
 # circleci-weigh-in
-**NOTE: Only works with GitHub repositories.**
-
 A CircleCI integration for tracking file size changes across deploys.
 
 ## What it Does
@@ -12,19 +10,19 @@ A CircleCI integration for tracking file size changes across deploys.
 {
   "app.css": {
     "size": 52336,
-    "path": "webcreator_public/css/app.54bbcf6f50ed582c98f5cf3841d5c837.css"
+    "path": "publid/css/app.54bbcf6f50ed582c98f5cf3841d5c837.css"
   },
   "app.js": {
     "size": 408489,
-    "path": "webcreator_public/js/app.18db3f4eb6b95f3ac8ea.js"
+    "path": "publid/js/app.18db3f4eb6b95f3ac8ea.js"
   },
   "manifest.js": {
     "size": 1463,
-    "path": "webcreator_public/js/manifest.5cb70be29d3945c8ee59.js"
+    "path": "publid/js/manifest.5cb70be29d3945c8ee59.js"
   },
   "vendor.js": {
     "size": 2284786,
-    "path": "webcreator_public/js/vendor.af1abaa45f10408b578e.js"
+    "path": "publid/js/vendor.af1abaa45f10408b578e.js"
   }
 }
 ```
@@ -162,3 +160,9 @@ jobs:
           path: ./example/dist/artifacts
           destination: ./
 ```
+
+## Future Plans
+I've tried to keep the CI environment-agnostic code (reading config, reading bundle stats, calculating bundle diffs, etc.) separate from the code specific to CircleCI (reading environment variables, storing build artifacts, retrieving build info, etc.) in an effort to ease development of similar integrations for other CI environments (Jenkins, Travis, etc.) I'll split this repo up accordingly when more integrations are made.
+
+## Contributing
+If you see something missing, please open an issue! This project is my real-world testbed for software design patterns or other ideas I want to play around with, so I plan to be very active in maintaining it in the foreseeable future.
