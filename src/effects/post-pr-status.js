@@ -39,3 +39,14 @@ export const postPendingPrStatus = ({sha, targetUrl, label}) => postPrStatus({
     description: 'Calculating bundle diffs and threshold failures (if any)...'
   }
 });
+
+export const postErrorPrStatus = ({sha, targetUrl, label, description}) =>
+  postPrStatus({
+    sha,
+    body: {
+      state: StatusStates.ERROR,
+      targetUrl,
+      context: label,
+      description
+    }
+  });
