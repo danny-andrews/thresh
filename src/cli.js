@@ -68,4 +68,8 @@ main.run({
   circleApiToken: process.env.CIRCLE_API_TOKEN,
   logMessage: console.log,
   logError: console.error
-}).catch(() => process.exit(1)); // eslint-disable-line no-process-exit
+}).catch(err => {
+  // Catchall in case our error logging logic has an error. :D
+  console.error(err);
+  process.exit(1); // eslint-disable-line no-process-exit
+});

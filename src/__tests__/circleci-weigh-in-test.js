@@ -27,6 +27,7 @@ const subject = (opts = {}) =>
       retrieveBaseBundleSizes: () => ReaderPromise.of({}),
       postFinalPrStatus: () => ReaderPromise.of(),
       postPendingPrStatus: () => ReaderPromise.of(),
+      postErrorPrStatus: () => ReaderPromise.of(),
       readStats: () => ReaderPromise.of({
         assetsByChunkName: {
           app: 'dist/app.js'
@@ -127,25 +128,33 @@ test('surfaces JSON parse errors for stats file', () => {
   });
 });
 
-test('surfaces errors making artifact directory', () =>
-  subject({
-    effects: {
-      makeArtifactDirectory: () => ReaderPromise.fromError('oh noes')
-    }
-  }).run(configFac()).catch(err => {
-    expect(err).toBe('oh noes');
-  })
-);
+test('surfaces errors making artifact directory', () => {
+  const logErrorSpy = createSpy();
 
-test('surfaces errors writing bundle sizes', () =>
-  subject({
+  return subject({
     effects: {
-      writeBundleSizes: () => ReaderPromise.fromError('uh oh')
+      makeArtifactDirectory: () => ReaderPromise.fromError({message: 'oh noes'})
     }
-  }).run(configFac()).catch(err => {
-    expect(err).toBe('uh oh');
-  })
-);
+  }).run(
+    configFac({logError: logErrorSpy})
+  ).catch(() => {
+    expect(logErrorSpy).toHaveBeenCalledWith('oh noes');
+  });
+});
+
+test('surfaces errors making artifact directory', () => {
+  const logErrorSpy = createSpy();
+
+  return subject({
+    effects: {
+      writeBundleSizes: () => ReaderPromise.fromError({message: 'uh oh'})
+    }
+  }).run(
+    configFac({logError: logErrorSpy})
+  ).catch(() => {
+    expect(logErrorSpy).toHaveBeenCalledWith('uh oh');
+  });
+});
 
 test('surfaces errors writing bundle diffs', () =>
   subject({

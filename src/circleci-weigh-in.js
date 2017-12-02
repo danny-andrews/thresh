@@ -1,5 +1,6 @@
 import R from 'ramda';
 import path from 'path';
+import {Reader} from 'monet';
 import {BUNDLE_SIZES_FILENAME} from './core/constants';
 import bundleSizesFromWebpackStats
   from './core/bundle-sizes-from-webpack-stats';
@@ -19,6 +20,7 @@ import {
   makeArtifactDirectory,
   postFinalPrStatus,
   postPendingPrStatus,
+  postErrorPrStatus,
   readStats,
   retrieveBaseBundleSizes,
   writeBundleDiff,
@@ -31,7 +33,15 @@ const warningTypes = [
   NoBundleSizeArtifactFoundErr
 ];
 
-const isWarningType = err => R.any(Type => R.is(Type, err), warningTypes);
+const isWarningType = err =>
+  R.any(Type => err.constructor === Type, warningTypes);
+
+const logError = Reader(
+  config => err => {
+    if(R.is(Error, err)) config.logError(err);
+    else config.logError(err.message);
+  }
+);
 
 export default opts => {
   const {
@@ -45,6 +55,7 @@ export default opts => {
       retrieveBaseBundleSizes,
       postFinalPrStatus,
       postPendingPrStatus,
+      postErrorPrStatus,
       readStats,
       makeArtifactDirectory,
       writeBundleSizes,
@@ -133,19 +144,19 @@ export default opts => {
           ])
         );
     }).catch(err => {
+      const logError2 = logError.run(config);
+      effects.postErrorPrStatus({...prStatusParams, description: err.message})
+        .run(config).catch(logError2);
+
       if(isWarningType(err)) {
         config.logMessage(err.message);
 
         return Promise.resolve();
       }
 
-      if(R.is(Error, err)) {
-        config.logError(err);
-      } else {
-        config.logError(err.message);
-      }
+      logError2(err);
 
-      return Promise.reject(err);
+      return Promise.reject();
     })
   );
 };
