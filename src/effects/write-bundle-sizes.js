@@ -12,9 +12,9 @@ export default ({rootPath, projectName, bundleSizes}) =>
     BUNDLE_SIZES_FILENAME
   ).chain(filepath =>
     ReaderPromise.fromReaderFn(({writeFile}) =>
-      writeFile(
-        filepath,
-        serializeForFile(bundleSizes)
-      ).catch(error => Promise.reject(ErrorWritingBundleSizeArtifactErr(error)))
+      writeFile(filepath, serializeForFile(bundleSizes))
+        .catch(error =>
+          Promise.reject(ErrorWritingBundleSizeArtifactErr(error))
+        )
     )
   );

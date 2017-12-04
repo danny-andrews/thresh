@@ -4,9 +4,6 @@ import expect, {createSpy} from 'expect';
 import circleciWeighIn from '../circleci-weigh-in';
 import ReaderPromise from '../core/reader-promise';
 import {Maybe} from 'monet';
-import {StatsFileReadErr, ErrorWritingBundleDiffArtifactErr}
-  from '../core/errors';
-import {parseJSON} from '../shared';
 
 const configFac = (config = {}) => ({
   logMessage: () => {},
@@ -39,20 +36,20 @@ const subject = (opts = {}) =>
       resolve: (...args) => ReaderPromise.of(['/root/builds', args.join('/')].join('/')),
       makeArtifactDirectory: () => ReaderPromise.of(),
       writeBundleSizes: () => ReaderPromise.of(),
-      writeBundleDiff: () => ReaderPromise.of(),
+      writeBundleDiffs: () => ReaderPromise.of(),
       ...(opts.effects ? opts.effects : {})
     },
     ...R.omit(['effects'], opts)
   });
 
 test('happy path (makes artifact directory, writes bundle stats to file, and writes bundle diffs to file)', () => {
-  const writeBundleDiffSpy = createSpy().andReturn(ReaderPromise.of());
+  const writeBundleDiffsSpy = createSpy().andReturn(ReaderPromise.of());
   const writeBundleSizesSpy = createSpy().andReturn(ReaderPromise.of());
   const makeArtifactDirectorySpy = createSpy().andReturn(ReaderPromise.of());
 
   return subject({
     effects: {
-      writeBundleDiff: writeBundleDiffSpy,
+      writeBundleDiffs: writeBundleDiffsSpy,
       writeBundleSizes: writeBundleSizesSpy,
       makeArtifactDirectory: makeArtifactDirectorySpy,
       readStats: () => ReaderPromise.of({
@@ -77,7 +74,7 @@ test('happy path (makes artifact directory, writes bundle stats to file, and wri
       projectName: bundleDiffProjectName,
       bundleDiffs: bundleDiffContents,
       thresholdFailures
-    } = firstCallFirstArgument(writeBundleDiffSpy);
+    } = firstCallFirstArgument(writeBundleDiffsSpy);
 
     expect(makeArtifactDirectorySpy).toHaveBeenCalledWith({
       rootPath: 'lfjk3208hohefi4/artifacts',
@@ -105,26 +102,15 @@ test('handles case where no open pull request is found', () =>
   subject({pullRequestId: Maybe.None()}).run(configFac())
 );
 
-test('surfaces errors reading stats file', () =>
-  subject({
-    effects: {
-      readFile: () => Promise.reject('oh noes')
-    }
-  }).run(configFac()).catch(err => {
-    expect(err.message).toBe(StatsFileReadErr('Error: oh noes').message);
-  })
-);
-
-test('surfaces JSON parse errors for stats file', () => {
-  const fileContents = 'not JSON';
+test('surfaces errors reading stats file', () => {
+  const logErrorSpy = createSpy();
 
   return subject({
     effects: {
-      readFile: () => Promise.resolve(fileContents)
+      readFile: () => ReaderPromise.fromError({message: 'oh noes'})
     }
-  }).run(configFac()).catch(err => {
-    expect(err.message)
-      .toBe(StatsFileReadErr(parseJSON(fileContents).left()).message);
+  }).run(configFac()).catch(() => {
+    expect(logErrorSpy).toHaveBeenCalledWith('oh noes');
   });
 });
 
@@ -142,7 +128,7 @@ test('surfaces errors making artifact directory', () => {
   });
 });
 
-test('surfaces errors making artifact directory', () => {
+test('surfaces errors writing bundle sizes', () => {
   const logErrorSpy = createSpy();
 
   return subject({
@@ -156,18 +142,14 @@ test('surfaces errors making artifact directory', () => {
   });
 });
 
-test('surfaces errors writing bundle diffs', () =>
-  subject({
+test('surfaces errors writing bundle diffs', () => {
+  const logErrorSpy = createSpy();
+
+  return subject({
     effects: {
-      writeFile: path => (
-        path.match(/bundle-sizes-diff\.json/)
-          ? Promise.reject('uh oh')
-          : Promise.resolve()
-      )
+      writeBundleDiffs: () => ReaderPromise.fromError({message: 'uh oh'})
     }
-  }).run(configFac()).catch(err => {
-    console.log(err);
-    expect(err.message)
-      .toBe(ErrorWritingBundleDiffArtifactErr('Error: uh oh').message);
-  })
-);
+  }).run(configFac({logError: logErrorSpy})).catch(() => {
+    expect(logErrorSpy).toHaveBeenCalledWith('uh oh');
+  });
+});

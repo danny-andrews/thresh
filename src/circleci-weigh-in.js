@@ -23,7 +23,7 @@ import {
   postErrorPrStatus,
   readStats,
   retrieveBaseBundleSizes,
-  writeBundleDiff,
+  writeBundleDiffs,
   writeBundleSizes
 } from './effects';
 
@@ -59,7 +59,7 @@ export default opts => {
       readStats,
       makeArtifactDirectory,
       writeBundleSizes,
-      writeBundleDiff
+      writeBundleDiffs
     }
   } = opts;
   const failureThresholds = opts.failureThresholds.map(
@@ -136,7 +136,7 @@ export default opts => {
         .then(thresholdFailures =>
           Promise.all([
             writeBundleSizes2,
-            effects.writeBundleDiff({
+            effects.writeBundleDiffs({
               ...writeArtifactParams,
               bundleDiffs,
               thresholdFailures
