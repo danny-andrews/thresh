@@ -1,6 +1,8 @@
 import R from 'ramda';
 import {Response} from 'node-fetch';
 
+export const PromiseError = R.pipe(Error, a => Promise.reject(a));
+
 export const ResponsePromise = R.pipe(
   (body, opts) => new Response(JSON.stringify(body), opts),
   a => Promise.resolve(a),

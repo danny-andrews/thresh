@@ -3,11 +3,7 @@ import {sprintf} from 'sprintf-js';
 const Err = ({messageTemplate, constructor}) => (...args) => {
   const message = sprintf(messageTemplate, ...args);
 
-  return ({
-    message,
-    constructor,
-    show: () => message
-  });
+  return ({message, constructor});
 };
 
 /* eslint-disable max-len */
