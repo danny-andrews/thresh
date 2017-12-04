@@ -1,6 +1,5 @@
 import R from 'ramda';
 import path from 'path';
-import {Reader} from 'monet';
 import {BUNDLE_SIZES_FILENAME} from './core/constants';
 import bundleSizesFromWebpackStats
   from './core/bundle-sizes-from-webpack-stats';
@@ -35,13 +34,6 @@ const warningTypes = [
 
 const isWarningType = err =>
   R.any(Type => err.constructor === Type, warningTypes);
-
-const logError = Reader(
-  config => err => {
-    if(R.is(Error, err)) config.logError(err);
-    else config.logError(err.message);
-  }
-);
 
 export default opts => {
   const {
@@ -149,9 +141,9 @@ export default opts => {
           ])
         );
     }).catch(err => {
-      const logError2 = logError.run(config);
+      const logError = () => config.logError(err.message);
       effects.postErrorPrStatus({...prStatusParams, description: err.message})
-        .run(config).catch(logError2);
+        .run(config).catch(logError);
 
       if(isWarningType(err)) {
         config.logMessage(err.message);
@@ -159,7 +151,7 @@ export default opts => {
         return Promise.resolve();
       }
 
-      logError2(err);
+      logError(err);
 
       return Promise.reject();
     })
