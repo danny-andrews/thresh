@@ -1,8 +1,8 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
-import subject from '../diff-bundles';
+import subject from '../diff-assets';
 
-const bundleFac = (opts = {}) => ({
+const assetFac = (opts = {}) => ({
   size: 24,
   ...opts
 });
@@ -21,12 +21,12 @@ test('empty objects', () => {
 test('calculates stats properly', () => {
   const actual = subject({
     current: {
-      'asset1.js': bundleFac({size: 5}),
-      'asset2.js': bundleFac({size: 80})
+      'asset1.js': assetFac({size: 5}),
+      'asset2.js': assetFac({size: 80})
     },
     original: {
-      'asset1.js': bundleFac({size: 4}),
-      'asset2.js': bundleFac({size: 100})
+      'asset1.js': assetFac({size: 4}),
+      'asset2.js': assetFac({size: 100})
     }
   });
 
@@ -51,11 +51,11 @@ test('calculates stats properly', () => {
 test('calculates diff correctly even when mismatch found', () => {
   const actual = subject({
     current: {
-      'asset1.js': bundleFac({size: 6}),
-      'asset2.js': bundleFac({size: 424})
+      'asset1.js': assetFac({size: 6}),
+      'asset2.js': assetFac({size: 424})
     },
     original: {
-      'asset1.js': bundleFac({size: 16})
+      'asset1.js': assetFac({size: 16})
     }
   });
 
@@ -73,7 +73,7 @@ test('calculates diff correctly even when mismatch found', () => {
 test('calls onMismatchFound for every mismatch found', () => {
   const spy = createSpy();
   subject({
-    current: {'new-asset.js': bundleFac(), 'new-asset.css': bundleFac()},
+    current: {'new-asset.js': assetFac(), 'new-asset.css': assetFac()},
     original: {},
     onMismatchFound: spy
   });

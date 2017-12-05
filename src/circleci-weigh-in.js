@@ -1,16 +1,14 @@
 import R from 'ramda';
 import path from 'path';
-import {BUNDLE_SIZES_FILENAME} from './core/constants';
-import bundleSizesFromWebpackStats
-  from './core/bundle-sizes-from-webpack-stats';
-import diffBundles from './core/diff-bundles';
+import {ASSET_STATS_FILENAME} from './core/constants';
+import diffAssets from './core/diff-assets';
 import getThresholdFailures from './core/get-threshold-failures';
 import {compactAndJoin, SchemaValidator} from './shared';
 import {
   NoOpenPullRequestFoundErr,
   InvalidFailureThresholdOptionErr,
   NoRecentBuildsFoundErr,
-  NoBundleSizeArtifactFoundErr
+  NoAssetStatsArtifactFoundErr
 } from './core/errors';
 import ReaderPromise from './core/reader-promise';
 import {failureThresholdListSchema, DFAULT_FAILURE_THRESHOLD_STRATEGY}
@@ -20,16 +18,16 @@ import {
   postFinalPrStatus,
   postPendingPrStatus,
   postErrorPrStatus,
-  readStats,
-  retrieveBaseBundleSizes,
-  writeBundleDiffs,
-  writeBundleSizes
+  readManifest,
+  retrieveBaseAssetSizes,
+  writeAssetDiffs,
+  writeAssetStats
 } from './effects';
 
 const warningTypes = [
   NoOpenPullRequestFoundErr,
   NoRecentBuildsFoundErr,
-  NoBundleSizeArtifactFoundErr
+  NoAssetStatsArtifactFoundErr
 ];
 
 const isWarningType = err =>
@@ -37,21 +35,22 @@ const isWarningType = err =>
 
 export default opts => {
   const {
-    statsFilepath,
+    manifestFilepath,
+    outputDirectory,
     projectName = '',
     buildSha,
     buildUrl,
     pullRequestId,
     artifactsDirectory,
     effects = {
-      retrieveBaseBundleSizes,
+      retrieveBaseAssetSizes,
       postFinalPrStatus,
       postPendingPrStatus,
       postErrorPrStatus,
-      readStats,
+      readManifest,
       makeArtifactDirectory,
-      writeBundleSizes,
-      writeBundleDiffs
+      writeAssetStats,
+      writeAssetDiffs
     }
   } = opts;
   const failureThresholds = opts.failureThresholds.map(
@@ -75,19 +74,19 @@ export default opts => {
     )(validator.errors, {separator: '\n'});
   }
 
-  const retrieveBaseBundleSizes2 = () =>
+  const retrieveBaseAssetSizes2 = () =>
     pullRequestId.toEither().cata(
       () => ReaderPromise.of(NoOpenPullRequestFoundErr()),
-      prId => effects.retrieveBaseBundleSizes({
+      prId => effects.retrieveBaseAssetSizes({
         pullRequestId: prId,
-        bundleSizesFilepath: path.join(projectName, BUNDLE_SIZES_FILENAME)
+        assetSizesFilepath: path.join(projectName, ASSET_STATS_FILENAME)
       })
     );
 
   const prStatusParams = {
     sha: buildSha,
     targetUrl: `${buildUrl}#artifacts`,
-    label: compactAndJoin(': ', ['Bundle Sizes', projectName])
+    label: compactAndJoin(': ', ['Asset Sizes', projectName])
   };
 
   const writeArtifactParams = {
@@ -95,27 +94,49 @@ export default opts => {
     projectName
   };
 
+  const getAssetStatsFromManifest = manifest =>
+    ReaderPromise.fromReaderFn(
+      config => Promise.all(
+        R.pipe(
+          R.mapObjIndexed((filepath, filename) => {
+            const fullPath = [outputDirectory, filepath].join('/');
+
+            return config.getFileStats(fullPath)
+              .then(({size}) => ({filename, path: fullPath, size}));
+          }),
+          R.values
+        )(manifest)
+      )
+    );
+
+  const assetStatListToMap = assetStats => R.reduce(
+    (acc, {filename, ...rest}) => ({...acc, [filename]: rest}),
+    {},
+    assetStats
+  );
+
   return ReaderPromise.fromReaderFn(
     config => Promise.all([
       effects.postPendingPrStatus(prStatusParams).run(config),
       effects.makeArtifactDirectory({rootPath: artifactsDirectory, projectName})
         .run(config),
-      effects.readStats(statsFilepath)
-        .map(bundleSizesFromWebpackStats)
+      effects.readManifest(manifestFilepath)
+        .chain(getAssetStatsFromManifest)
+        .map(assetStatListToMap)
         .run(config),
-      retrieveBaseBundleSizes2().run(config)
-    ]).then(([,, bundleSizes, baseBundleSizes]) => {
-      const writeBundleSizes2 = effects.writeBundleSizes({
+      retrieveBaseAssetSizes2().run(config)
+    ]).then(([,, assetStats, baseAssetSizes]) => {
+      const writeAssetStats2 = effects.writeAssetStats({
         ...writeArtifactParams,
-        bundleSizes
+        assetStats
       }).run(config);
-      if(baseBundleSizes.constructor === NoOpenPullRequestFoundErr) {
-        return writeBundleSizes2.then(() => Promise.reject(baseBundleSizes));
+      if(isWarningType(baseAssetSizes)) {
+        return writeAssetStats2.then(() => Promise.reject(baseAssetSizes));
       }
 
-      const bundleDiffs = diffBundles({
-        current: bundleSizes,
-        original: baseBundleSizes
+      const assetDiffs = diffAssets({
+        current: assetStats,
+        original: baseAssetSizes
       });
 
       return getThresholdFailures({
@@ -123,19 +144,19 @@ export default opts => {
         assetStats: R.pipe(
           R.toPairs,
           R.map(([filepath, {current: size}]) => ({filepath, size}))
-        )(bundleDiffs)
+        )(assetDiffs)
       }).cata(a => Promise.reject(a), a => Promise.resolve(a))
         .then(thresholdFailures =>
           Promise.all([
-            writeBundleSizes2,
-            effects.writeBundleDiffs({
+            writeAssetStats2,
+            effects.writeAssetDiffs({
               ...writeArtifactParams,
-              bundleDiffs,
+              assetDiffs,
               thresholdFailures
             }).run(config),
             effects.postFinalPrStatus({
               ...prStatusParams,
-              bundleDiffs,
+              assetDiffs,
               thresholdFailures
             }).run(config)
           ])

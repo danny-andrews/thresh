@@ -4,7 +4,7 @@ import subject from '../get-pr-status-payload';
 import R from 'ramda';
 
 const fac = (opts = {}) => ({
-  bundleDiffs: {
+  assetDiffs: {
     'app.js': {
       filename: 'app.js',
       difference: 0,
@@ -33,10 +33,10 @@ test("sets state to 'failure' when there are failures", () => {
 
 test('sets context to label', () => {
   const {context: actual} = R.pipe(fac, subject)({
-    label: 'bundle sizes'
+    label: 'asset sizes'
   });
 
-  expect(actual).toEqual('bundle sizes');
+  expect(actual).toEqual('asset sizes');
 });
 
 test('sets targetUrl to targetUrl', () => {
@@ -57,16 +57,16 @@ test('sets description to concatenated failure messages when there are failures'
   const {description: actual} = R.pipe(fac, subject)({
     thresholdFailures: [
       {message: 'file2.js is too big'},
-      {message: 'vendor bundle is too big'}
+      {message: 'vendor asset is too big'}
     ]
   });
 
-  expect(actual).toEqual('file2.js is too big \nvendor bundle is too big');
+  expect(actual).toEqual('file2.js is too big \nvendor asset is too big');
 });
 
-test('sets description to formatted bundle diffs when there are no failures', () => {
+test('sets description to formatted asset diffs when there are no failures', () => {
   const {description: actual} = R.pipe(fac, subject)({
-    bundleDiffs: {
+    assetDiffs: {
       'app.js': {
         difference: -734729,
         current: 5364634,

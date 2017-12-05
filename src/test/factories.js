@@ -16,6 +16,6 @@ export const BuildResource = Factory({
 });
 
 export const ArtifactResource = Factory({
-  path: '8932hfdlsajlf/project-name/bundle-sizes.json',
+  path: '8932hfdlsajlf/project-name/asset-stats.json',
   url: 'http://circle-artifacts/my-url/84jhdfhads.json'
 });

@@ -1,4 +1,5 @@
 rules:
+  no-console: off
   no-magic-numbers: off
   max-len:
     - error

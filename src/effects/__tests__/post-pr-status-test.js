@@ -7,7 +7,7 @@ test('postFinalPrStatus makes request to post pr status to GitHub', () => {
   const spy = createSpy().andReturn(ResponsePromise({}));
   postFinalPrStatus({
     sha: 'h8g94hg9',
-    bundleDiffs: {},
+    assetDiffs: {},
     thresholdFailures: [],
     targetUrl: 'info.com/53',
     label: 'interesting info'
@@ -51,7 +51,7 @@ test('postPendingPrStatus makes request to post pending pr status to GitHub', ()
   expect(JSON.parse(body)).toEqual({
     state: 'pending',
     target_url: 'info.com/53', // eslint-disable-line camelcase
-    description: 'Calculating bundle diffs and threshold failures (if any)...',
+    description: 'Calculating asset diffs and threshold failures (if any)...',
     context: 'interesting info'
   });
   expect(url).toBe('https://api.github.com/repos/me/my-repo/statuses/h8g94hg9');

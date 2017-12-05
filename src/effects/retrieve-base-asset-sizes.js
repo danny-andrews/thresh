@@ -3,10 +3,10 @@ import makeGitHubRequest from '../make-github-request';
 import makeCircleRequest from '../make-circle-request';
 import ReaderPromise from '../core/reader-promise';
 import {CircleCiBuildStatuses} from '../core/constants';
-import {NoRecentBuildsFoundErr, NoBundleSizeArtifactFoundErr}
+import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr}
   from '../core/errors';
 
-export default ({pullRequestId, bundleSizesFilepath}) =>
+export default ({pullRequestId, assetSizesFilepath}) =>
   ReaderPromise.fromReaderFn(config => {
     const repoProjectPath = [config.repoOwner, config.repoName].join('/');
 
@@ -24,15 +24,15 @@ export default ({pullRequestId, bundleSizesFilepath}) =>
         path: `project/github/${repoProjectPath}/${buildNumber}/artifacts`
       });
 
-    const getBundleSizeArtifact = bundleSizeArtifactUrl =>
-      makeCircleRequest({url: bundleSizeArtifactUrl, raw: true});
+    const getAssetSizeArtifact = assetSizeArtifactUrl =>
+      makeCircleRequest({url: assetSizeArtifactUrl, raw: true});
 
     return getBaseBranch.chain(prData => {
       const baseBranch = prData.base.ref;
 
       return getRecentBuilds(baseBranch).chain(recentBuilds => {
         if(recentBuilds.length === 0) {
-          return R.pipe(NoRecentBuildsFoundErr, ReaderPromise.fromError)(
+          return R.pipe(NoRecentBuildsFoundErr, ReaderPromise.of)(
             baseBranch
           );
         }
@@ -43,17 +43,17 @@ export default ({pullRequestId, bundleSizesFilepath}) =>
           : firstItem.previousSuccessfulBuild.buildNum;
 
         return getBuildArtifacts(buildNumber).chain(buildArtifacts => {
-          const artifactPathRegExp = new RegExp(`${bundleSizesFilepath}$`);
-          const bundleSizeArtifact = buildArtifacts
+          const artifactPathRegExp = new RegExp(`${assetSizesFilepath}$`);
+          const assetSizeArtifact = buildArtifacts
             .find(artifact => artifact.path.match(artifactPathRegExp));
-          if(!bundleSizeArtifact) {
+          if(!assetSizeArtifact) {
             return R.pipe(
-              NoBundleSizeArtifactFoundErr,
-              ReaderPromise.fromError
+              NoAssetStatsArtifactFoundErr,
+              ReaderPromise.of
             )(baseBranch, buildNumber);
           }
 
-          return getBundleSizeArtifact(bundleSizeArtifact.url);
+          return getAssetSizeArtifact(assetSizeArtifact.url);
         });
       });
     }).run(config);
