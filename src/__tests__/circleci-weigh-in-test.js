@@ -1,6 +1,7 @@
 import R from 'ramda';
 import test from 'ava';
 import expect, {createSpy} from 'expect';
+import {Maybe, Either} from 'monet';
 import {
   NoOpenPullRequestFoundErr,
   InvalidFailureThresholdErr,
@@ -8,7 +9,6 @@ import {
 } from '../core/errors';
 import circleciWeighIn from '../circleci-weigh-in';
 import ReaderPromise from '../core/reader-promise';
-import {Maybe} from 'monet';
 
 const subject = (opts = {}) => {
   const {
@@ -28,7 +28,7 @@ const subject = (opts = {}) => {
     pullRequestId: Maybe.of('f820yf3h'),
     artifactsDirectory: 'lfjk3208hohefi4/artifacts',
     effects: {
-      retrieveAssetSizes: () => ReaderPromise.of({
+      retrieveAssetSizes: () => R.pipe(Either.Right, ReaderPromise.of)({
         'app.js': {
           size: 300,
           path: 'dist/app.js'
@@ -64,7 +64,7 @@ test('happy path (makes artifact directory, writes asset stats to file, and writ
       writeAssetStats: writeAssetStatsSpy,
       makeArtifactDirectory: makeArtifactDirectorySpy,
       readManifest: () => ReaderPromise.of({'app.js': 'app.js'}),
-      retrieveAssetSizes: () => ReaderPromise.of({
+      retrieveAssetSizes: () => R.pipe(Either.Right, ReaderPromise.of)({
         'app.js': {
           size: 20,
           path: 'dist/app.js'

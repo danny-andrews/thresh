@@ -1,5 +1,6 @@
 import R from 'ramda';
 import path from 'path';
+import {Either} from 'monet';
 import {ASSET_STATS_FILENAME} from './core/constants';
 import diffAssets from './core/diff-assets';
 import getThresholdFailures from './core/get-threshold-failures';
@@ -76,7 +77,7 @@ const circleCiWeighInUnchecked = opts => {
 
   const retrieveBaseAssetSizes2 = () =>
     pullRequestId.toEither().cata(
-      () => ReaderPromise.of(NoOpenPullRequestFoundErr()),
+      () => R.pipe(NoOpenPullRequestFoundErr, Either.Left, ReaderPromise.of)(),
       prId => effects.retrieveAssetSizes({
         pullRequestId: prId,
         assetSizesFilepath: path.join(projectName, ASSET_STATS_FILENAME)
@@ -133,13 +134,13 @@ const circleCiWeighInUnchecked = opts => {
         ...writeArtifactParams,
         assetStats
       }).run(config);
-      if(isWarningType(baseAssetSizes)) {
-        return writeAssetStats2.then(() => Promise.reject(baseAssetSizes));
+      if(baseAssetSizes.isLeft()) {
+        return writeAssetStats2.then(() => Promise.reject(baseAssetSizes.left()));
       }
 
       const assetDiffs = diffAssets({
         current: assetStats,
-        original: baseAssetSizes
+        original: baseAssetSizes.right()
       });
 
       const thresholdFailures = await getThresholdFailures({
