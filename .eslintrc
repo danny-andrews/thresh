@@ -1,6 +1,5 @@
 extends: '@danny.andrews/eslint-config'
 rules:
-  no-console: off
   # https://stackoverflow.com/a/3390635/2433572
   no-undefined: off
   sort-imports: off

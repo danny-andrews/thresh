@@ -1,8 +1,8 @@
 export const OUTPUT_FILEPATH = 'circleci-weigh-in';
 
-export const BUNDLE_SIZES_FILENAME = 'bundle-sizes.json';
+export const ASSET_STATS_FILENAME = 'asset-stats.json';
 
-export const BUNDLE_SIZES_DIFF_FILENAME = 'bundle-sizes-diff.json';
+export const ASSET_DIFFS_FILENAME = 'asset-diffs.json';
 
 export const JSON_OUTPUT_SPACING = 2;
 

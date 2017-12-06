@@ -1,11 +1,13 @@
 Write test for cli.js.
 
+Try out babel pipeline operator! https://github.com/babel/babel/tree/master/packages/babel-plugin-proposal-pipeline-operator
+
 Replace Promises with Flutures.
 
 Use named parameters for error message sprintf.
 
 Stats should passed around as a list, not an object. Currently, we have to do a
-bunch of conversions back and forth (see bundle sizes from webpack stats).
+bunch of conversions back and forth.
 
 Move ReaderPromise into seperate repo.
 

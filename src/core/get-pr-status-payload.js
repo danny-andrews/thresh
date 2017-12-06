@@ -1,6 +1,6 @@
 import R from 'ramda';
 import {truncate} from '../shared';
-import formatBundleDiff from './format-bundle-diff';
+import formatAssetDiff from './format-asset-diff';
 
 const MAX_DESCRIPTION_LENGTH = 140;
 
@@ -11,7 +11,7 @@ export const StatusStates = {
   ERROR: 'error'
 };
 
-export default ({bundleDiffs, thresholdFailures, targetUrl = '', label}) => ({
+export default ({assetDiffs, thresholdFailures, targetUrl = '', label}) => ({
   state: R.isEmpty(thresholdFailures)
     ? StatusStates.SUCCESS
     : StatusStates.FAILURE,
@@ -21,9 +21,9 @@ export default ({bundleDiffs, thresholdFailures, targetUrl = '', label}) => ({
     truncate({maxSize: MAX_DESCRIPTION_LENGTH})
   )(
     R.isEmpty(thresholdFailures)
-      ? R.toPairs(bundleDiffs)
-        .map(([filename, bundleDiff]) =>
-          formatBundleDiff({filename, ...bundleDiff})
+      ? R.toPairs(assetDiffs)
+        .map(([filename, assetDiff]) =>
+          formatAssetDiff({filename, ...assetDiff})
         )
       : thresholdFailures.map(({message}) => message)
   ),

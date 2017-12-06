@@ -1,13 +1,13 @@
 import test from 'ava';
 import expect from 'expect';
-import readStats from '../read-stats';
+import readManifest from '../read-manifest';
 import {PromiseError} from '../../test/helpers';
-import {StatsFileReadErr} from '../../core/errors';
+import {ManifestFileReadErr} from '../../core/errors';
 
 const subject = ({
   readFile = () => Promise.resolve(),
-  statsFilepath = 'dist/stats.json'
-} = {}) => readStats({statsFilepath}).run({readFile});
+  manifestFilepath = 'dist/stats.json'
+} = {}) => readManifest(manifestFilepath).run({readFile});
 
 test('returns parsed contents of stats file', () =>
   subject({
@@ -17,14 +17,14 @@ test('returns parsed contents of stats file', () =>
   })
 );
 
-test('returns StatsFileReadErr when an error is encountered reading stats file', () =>
+test('returns ManifestFileReadErr when an error is encountered reading stats file', () =>
   subject({readFile: () => PromiseError('oh no')}).catch(err => {
-    expect(err).toEqual(StatsFileReadErr('Error: oh no'));
+    expect(err).toEqual(ManifestFileReadErr('Error: oh no'));
   })
 );
 
-test('returns StatsFileReadErr when an error is encountered parsing stats file contents', () =>
+test('returns ManifestFileReadErr when an error is encountered parsing stats file contents', () =>
   subject({writeFile: () => Promise.resolve('no valid JSON')}).catch(err => {
-    expect(err).toEqual(StatsFileReadErr('SyntaxError: Unexpected token u in JSON at position 0'));
+    expect(err).toEqual(ManifestFileReadErr('SyntaxError: Unexpected token u in JSON at position 0'));
   })
 );

@@ -25,6 +25,8 @@ export const readFile = promisify(fs.readFile);
 
 export const writeFile = promisify(fs.writeFile);
 
+export const getFileStats = promisify(fs.stat);
+
 export const mkdir = promisify(mkdirp);
 
 export const SchemaValidator = () => new Ajv({allErrors: true});

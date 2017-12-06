@@ -2,7 +2,7 @@
 A CircleCI integration for tracking file size changes across deploys.
 
 ## What it Does
-- Saves file containing file sizes of assets (by reading from webpack stats output) to the `$CIRCLE_ARTIFACTS/circleci-weigh-in/bundle-sizes.json` directory in order to save it as an artifact for later reference.
+- Saves file containing file sizes of assets (by reading from your bundler's manifest output) to the `$CIRCLE_ARTIFACTS/circleci-weigh-in/asset-sizes.json` directory in order to save it as an artifact for later reference.
 
   Example output:
 
@@ -29,7 +29,7 @@ A CircleCI integration for tracking file size changes across deploys.
 
 - Generates diff of base branch file sizes with current branch.
 
-- Saves file containing that diff information to `$CIRCLE_ARTIFACTS/circleci-weigh-in/bundle-sizes-diff.json`.
+- Saves file containing that diff information to `$CIRCLE_ARTIFACTS/circleci-weigh-in/asset-diffs.json`.
 
   Example output
 
@@ -66,13 +66,18 @@ A CircleCI integration for tracking file size changes across deploys.
 
 ## CLI Options
 
-### --stats-filepath
-- Description: Filepath of the webpack stats object to read from.
+### --manifest-filepath
+- Description: Filepath to your bundler's manifest output.
 - Type: `String`
 - Required?: `true`
 
+### --output-directory
+- Description: Directory where your assets are output to.
+- Type: `String`
+- Required?: `false`
+
 ### --project-name
-- Description: The name of the project for which the bundle stats will be generated. (This is useful in monorepo situations where you may want to generate bundle stats for multiple projects during the same build.) Bundle size artifact filenames (`[PROJECT_NAME]/bundle-sizes.json`/`[PROJECT_NAME]/bundle-sizes-diff.json`) and the CI status label (`Bundle Sizes: [PROJECT_NAME]`) will be updated accordingly.
+- Description: The name of the project for which the asset stats will be generated. (This is useful in monorepo situations where you may want to generate asset stats for multiple projects during the same build.) Asset size artifact filenames (`[PROJECT_NAME]/asset-sizes.json`/`[PROJECT_NAME]/asset-diffs.json`) and the CI status label (`Asset Sizes: [PROJECT_NAME]`) will be updated accordingly.
 - Type: `String`
 - Required?: `false`
 
@@ -162,7 +167,7 @@ jobs:
 ```
 
 ## Future Plans
-I've tried to keep the CI environment-agnostic code (reading config, reading bundle stats, calculating bundle diffs, etc.) separate from the code specific to CircleCI (reading environment variables, storing build artifacts, retrieving build info, etc.) in an effort to ease development of similar integrations for other CI environments (Jenkins, Travis, etc.) I'll split this repo up accordingly when more integrations are made.
+I've tried to keep the CI environment-agnostic code (reading config, reading asset stats, calculating asset diffs, etc.) separate from the code specific to CircleCI (reading environment variables, storing build artifacts, retrieving build info, etc.) in an effort to ease development of similar integrations for other CI environments (Jenkins, Travis, etc.) I'll split this repo up accordingly when more integrations are made.
 
 ## Contributing
 If you see something missing, please open an issue! This project is my real-world testbed for software design patterns or other ideas I want to play around with, so I plan to be very active in maintaining it in the foreseeable future.

@@ -1,24 +1,24 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
-import writeBundleSizes from '../write-bundle-sizes';
-import {ErrorWritingBundleSizeArtifactErr} from '../../core/errors';
+import writeAssetStats from '../write-asset-stats';
+import {ErrorWritingAssetSizesArtifactErr} from '../../core/errors';
 
 const subject = ({
   writeFile = () => Promise.resolve(),
   resolve = (...args) => args.join('/'),
   rootPath = 'root',
   projectName = 'project',
-  bundleSizes = {}
-} = {}) => writeBundleSizes({rootPath, projectName, bundleSizes})
+  assetStats = {}
+} = {}) => writeAssetStats({rootPath, projectName, assetStats})
   .run({writeFile, resolve});
 
-test('writes bundle sizes file', () => {
+test('writes asset stats file', () => {
   const writeFileSpy = createSpy().andReturn(Promise.resolve());
 
   return subject({
     rootPath: 'dist',
     projectName: 'my-proj',
-    bundleSizes: {
+    assetStats: {
       'app.css': {
         size: 213,
         path: 'app.css'
@@ -27,7 +27,7 @@ test('writes bundle sizes file', () => {
     writeFile: writeFileSpy
   }).then(() => {
     expect(writeFileSpy).toHaveBeenCalledWith(
-      'dist/circleci-weigh-in/my-proj/bundle-sizes.json',
+      'dist/circleci-weigh-in/my-proj/asset-stats.json',
       JSON.stringify({
         'app.css': {
           size: 213,
@@ -38,8 +38,8 @@ test('writes bundle sizes file', () => {
   });
 });
 
-test('returns ErrorWritingBundleSizeArtifactErr when an error is encountered writing bundle sizes file', () =>
+test('returns error when an error is encountered writing asset stats file', () =>
   subject({writeFile: () => Promise.reject('oh no')}).catch(err => {
-    expect(err).toEqual(ErrorWritingBundleSizeArtifactErr('oh no'));
+    expect(err).toEqual(ErrorWritingAssetSizesArtifactErr('oh no'));
   })
 );

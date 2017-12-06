@@ -17,14 +17,9 @@ export const InvalidFailureThresholdErr = (...args) => Err({
   constructor: InvalidFailureThresholdErr
 })(...args);
 
-export const FilepathNotFoundInStatsErr = (...args) => Err({
-  messageTemplate: 'Could not find %s listed in given webpack stats!',
-  constructor: FilepathNotFoundInStatsErr
-})(...args);
-
-export const StatsFileReadErr = (...args) => Err({
-  messageTemplate: 'Error reading stats file: %s!',
-  constructor: StatsFileReadErr
+export const ManifestFileReadErr = (...args) => Err({
+  messageTemplate: 'Error reading manifest file: %s!',
+  constructor: ManifestFileReadErr
 })(...args);
 
 export const ErrorCreatingArtifactDirectoryErr = (...args) => Err({
@@ -32,14 +27,14 @@ export const ErrorCreatingArtifactDirectoryErr = (...args) => Err({
   constructor: ErrorCreatingArtifactDirectoryErr
 })(...args);
 
-export const ErrorWritingBundleSizeArtifactErr = (...args) => Err({
-  messageTemplate: 'Error writing bundle size artifact: %s',
-  constructor: ErrorWritingBundleSizeArtifactErr
+export const ErrorWritingAssetSizesArtifactErr = (...args) => Err({
+  messageTemplate: 'Error writing asset sizes artifact: %s',
+  constructor: ErrorWritingAssetSizesArtifactErr
 })(...args);
 
-export const ErrorWritingBundleDiffArtifactErr = (...args) => Err({
-  messageTemplate: 'Error writing bundle diff artifact: %s!',
-  constructor: ErrorWritingBundleDiffArtifactErr
+export const ErrorWritingAssetDiffsArtifactErr = (...args) => Err({
+  messageTemplate: 'Error writing asset diffs artifact: %s!',
+  constructor: ErrorWritingAssetDiffsArtifactErr
 })(...args);
 
 export const MissingEnvVarErr = (...args) => Err({
@@ -83,7 +78,7 @@ export const GitHubInvalidResponseErr = (...args) => Err({
 })(...args);
 
 export const NoOpenPullRequestFoundErr = (...args) => Err({
-  messageTemplate: 'No open pull request found. Skipping bundle diff step.',
+  messageTemplate: 'No open pull request found. Skipping asset diff step.',
   constructor: NoOpenPullRequestFoundErr
 })(...args);
 
@@ -92,7 +87,7 @@ export const NoRecentBuildsFoundErr = (...args) => Err({
   constructor: NoRecentBuildsFoundErr
 })(...args);
 
-export const NoBundleSizeArtifactFoundErr = (...args) => Err({
-  messageTemplate: 'No bundle size artifact found for latest build of: %s. Build number: %s',
-  constructor: NoBundleSizeArtifactFoundErr
+export const NoAssetStatsArtifactFoundErr = (...args) => Err({
+  messageTemplate: 'No asset stats artifact found for latest build of: %s. Build number: %s',
+  constructor: NoAssetStatsArtifactFoundErr
 })(...args);

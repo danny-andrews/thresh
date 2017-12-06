@@ -11,18 +11,24 @@ import ReaderPromise from '../core/reader-promise';
 import {Maybe} from 'monet';
 
 const subject = (opts = {}) => {
-  const {logError = () => {}, logMessage = () => {}, ...rest} = opts;
+  const {
+    logError = console.error,
+    logMessage = console.log,
+    getFileStats = R.pipe(a => Promise.resolve(a), R.always)({size: 452}),
+    ...rest
+  } = opts;
 
   return circleciWeighIn({
     statsFilepath: 'dist/stats.js',
     projectName: 'my-project',
+    outputDirectory: '',
     failureThresholds: [],
     buildSha: '8fdhihfj',
     buildUrl: 'http://circle.com/my-build',
     pullRequestId: Maybe.of('f820yf3h'),
     artifactsDirectory: 'lfjk3208hohefi4/artifacts',
     effects: {
-      retrieveBaseBundleSizes: () => ReaderPromise.of({
+      retrieveBaseAssetSizes: () => ReaderPromise.of({
         'app.js': {
           size: 300,
           path: 'dist/app.js'
@@ -31,46 +37,34 @@ const subject = (opts = {}) => {
       postFinalPrStatus: () => ReaderPromise.of(),
       postPendingPrStatus: () => ReaderPromise.of(),
       postErrorPrStatus: () => ReaderPromise.of(),
-      readStats: () => ReaderPromise.of({
-        assetsByChunkName: {
-          app: 'dist/app.js'
-        },
-        assets: [
-          {name: 'dist/app.js', size: 452}
-        ]
-      }),
+      readManifest: () => ReaderPromise.of({'app.js': 'app.js'}),
       resolve: (...args) => ReaderPromise.of(['/root/builds', args.join('/')].join('/')),
       makeArtifactDirectory: () => ReaderPromise.of(),
-      writeBundleSizes: () => ReaderPromise.of(),
-      writeBundleDiffs: () => ReaderPromise.of(),
+      writeAssetStats: () => ReaderPromise.of(),
+      writeAssetDiffs: () => ReaderPromise.of(),
       ...(opts.effects ? opts.effects : {})
     },
     ...R.omit(['effects'], rest)
-  }).run({logMessage, logError});
+  }).run({logMessage, logError, getFileStats});
 };
 
 const firstCallFirstArgument = R.path(['calls', 0, 'arguments', 0]);
 
-test('happy path (makes artifact directory, writes bundle stats to file, and writes bundle diffs to file)', () => {
-  const writeBundleDiffsSpy = createSpy().andReturn(ReaderPromise.of());
-  const writeBundleSizesSpy = createSpy().andReturn(ReaderPromise.of());
+test('happy path (makes artifact directory, writes asset stats to file, and writes asset diffs to file)', () => {
+  const writeAssetDiffsSpy = createSpy().andReturn(ReaderPromise.of());
+  const writeAssetStatsSpy = createSpy().andReturn(ReaderPromise.of());
   const makeArtifactDirectorySpy = createSpy().andReturn(ReaderPromise.of());
 
   return subject({
+    getFileStats: R.pipe(a => Promise.resolve(a), R.always)({size: 200}),
     failureThresholds: [{targets: 'app.js', maxSize: 50}],
+    outputDirectory: 'dist',
     effects: {
-      writeBundleDiffs: writeBundleDiffsSpy,
-      writeBundleSizes: writeBundleSizesSpy,
+      writeAssetDiffs: writeAssetDiffsSpy,
+      writeAssetStats: writeAssetStatsSpy,
       makeArtifactDirectory: makeArtifactDirectorySpy,
-      readStats: () => ReaderPromise.of({
-        assetsByChunkName: {
-          app: 'dist/app.js'
-        },
-        assets: [
-          {name: 'dist/app.js', size: 200}
-        ]
-      }),
-      retrieveBaseBundleSizes: () => ReaderPromise.of({
+      readManifest: () => ReaderPromise.of({'app.js': 'app.js'}),
+      retrieveBaseAssetSizes: () => ReaderPromise.of({
         'app.js': {
           size: 20,
           path: 'dist/app.js'
@@ -79,35 +73,35 @@ test('happy path (makes artifact directory, writes bundle stats to file, and wri
     }
   }).then(() => {
     const {
-      rootPath: bundleStatsRootPath,
-      projectName: bundleStatsProjectName,
-      bundleSizes: bundleStatsContents
-    } = firstCallFirstArgument(writeBundleSizesSpy);
+      rootPath: assetStatsRootPath,
+      projectName: assetStatsProjectName,
+      assetStats: assetStatsContents
+    } = firstCallFirstArgument(writeAssetStatsSpy);
 
     const {
-      rootPath: bundleDiffRootPath,
-      projectName: bundleDiffProjectName,
-      bundleDiffs: bundleDiffContents,
+      rootPath: assetDiffsRootPath,
+      projectName: assetDiffsProjectName,
+      assetDiffs: assetDiffsContents,
       thresholdFailures
-    } = firstCallFirstArgument(writeBundleDiffsSpy);
+    } = firstCallFirstArgument(writeAssetDiffsSpy);
 
     expect(makeArtifactDirectorySpy).toHaveBeenCalledWith({
       rootPath: 'lfjk3208hohefi4/artifacts',
       projectName: 'my-project'
     });
 
-    expect(bundleStatsRootPath).toEqual('lfjk3208hohefi4/artifacts');
-    expect(bundleStatsProjectName).toEqual('my-project');
-    expect(bundleStatsContents).toEqual({
+    expect(assetStatsRootPath).toEqual('lfjk3208hohefi4/artifacts');
+    expect(assetStatsProjectName).toEqual('my-project');
+    expect(assetStatsContents).toEqual({
       'app.js': {
         path: 'dist/app.js',
         size: 200
       }
     });
 
-    expect(bundleDiffRootPath).toEqual('lfjk3208hohefi4/artifacts');
-    expect(bundleDiffProjectName).toEqual('my-project');
-    expect(bundleDiffContents).toEqual({
+    expect(assetDiffsRootPath).toEqual('lfjk3208hohefi4/artifacts');
+    expect(assetDiffsProjectName).toEqual('my-project');
+    expect(assetDiffsContents).toEqual({
       'app.js': {
         current: 200,
         difference: 180,
@@ -160,15 +154,9 @@ test('handles invalid failure threshold case', () => {
   const logErrorSpy = createSpy();
 
   return subject({
+    getFileStats: R.pipe(a => Promise.resolve(a), R.always)({size: 32432}),
     logError: logErrorSpy,
-    readStats: () => ReaderPromise.of({
-      assetsByChunkName: {
-        app: 'dist/app.js'
-      },
-      assets: [
-        {name: 'dist/app.js', size: 32432}
-      ]
-    }),
+    readManifest: () => ReaderPromise.of({'app.js': 'app.js'}),
     failureThresholds: [{targets: '.css', maxSize: 45}]
   }).catch(() => {
     expect(logErrorSpy)
@@ -181,7 +169,7 @@ test('surfaces errors reading stats file', () => {
 
   return subject({
     effects: {
-      readStats: () => ReaderPromise.fromError({message: 'oh noes'})
+      readManifest: () => ReaderPromise.fromError({message: 'oh noes'})
     },
     logError: logErrorSpy
   }).catch(() => {
@@ -202,12 +190,12 @@ test('surfaces errors making artifact directory', () => {
   });
 });
 
-test('surfaces errors writing bundle sizes', () => {
+test('surfaces errors writing asset sizes', () => {
   const logErrorSpy = createSpy();
 
   return subject({
     effects: {
-      writeBundleSizes: () => ReaderPromise.fromError({message: 'uh oh'})
+      writeAssetStats: () => ReaderPromise.fromError({message: 'uh oh'})
     },
     logError: logErrorSpy
   }).catch(() => {
@@ -215,12 +203,12 @@ test('surfaces errors writing bundle sizes', () => {
   });
 });
 
-test('surfaces errors writing bundle diffs', () => {
+test('surfaces errors writing asset diffs', () => {
   const logErrorSpy = createSpy();
 
   return subject({
     effects: {
-      writeBundleDiffs: () => ReaderPromise.fromError({message: 'uh oh'})
+      writeAssetDiffs: () => ReaderPromise.fromError({message: 'uh oh'})
     },
     logError: logErrorSpy
   }).catch(() => {

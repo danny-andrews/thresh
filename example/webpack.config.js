@@ -1,6 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
-const {StatsWriterPlugin} = require('webpack-stats-plugin');
+const ManifestPlugin = require('webpack-manifest-plugin');
 
 module.exports = {
   entry: {
@@ -16,6 +16,6 @@ module.exports = {
       minChunks: module => module.context
         && module.context.indexOf('node_modules') !== -1
     }),
-    new StatsWriterPlugin({fields: ['assetsByChunkName', 'assets']})
+    new ManifestPlugin()
   ]
 };

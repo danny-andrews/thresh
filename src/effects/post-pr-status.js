@@ -16,14 +16,14 @@ const postPrStatus = ({sha, body}) =>
 
 export const postFinalPrStatus = ({
   sha,
-  bundleDiffs,
+  assetDiffs,
   thresholdFailures,
   targetUrl,
   label
 }) => postPrStatus({
   sha,
   body: getPrStatusPayload({
-    bundleDiffs,
+    assetDiffs,
     thresholdFailures,
     targetUrl,
     label
@@ -36,7 +36,7 @@ export const postPendingPrStatus = ({sha, targetUrl, label}) => postPrStatus({
     state: StatusStates.PENDING,
     targetUrl,
     context: label,
-    description: 'Calculating bundle diffs and threshold failures (if any)...'
+    description: 'Calculating asset diffs and threshold failures (if any)...'
   }
 });
 

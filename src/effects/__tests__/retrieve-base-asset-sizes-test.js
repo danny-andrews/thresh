@@ -1,7 +1,7 @@
 import test from 'ava';
 import R from 'ramda';
 import expect, {createSpy} from 'expect';
-import retrieveBaseBundleSizes from '../retrieve-base-bundle-sizes';
+import retrieveBaseAssetSizes from '../retrieve-base-asset-sizes';
 import {FakeFetch} from '../../test/helpers';
 import {PrResource, BuildResource, ArtifactResource} from '../../test/factories';
 import {
@@ -10,12 +10,12 @@ import {
   GetArtifactsHandler,
   GetArtifactHandler
 } from '../../test/requests';
-import {NoRecentBuildsFoundErr, NoBundleSizeArtifactFoundErr}
+import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr}
   from '../../core/errors';
 
 const optsFac = (opts = {}) => ({
   pullRequestId: '45',
-  bundleSizesFilepath: 'dist/vendor.js',
+  assetSizesFilepath: 'dist/vendor.js',
   ...opts
 });
 
@@ -55,8 +55,8 @@ const subject = ({responseData, repoOwner, repoName, ...opts} = {}) => {
     ...responseData
   });
 
-  return R.pipe(optsFac, retrieveBaseBundleSizes)({
-    bundleSizesFilepath: 'dist/app.js',
+  return R.pipe(optsFac, retrieveBaseAssetSizes)({
+    assetSizesFilepath: 'dist/app.js',
     ...opts
   }).run({
     request: fakeFetch,
@@ -84,7 +84,7 @@ test('uses most recent successful build if latest was unsuccessful', async () =>
   ]);
 
   await subject({
-    bundleSizesFilepath: 'dist/my-file.js',
+    assetSizesFilepath: 'dist/my-file.js',
     responseData: {
       getRecentBuildsResponse: [
         BuildResource({
@@ -115,7 +115,7 @@ test('returns error when there are no recent builds for the base branch', () =>
   })
 );
 
-test('returns error when there are no bundle size artifacts found for latest build of base branch', () =>
+test('returns error when there is no asset stats artifact found for latest build of base branch', () =>
   subject({
     responseData: {
       ref: 'lq3i7t42ug',
@@ -124,6 +124,6 @@ test('returns error when there are no bundle size artifacts found for latest bui
     }
   }).catch(error => {
     expect(error.message)
-      .toBe(NoBundleSizeArtifactFoundErr('lq3i7t42ug', '6390').message);
+      .toBe(NoAssetStatsArtifactFoundErr('lq3i7t42ug', '6390').message);
   })
 );

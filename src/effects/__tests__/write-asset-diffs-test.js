@@ -1,23 +1,23 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
-import writeBundleDiffs from '../write-bundle-diffs';
-import {ErrorWritingBundleDiffArtifactErr} from '../../core/errors';
+import writeAssetDiffs from '../write-asset-diffs';
+import {ErrorWritingAssetDiffsArtifactErr} from '../../core/errors';
 
 const subject = ({
   writeFile = () => Promise.resolve(),
   resolve = (...args) => args.join('/'),
   rootPath = 'root',
   projectName = 'project',
-  bundleDiffs = {},
+  assetDiffs = {},
   thresholdFailures = {}
-} = {}) => writeBundleDiffs({
+} = {}) => writeAssetDiffs({
   rootPath,
   projectName,
-  bundleDiffs,
+  assetDiffs,
   thresholdFailures
 }).run({writeFile, resolve});
 
-test('writes bundle diffs file', () => {
+test('writes asset stats file', () => {
   const writeFileSpy = createSpy().andReturn(Promise.resolve());
   const diffs = {
     'app.css': {
@@ -35,19 +35,19 @@ test('writes bundle diffs file', () => {
   return subject({
     rootPath: 'dist',
     projectName: 'my-proj',
-    bundleDiffs: diffs,
+    assetDiffs: diffs,
     thresholdFailures: failures,
     writeFile: writeFileSpy
   }).then(() => {
     expect(writeFileSpy).toHaveBeenCalledWith(
-      'dist/circleci-weigh-in/my-proj/bundle-sizes-diff.json',
+      'dist/circleci-weigh-in/my-proj/asset-diffs.json',
       JSON.stringify({diffs, failures}, null, 2)
     );
   });
 });
 
-test('returns ErrorWritingBundleDiffArtifactErr when an error is encountered writing bundle diffs file', () =>
+test('returns error when an error is encountered writing asset diffs file', () =>
   subject({writeFile: () => Promise.reject('oh no')}).catch(err => {
-    expect(err).toEqual(ErrorWritingBundleDiffArtifactErr('oh no'));
+    expect(err).toEqual(ErrorWritingAssetDiffsArtifactErr('oh no'));
   })
 );

@@ -1,10 +1,11 @@
+/* eslint-disable no-console */
 import R from 'ramda';
 import assert from 'assert';
 import commandLineArgs from 'command-line-args';
 import path from 'path';
 import fetch from 'node-fetch';
 import {Maybe} from 'monet';
-import {parseJSON, mkdir, writeFile, readFile} from './shared';
+import {parseJSON, mkdir, writeFile, readFile, getFileStats} from './shared';
 import circleciWeighIn from './circleci-weigh-in';
 import {MissingEnvVarErr, CliOptionInvalidJsonErr, MissingCliOptionErr}
   from './core/errors';
@@ -19,9 +20,10 @@ const requiredEnvVariables = [
   'CIRCLE_API_TOKEN'
 ];
 const optionDefinitions = [
-  {name: 'stats-filepath', type: String},
+  {name: 'manifest-filepath', type: String},
   {name: 'project-name', type: String},
-  {name: 'failure-thresholds', type: String, defaultValue: '[]'}
+  {name: 'failure-thresholds', type: String, defaultValue: '[]'},
+  {name: 'output-directory', type: String, defaultValue: ''}
 ];
 
 requiredEnvVariables.forEach(variable =>
@@ -29,12 +31,16 @@ requiredEnvVariables.forEach(variable =>
 );
 
 const {
-  'stats-filepath': statsFilepath,
+  'manifest-filepath': manifestFilepath,
   'project-name': projectName,
-  'failure-thresholds': failureThresholdsString
+  'failure-thresholds': failureThresholdsString,
+  'output-directory': outputDirectory
 } = commandLineArgs(optionDefinitions);
 
-assert(!R.isNil(statsFilepath), MissingCliOptionErr('stats-filepath').message);
+assert(
+  !R.isNil(manifestFilepath),
+  MissingCliOptionErr('manifest-filepath').message
+);
 
 const failureThresholds = parseJSON(failureThresholdsString);
 
@@ -47,8 +53,9 @@ const pullRequestId = process.env.CI_PULL_REQUEST
   && R.last(process.env.CI_PULL_REQUEST.split('/'));
 
 const main = circleciWeighIn({
-  statsFilepath,
+  manifestFilepath,
   projectName,
+  outputDirectory,
   pullRequestId: Maybe.fromNull(pullRequestId),
   failureThresholds: failureThresholds.right(),
   buildSha: process.env.CIRCLE_SHA1,
@@ -62,6 +69,7 @@ main.run({
   resolve: path.resolve,
   request: fetch,
   mkdir,
+  getFileStats,
   repoOwner: process.env.CIRCLE_PROJECT_USERNAME,
   repoName: process.env.CIRCLE_PROJECT_REPONAME,
   githubApiToken: process.env.GITHUB_API_TOKEN,
