@@ -19,7 +19,7 @@ import {
   postPendingPrStatus,
   postErrorPrStatus,
   readManifest,
-  retrieveBaseAssetSizes,
+  retrieveAssetSizes,
   writeAssetDiffs,
   writeAssetStats
 } from './effects';
@@ -33,7 +33,7 @@ const warningTypes = [
 const isWarningType = err =>
   R.any(Type => err.constructor === Type, warningTypes);
 
-export default opts => {
+const circleCiWeighInUnchecked = opts => {
   const {
     manifestFilepath,
     outputDirectory,
@@ -43,7 +43,7 @@ export default opts => {
     pullRequestId,
     artifactsDirectory,
     effects = {
-      retrieveBaseAssetSizes,
+      retrieveAssetSizes,
       postFinalPrStatus,
       postPendingPrStatus,
       postErrorPrStatus,
@@ -77,7 +77,7 @@ export default opts => {
   const retrieveBaseAssetSizes2 = () =>
     pullRequestId.toEither().cata(
       () => ReaderPromise.of(NoOpenPullRequestFoundErr()),
-      prId => effects.retrieveBaseAssetSizes({
+      prId => effects.retrieveAssetSizes({
         pullRequestId: prId,
         assetSizesFilepath: path.join(projectName, ASSET_STATS_FILENAME)
       })
@@ -116,16 +116,19 @@ export default opts => {
   );
 
   return ReaderPromise.fromReaderFn(
-    config => Promise.all([
-      effects.postPendingPrStatus(prStatusParams).run(config),
-      effects.makeArtifactDirectory({rootPath: artifactsDirectory, projectName})
-        .run(config),
-      effects.readManifest(manifestFilepath)
-        .chain(getAssetStatsFromManifest)
-        .map(assetStatListToMap)
-        .run(config),
-      retrieveBaseAssetSizes2().run(config)
-    ]).then(([,, assetStats, baseAssetSizes]) => {
+    async config => {
+      const [,, assetStats, baseAssetSizes] = await Promise.all([
+        effects.postPendingPrStatus(prStatusParams).run(config),
+        effects.makeArtifactDirectory({
+          rootPath: artifactsDirectory,
+          projectName
+        }).run(config),
+        effects.readManifest(manifestFilepath)
+          .chain(getAssetStatsFromManifest)
+          .map(assetStatListToMap)
+          .run(config),
+        retrieveBaseAssetSizes2().run(config)
+      ]);
       const writeAssetStats2 = effects.writeAssetStats({
         ...writeArtifactParams,
         assetStats
@@ -139,42 +142,43 @@ export default opts => {
         original: baseAssetSizes
       });
 
-      return getThresholdFailures({
+      const thresholdFailures = await getThresholdFailures({
         failureThresholds,
         assetStats: R.pipe(
           R.toPairs,
           R.map(([filepath, {current: size}]) => ({filepath, size}))
         )(assetDiffs)
-      }).cata(a => Promise.reject(a), a => Promise.resolve(a))
-        .then(thresholdFailures =>
-          Promise.all([
-            writeAssetStats2,
-            effects.writeAssetDiffs({
-              ...writeArtifactParams,
-              assetDiffs,
-              thresholdFailures
-            }).run(config),
-            effects.postFinalPrStatus({
-              ...prStatusParams,
-              assetDiffs,
-              thresholdFailures
-            }).run(config)
-          ])
-        );
-    }).catch(err => {
-      const logError = () => config.logError(err.message);
-      effects.postErrorPrStatus({...prStatusParams, description: err.message})
-        .run(config).catch(logError);
+      }).cata(a => Promise.reject(a), a => Promise.resolve(a));
 
-      if(isWarningType(err)) {
-        config.logMessage(err.message);
-
-        return Promise.resolve();
-      }
-
-      logError(err);
-
-      return Promise.reject();
-    })
+      return Promise.all([
+        writeAssetStats2,
+        effects.writeAssetDiffs({
+          ...writeArtifactParams,
+          assetDiffs,
+          thresholdFailures
+        }).run(config),
+        effects.postFinalPrStatus({
+          ...prStatusParams,
+          assetDiffs,
+          thresholdFailures
+        }).run(config)
+      ]);
+    }
   );
 };
+
+export default (...args) => ReaderPromise.fromReaderFn(
+  config => circleCiWeighInUnchecked(...args).run(config).catch(err => {
+    const logError = () => config.logError(err.message);
+
+    if(isWarningType(err)) {
+      config.logMessage(err.message);
+
+      return Promise.resolve();
+    }
+
+    logError(err);
+
+    return Promise.reject();
+  })
+);

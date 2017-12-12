@@ -1,7 +1,7 @@
 import test from 'ava';
 import R from 'ramda';
 import expect, {createSpy} from 'expect';
-import retrieveBaseAssetSizes from '../retrieve-base-asset-sizes';
+import retrieveAssetSizes from '../retrieve-asset-sizes';
 import {FakeFetch} from '../../test/helpers';
 import {PrResource, BuildResource, ArtifactResource} from '../../test/factories';
 import {
@@ -55,7 +55,7 @@ const subject = ({responseData, repoOwner, repoName, ...opts} = {}) => {
     ...responseData
   });
 
-  return R.pipe(optsFac, retrieveBaseAssetSizes)({
+  return R.pipe(optsFac, retrieveAssetSizes)({
     assetSizesFilepath: 'dist/app.js',
     ...opts
   }).run({

@@ -28,7 +28,7 @@ const subject = (opts = {}) => {
     pullRequestId: Maybe.of('f820yf3h'),
     artifactsDirectory: 'lfjk3208hohefi4/artifacts',
     effects: {
-      retrieveBaseAssetSizes: () => ReaderPromise.of({
+      retrieveAssetSizes: () => ReaderPromise.of({
         'app.js': {
           size: 300,
           path: 'dist/app.js'
@@ -64,7 +64,7 @@ test('happy path (makes artifact directory, writes asset stats to file, and writ
       writeAssetStats: writeAssetStatsSpy,
       makeArtifactDirectory: makeArtifactDirectorySpy,
       readManifest: () => ReaderPromise.of({'app.js': 'app.js'}),
-      retrieveBaseAssetSizes: () => ReaderPromise.of({
+      retrieveAssetSizes: () => ReaderPromise.of({
         'app.js': {
           size: 20,
           path: 'dist/app.js'
@@ -132,13 +132,20 @@ test("defaults projectName to ''", () => {
   });
 });
 
-test('returns error when non-schema-matching failure threshold is provided', () =>
-  subject({
-    failureThresholds: [{targets: '.js'}]
-  }).catch(err => {
-    expect(err).toEqual(InvalidFailureThresholdOptionErr("data[0] should have required property 'maxSize'"));
-  })
-);
+test('returns error when non-schema-matching failure threshold is provided', () => {
+  const logErrorSpy = createSpy();
+
+  return subject({
+    failureThresholds: [{targets: '.js'}],
+    logError: logErrorSpy
+  }).catch(() => {
+    expect(logErrorSpy).toHaveBeenCalledWith(
+      InvalidFailureThresholdOptionErr(
+        "data[0] should have required property 'maxSize'"
+      ).message
+    );
+  });
+});
 
 test('handles case where no open pull request is found', () => {
   const logMessageSpy = createSpy();
