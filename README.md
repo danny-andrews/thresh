@@ -77,7 +77,7 @@ A CircleCI integration for tracking file size changes across deploys.
 - Required?: `false`
 
 ### --project-name
-- Description: The name of the project for which the asset stats will be generated. (This is useful in monorepo situations where you may want to generate asset stats for multiple projects during the same build.) Asset size artifact filenames (`[PROJECT_NAME]/asset-sizes.json`/`[PROJECT_NAME]/asset-diffs.json`) and the CI status label (`Asset Sizes: [PROJECT_NAME]`) will be updated accordingly.
+- Description: The name of the project for which the asset stats will be generated. (Only use in monorepo situations where you may want to generate asset stats for multiple projects during the same build.) The asset size artifact will be scoped by project name and the CI status label (`Asset Sizes: [PROJECT_NAME]`) will be updated accordingly.
 - Type: `String`
 - Required?: `false`
 

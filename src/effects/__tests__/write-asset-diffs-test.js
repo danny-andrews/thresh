@@ -7,12 +7,10 @@ const subject = ({
   writeFile = () => Promise.resolve(),
   resolve = (...args) => args.join('/'),
   rootPath = 'root',
-  projectName = 'project',
   assetDiffs = {},
   thresholdFailures = {}
 } = {}) => writeAssetDiffs({
   rootPath,
-  projectName,
   assetDiffs,
   thresholdFailures
 }).run({writeFile, resolve});
@@ -34,13 +32,12 @@ test('writes asset stats file', () => {
 
   return subject({
     rootPath: 'dist',
-    projectName: 'my-proj',
     assetDiffs: diffs,
     thresholdFailures: failures,
     writeFile: writeFileSpy
   }).then(() => {
     expect(writeFileSpy).toHaveBeenCalledWith(
-      'dist/circleci-weigh-in/my-proj/asset-diffs.json',
+      'dist/circleci-weigh-in/asset-diffs.json',
       JSON.stringify({diffs, failures}, null, 2)
     );
   });

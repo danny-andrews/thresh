@@ -1,8 +1,18 @@
+Rename: retrieveAssetSizes -> getPreviousAssetSizes
+
+Use async/await in test.
+
+Check for the existence of the running asset value in file database. If it exists, we don't need to make separate request for the previous asset stats artifact.
+
 Write test for cli.js.
+
+Move effects into one file. They are too small to be in their own file.
 
 Try out babel pipeline operator! https://github.com/babel/babel/tree/master/packages/babel-plugin-proposal-pipeline-operator
 
 Replace Promises with Flutures.
+
+Clean up async code with await/async or generators.
 
 Use named parameters for error message sprintf.
 
@@ -13,3 +23,7 @@ Move ReaderPromise into seperate repo.
 
 Give ReaderPromise an unwrap method, and use that instead of hijacking the
 underlying Reader's run method.
+
+Add terminology:
+Asset: object representation of the asset
+Asset-file: the physical file on the file-system

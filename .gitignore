@@ -1,6 +1,5 @@
 /node_modules/
 /lib/
-/example/dist/
 /.nyc_output/
 /coverage/
 /.ideas

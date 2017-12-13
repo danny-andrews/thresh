@@ -5,7 +5,8 @@ import commandLineArgs from 'command-line-args';
 import path from 'path';
 import fetch from 'node-fetch';
 import {Maybe} from 'monet';
-import {parseJSON, mkdir, writeFile, readFile, getFileStats} from './shared';
+import {parseJSON, mkdir, writeFile, readFile, getFileStats, Database}
+  from './shared';
 import circleciWeighIn from './circleci-weigh-in';
 import {MissingEnvVarErr, CliOptionInvalidJsonErr, MissingCliOptionErr}
   from './core/errors';
@@ -54,7 +55,7 @@ const pullRequestId = process.env.CI_PULL_REQUEST
 
 const main = circleciWeighIn({
   manifestFilepath,
-  projectName,
+  projectName: Maybe.fromNull(projectName),
   outputDirectory,
   pullRequestId: Maybe.fromNull(pullRequestId),
   failureThresholds: failureThresholds.right(),
@@ -68,6 +69,7 @@ main.run({
   readFile,
   resolve: path.resolve,
   request: fetch,
+  db: Database('my.db'),
   mkdir,
   getFileStats,
   repoOwner: process.env.CIRCLE_PROJECT_USERNAME,

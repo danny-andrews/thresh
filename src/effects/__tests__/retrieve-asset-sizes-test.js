@@ -72,7 +72,7 @@ test('happy path (returns artifact body)', async () => {
     }
   });
 
-  expect(artifact).toBe('artifact text');
+  expect(artifact.right()).toBe('artifact text');
 });
 
 test('uses most recent successful build if latest was unsuccessful', async () => {

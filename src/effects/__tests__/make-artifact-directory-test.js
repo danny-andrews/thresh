@@ -6,19 +6,17 @@ import {ErrorCreatingArtifactDirectoryErr} from '../../core/errors';
 const subject = ({
   mkdir = () => Promise.resolve(),
   resolve = (...args) => args.join('/'),
-  rootPath = 'root',
-  projectName = 'project'
-} = {}) => makeArtifactDirectory({rootPath, projectName}).run({mkdir, resolve});
+  rootPath = 'root'
+} = {}) => makeArtifactDirectory({rootPath}).run({mkdir, resolve});
 
 test('makes artifact directory', () => {
   const mkdirSpy = createSpy().andReturn(Promise.resolve());
 
   return subject({
     rootPath: 'dist',
-    projectName: 'my-proj',
     mkdir: mkdirSpy
   }).then(() => {
-    expect(mkdirSpy).toHaveBeenCalledWith('dist/circleci-weigh-in/my-proj');
+    expect(mkdirSpy).toHaveBeenCalledWith('dist/circleci-weigh-in');
   });
 });
 

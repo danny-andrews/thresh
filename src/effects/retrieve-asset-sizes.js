@@ -1,4 +1,5 @@
 import R from 'ramda';
+import {Either} from 'monet';
 import makeGitHubRequest from '../make-github-request';
 import makeCircleRequest from '../make-circle-request';
 import ReaderPromise from '../core/reader-promise';
@@ -32,9 +33,11 @@ export default ({pullRequestId, assetSizesFilepath}) =>
 
       return getRecentBuilds(baseBranch).chain(recentBuilds => {
         if(recentBuilds.length === 0) {
-          return R.pipe(NoRecentBuildsFoundErr, ReaderPromise.of)(
-            baseBranch
-          );
+          return R.pipe(
+            NoRecentBuildsFoundErr,
+            Either.Left,
+            ReaderPromise.of
+          )(baseBranch);
         }
 
         const [firstItem] = recentBuilds;
@@ -49,11 +52,12 @@ export default ({pullRequestId, assetSizesFilepath}) =>
           if(!assetSizeArtifact) {
             return R.pipe(
               NoAssetStatsArtifactFoundErr,
+              Either.Left,
               ReaderPromise.of
             )(baseBranch, buildNumber);
           }
 
-          return getAssetSizeArtifact(assetSizeArtifact.url);
+          return getAssetSizeArtifact(assetSizeArtifact.url).map(Either.Right);
         });
       });
     }).run(config);
