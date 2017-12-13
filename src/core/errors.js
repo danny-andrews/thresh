@@ -1,93 +1,87 @@
 import {sprintf} from 'sprintf-js';
 
-const Err = ({messageTemplate, constructor}) => (...args) => {
-  const message = sprintf(messageTemplate, ...args);
-
-  return ({message, constructor});
-};
-
 /* eslint-disable max-len */
-export const InvalidFailureThresholdOptionErr = (...args) => Err({
-  messageTemplate: "failure-thresholds' option is invalid. Problem(s):\n%s",
+export const InvalidFailureThresholdOptionErr = (...args) => ({
+  message: sprintf("failure-thresholds' option is invalid. Problem(s):\n%s", ...args),
   constructor: InvalidFailureThresholdOptionErr
-})(...args);
+});
 
-export const InvalidFailureThresholdErr = (...args) => Err({
-  messageTemplate: 'Invalid failure threshold provided. No targets found for target: [%s]',
+export const InvalidFailureThresholdErr = (...args) => ({
+  message: sprintf('Invalid failure threshold provided. No targets found for target: [%s]', ...args),
   constructor: InvalidFailureThresholdErr
-})(...args);
+});
 
-export const ManifestFileReadErr = (...args) => Err({
-  messageTemplate: 'Error reading manifest file: %s!',
+export const ManifestFileReadErr = (...args) => ({
+  message: sprintf('Error reading manifest file: %s!', ...args),
   constructor: ManifestFileReadErr
-})(...args);
+});
 
-export const ErrorCreatingArtifactDirectoryErr = (...args) => Err({
-  messageTemplate: 'Error creating artifact directory: %s',
+export const ErrorCreatingArtifactDirectoryErr = (...args) => ({
+  message: sprintf('Error creating artifact directory: %s', ...args),
   constructor: ErrorCreatingArtifactDirectoryErr
-})(...args);
+});
 
-export const ErrorWritingAssetSizesArtifactErr = (...args) => Err({
-  messageTemplate: 'Error writing asset sizes artifact: %s',
+export const ErrorWritingAssetSizesArtifactErr = (...args) => ({
+  message: sprintf('Error writing asset sizes artifact: %s', ...args),
   constructor: ErrorWritingAssetSizesArtifactErr
-})(...args);
+});
 
-export const ErrorWritingAssetDiffsArtifactErr = (...args) => Err({
-  messageTemplate: 'Error writing asset diffs artifact: %s!',
+export const ErrorWritingAssetDiffsArtifactErr = (...args) => ({
+  message: sprintf('Error writing asset diffs artifact: %s!', ...args),
   constructor: ErrorWritingAssetDiffsArtifactErr
-})(...args);
+});
 
-export const MissingEnvVarErr = (...args) => Err({
-  messageTemplate: 'Environment variable %s is required!',
+export const MissingEnvVarErr = (...args) => ({
+  message: sprintf('Environment variable %s is required!', ...args),
   constructor: MissingEnvVarErr
-})(...args);
+});
 
-export const MissingCliOptionErr = (...args) => Err({
-  messageTemplate: "'%s' option is required!",
+export const MissingCliOptionErr = (...args) => ({
+  message: sprintf("'%s' option is required!", ...args),
   constructor: MissingCliOptionErr
-})(...args);
+});
 
-export const CliOptionInvalidJsonErr = (...args) => Err({
-  messageTemplate: "'%s' option is not valid JSON!",
+export const CliOptionInvalidJsonErr = (...args) => ({
+  message: sprintf("'%s' option is not valid JSON!", ...args),
   constructor: CliOptionInvalidJsonErr
-})(...args);
+});
 
-export const CircleCiFetchErr = (...args) => Err({
-  messageTemplate: 'Error making request to CircleCI %s: %s',
+export const CircleCiFetchErr = (...args) => ({
+  message: sprintf('Error making request to CircleCI %s: %s', ...args),
   constructor: CircleCiFetchErr
-})(...args);
+});
 
-export const CircleCiInvalidResponseErr = (...args) => Err({
-  messageTemplate: 'Error making request to CircleCI %s: %s',
+export const CircleCiInvalidResponseErr = (...args) => ({
+  message: sprintf('Error making request to CircleCI %s: %s', ...args),
   constructor: CircleCiInvalidResponseErr
-})(...args);
+});
 
-export const GitHubFetchErr = (...args) => Err({
-  messageTemplate: 'Error making request to GitHub %s: %s',
+export const GitHubFetchErr = (...args) => ({
+  message: sprintf('Error making request to GitHub %s: %s', ...args),
   constructor: GitHubFetchErr
-})(...args);
+});
 
-export const GitHubAuthorizationErr = (...args) => Err({
-  messageTemplate: 'Authorization failed for request to GitHub %s. Did you provide a correct GitHub Api Token? Original response: %s',
+export const GitHubAuthorizationErr = (...args) => ({
+  message: sprintf('Authorization failed for request to GitHub %s. Did you provide a correct GitHub Api Token? Original response: %s', ...args),
   constructor: GitHubAuthorizationErr
-})(...args);
+});
 
-export const GitHubInvalidResponseErr = (...args) => Err({
-  messageTemplate: 'Error making request to GitHub %s: %s',
+export const GitHubInvalidResponseErr = (...args) => ({
+  message: sprintf('Error making request to GitHub %s: %s', ...args),
   constructor: GitHubInvalidResponseErr
-})(...args);
+});
 
-export const NoOpenPullRequestFoundErr = (...args) => Err({
-  messageTemplate: 'No open pull request found. Skipping asset diff step.',
+export const NoOpenPullRequestFoundErr = (...args) => ({
+  message: sprintf('No open pull request found. Skipping asset diff step.', ...args),
   constructor: NoOpenPullRequestFoundErr
-})(...args);
+});
 
-export const NoRecentBuildsFoundErr = (...args) => Err({
-  messageTemplate: 'No recent builds found for the base branch: %s!',
+export const NoRecentBuildsFoundErr = (...args) => ({
+  message: sprintf('No recent builds found for the base branch: %s!', ...args),
   constructor: NoRecentBuildsFoundErr
-})(...args);
+});
 
-export const NoAssetStatsArtifactFoundErr = (...args) => Err({
-  messageTemplate: 'No asset stats artifact found for latest build of: %s. Build number: %s',
+export const NoAssetStatsArtifactFoundErr = (...args) => ({
+  message: sprintf('No asset stats artifact found for latest build of: %s. Build number: %s', ...args),
   constructor: NoAssetStatsArtifactFoundErr
-})(...args);
+});
