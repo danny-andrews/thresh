@@ -7,9 +7,8 @@ const subject = ({
   writeFile = () => Promise.resolve(),
   resolve = (...args) => args.join('/'),
   rootPath = 'root',
-  projectName = 'project',
   assetStats = {}
-} = {}) => writeAssetStats({rootPath, projectName, assetStats})
+} = {}) => writeAssetStats({rootPath, assetStats})
   .run({writeFile, resolve});
 
 test('writes asset stats file', () => {
@@ -17,7 +16,6 @@ test('writes asset stats file', () => {
 
   return subject({
     rootPath: 'dist',
-    projectName: 'my-proj',
     assetStats: {
       'app.css': {
         size: 213,
@@ -27,7 +25,7 @@ test('writes asset stats file', () => {
     writeFile: writeFileSpy
   }).then(() => {
     expect(writeFileSpy).toHaveBeenCalledWith(
-      'dist/circleci-weigh-in/my-proj/asset-stats.json',
+      'dist/circleci-weigh-in/asset-stats.json',
       JSON.stringify({
         'app.css': {
           size: 213,

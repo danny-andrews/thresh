@@ -10,8 +10,7 @@ jobs:
       - run: yarn install
       - run: yarn ci
       - run: yarn build
-      - run: yarn build:example
-      - run: './circleci-weigh-in -- --manifest-filepath=example/dist/manifest.json --output-directory=example/dist --project-name=circleci-weigh-in --failure-thresholds="[{ \"targets\": \".js\", \"maxSize\": 20000, \"strategy\": \"total\" }]"'
+      - run: './circleci-weigh-in -- --manifest-filepath=example/dist/manifest.json --output-directory=example/dist --failure-thresholds="[{ \"targets\": \".js\", \"maxSize\": 20000, \"strategy\": \"total\" }]"'
       - store_artifacts:
           path: ./example/dist/artifacts
           destination: ./

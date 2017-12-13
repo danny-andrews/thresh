@@ -1,5 +1,4 @@
 import R from 'ramda';
-import path from 'path';
 import {Either} from 'monet';
 import {ASSET_STATS_FILENAME} from './core/constants';
 import diffAssets from './core/diff-assets';
@@ -22,7 +21,9 @@ import {
   readManifest,
   retrieveAssetSizes,
   writeAssetDiffs,
-  writeAssetStats
+  writeAssetStats,
+  getAssetFileStats,
+  saveStats
 } from './effects';
 
 const warningTypes = [
@@ -38,7 +39,7 @@ const circleCiWeighInUnchecked = opts => {
   const {
     manifestFilepath,
     outputDirectory,
-    projectName = '',
+    projectName,
     buildSha,
     buildUrl,
     pullRequestId,
@@ -51,7 +52,9 @@ const circleCiWeighInUnchecked = opts => {
       readManifest,
       makeArtifactDirectory,
       writeAssetStats,
-      writeAssetDiffs
+      writeAssetDiffs,
+      getAssetFileStats,
+      saveStats
     }
   } = opts;
   const failureThresholds = opts.failureThresholds.map(
@@ -75,12 +78,12 @@ const circleCiWeighInUnchecked = opts => {
     )(validator.errors, {separator: '\n'});
   }
 
-  const retrieveBaseAssetSizes2 = () =>
+  const retrieveAssetSizes2 = () =>
     pullRequestId.toEither().cata(
-      () => R.pipe(NoOpenPullRequestFoundErr, Either.Left, ReaderPromise.of)(),
+      R.pipe(NoOpenPullRequestFoundErr, Either.Left, ReaderPromise.of),
       prId => effects.retrieveAssetSizes({
         pullRequestId: prId,
-        assetSizesFilepath: path.join(projectName, ASSET_STATS_FILENAME)
+        assetSizesFilepath: ASSET_STATS_FILENAME
       })
     );
 
@@ -90,78 +93,96 @@ const circleCiWeighInUnchecked = opts => {
     label: compactAndJoin(': ', ['Asset Sizes', projectName])
   };
 
-  const writeArtifactParams = {
-    rootPath: artifactsDirectory,
-    projectName
-  };
-
-  const getAssetStatsFromManifest = manifest =>
-    ReaderPromise.fromReaderFn(
-      config => Promise.all(
-        R.pipe(
-          R.mapObjIndexed((filepath, filename) => {
-            const fullPath = [outputDirectory, filepath].join('/');
-
-            return config.getFileStats(fullPath)
-              .then(({size}) => ({filename, path: fullPath, size}));
-          }),
-          R.values
-        )(manifest)
-      )
-    );
-
   const assetStatListToMap = assetStats => R.reduce(
     (acc, {filename, ...rest}) => ({...acc, [filename]: rest}),
     {},
     assetStats
   );
 
+  const assetStatMapToList = R.pipe(
+    R.toPairs,
+    R.map(
+      ([filename, filepath]) => ({
+        filename,
+        path: filepath
+      })
+    )
+  );
+
+  const resolvePath = ({path, ...rest}) => ({
+    ...rest,
+    path: [outputDirectory, path].join('/')
+  });
+
   return ReaderPromise.fromReaderFn(
     async config => {
-      const [,, assetStats, baseAssetSizes] = await Promise.all([
+      const [,, currentAssetStats, previousAssetSizes] = await Promise.all([
         effects.postPendingPrStatus(prStatusParams).run(config),
-        effects.makeArtifactDirectory({
-          rootPath: artifactsDirectory,
-          projectName
-        }).run(config),
+        effects.makeArtifactDirectory({rootPath: artifactsDirectory})
+          .run(config),
         effects.readManifest(manifestFilepath)
-          .chain(getAssetStatsFromManifest)
+          .map(assetStatMapToList)
+          .map(R.map(resolvePath))
+          .chain(effects.getAssetFileStats)
           .map(assetStatListToMap)
           .run(config),
-        retrieveBaseAssetSizes2().run(config)
+        retrieveAssetSizes2().run(config)
       ]);
+
+      // TODO: Use polymorphism to eliminate unsemantic branching off
+      // projectName. Also, use some semantic variable like isMonorepo.
+      const assetStats = await projectName.toEither().cata(
+        () => Promise.resolve(currentAssetStats),
+        () => effects.saveStats({
+          ...(previousAssetSizes.isRight() ? previousAssetSizes.right() : {}),
+          [projectName.some()]: currentAssetStats
+        }).run(config)
+      );
+
       const writeAssetStats2 = effects.writeAssetStats({
-        ...writeArtifactParams,
+        rootPath: artifactsDirectory,
         assetStats
       }).run(config);
-      if(baseAssetSizes.isLeft()) {
-        return writeAssetStats2.then(() => Promise.reject(baseAssetSizes.left()));
+      if(previousAssetSizes.isLeft()) {
+        return writeAssetStats2.then(
+          () => Promise.reject(previousAssetSizes.left())
+        );
       }
 
       const assetDiffs = diffAssets({
-        current: assetStats,
-        original: baseAssetSizes.right()
+        current: projectName.isSome()
+          ? assetStats[projectName.some()]
+          : assetStats,
+        original: projectName.isSome()
+          ? previousAssetSizes.right()[projectName.some()]
+          : previousAssetSizes.right()
       });
 
-      const thresholdFailures = await getThresholdFailures({
+      const thresholdFailures = getThresholdFailures({
         failureThresholds,
         assetStats: R.pipe(
           R.toPairs,
           R.map(([filepath, {current: size}]) => ({filepath, size}))
         )(assetDiffs)
-      }).cata(a => Promise.reject(a), a => Promise.resolve(a));
+      });
+
+      if(thresholdFailures.isLeft()) {
+        return writeAssetStats2.then(
+          () => Promise.reject(thresholdFailures.left())
+        );
+      }
 
       return Promise.all([
         writeAssetStats2,
         effects.writeAssetDiffs({
-          ...writeArtifactParams,
+          rootPath: artifactsDirectory,
           assetDiffs,
-          thresholdFailures
+          thresholdFailures: thresholdFailures.right()
         }).run(config),
         effects.postFinalPrStatus({
           ...prStatusParams,
           assetDiffs,
-          thresholdFailures
+          thresholdFailures: thresholdFailures.right()
         }).run(config)
       ]);
     }
@@ -175,11 +196,11 @@ export default (...args) => ReaderPromise.fromReaderFn(
     if(isWarningType(err)) {
       config.logMessage(err.message);
 
-      return Promise.resolve();
+      return Promise.resolve(err);
     }
 
     logError(err);
 
-    return Promise.reject();
+    return Promise.reject(err);
   })
 );

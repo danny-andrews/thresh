@@ -8,8 +8,7 @@
     "github",
     "gulp",
     "rollup",
-    "size",
-    "webpack"
+    "size"
   ],
   "license": "MIT",
   "author": "Danny Andrews",
@@ -27,7 +26,6 @@
   },
   "scripts": {
     "build": "rm -rf lib && babel src --out-dir lib",
-    "build:example": "rm -rf example/dist && yarn webpack -- --config=example/webpack.config.js",
     "ci": "yarn lint && yarn test:coverage && yarn stats",
     "lint": "eslint . && sort-package-json",
     "stats": "echo 'LOC IN PROJECT...' && find src -name '*.js' -not -path '**/__tests__/*' | xargs wc -l",
@@ -38,6 +36,7 @@
     "ajv": "^5.2.2",
     "command-line-args": "^4.0.6",
     "filesize": "^3.5.10",
+    "flat-file-db": "^1.0.0",
     "humps": "^2.0.1",
     "mkdirp": "^0.5.1",
     "monet": "^0.8.10",
@@ -56,9 +55,7 @@
     "eslint": "^4.1.1",
     "expect": "^1.20.2",
     "nyc": "^11.1.0",
-    "sort-package-json": "^1.6.0",
-    "webpack": "^3.2.0",
-    "webpack-manifest-plugin": "^1.3.2"
+    "sort-package-json": "^1.6.0"
   },
   "ava": {
     "files": [
@@ -69,8 +66,7 @@
       "babel-register"
     ],
     "babel": "inherit",
-    "failWithoutAssertions": false,
-    "verbose": true
+    "failWithoutAssertions": false
   },
   "nyc": {
     "include": [
@@ -78,7 +74,8 @@
     ],
     "exclude": [
       "src/test",
-      "src/**/__tests__/**/*.js"
+      "src/**/__tests__/**/*.js",
+      "src/core/errors.js"
     ],
     "reporter": [
       "html",

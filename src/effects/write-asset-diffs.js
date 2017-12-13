@@ -4,13 +4,8 @@ import ReaderPromise from '../core/reader-promise';
 import resolve from '../resolve';
 import {ASSET_DIFFS_FILENAME, OUTPUT_FILEPATH} from '../core/constants';
 
-export default ({rootPath, projectName, assetDiffs, thresholdFailures}) =>
-  resolve(
-    rootPath,
-    OUTPUT_FILEPATH,
-    projectName,
-    ASSET_DIFFS_FILENAME
-  ).chain(filepath =>
+export default ({rootPath, assetDiffs, thresholdFailures}) =>
+  resolve(rootPath, OUTPUT_FILEPATH, ASSET_DIFFS_FILENAME).chain(filepath =>
     ReaderPromise.fromReaderFn(({writeFile}) =>
       writeFile(
         filepath,

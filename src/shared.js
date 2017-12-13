@@ -1,6 +1,7 @@
 import R from 'ramda';
 import Ajv from 'ajv';
 import fs from 'fs';
+import FlatFileDb from 'flat-file-db';
 import mkdirp from 'mkdirp';
 import {Either} from 'monet';
 import {promisify} from 'util';
@@ -17,6 +18,14 @@ export const unthrow = fn => (...args) => {
   } catch(e) {
     return Either.Left(e);
   }
+};
+
+export const Database = (...args) => {
+  const flatFileDb = FlatFileDb(...args);
+
+  return new Promise(resolve =>
+    flatFileDb.on('open', () => resolve(flatFileDb))
+  );
 };
 
 export const parseJSON = unthrow(JSON.parse);
