@@ -90,7 +90,7 @@ const circleCiWeighInUnchecked = opts => {
   const prStatusParams = {
     sha: buildSha,
     targetUrl: `${buildUrl}#artifacts`,
-    label: compactAndJoin(': ', ['Asset Sizes', projectName])
+    label: compactAndJoin(': ', ['Asset Sizes', projectName.orSome(null)])
   };
 
   const assetStatListToMap = assetStats => R.reduce(
