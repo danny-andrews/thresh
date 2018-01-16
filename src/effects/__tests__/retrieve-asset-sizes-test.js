@@ -1,7 +1,7 @@
 import test from 'ava';
 import R from 'ramda';
 import expect, {createSpy} from 'expect';
-import retrieveAssetSizes from '../retrieve-asset-sizes';
+import retrieveAssetSizes from '../get-previous-asset-sizes';
 import {FakeFetch} from '../../test/helpers';
 import {PrResource, BuildResource, ArtifactResource} from '../../test/factories';
 import {
