@@ -4,11 +4,7 @@ Check for the existence of the running asset value in file database. If it exist
 
 Write test for cli.js.
 
-Move effects into one file. They are too small to be in their own file.
-
 Replace Promises with Flutures.
-
-Clean up async code with await/async or generators.
 
 Use named parameters for error message sprintf.
 
