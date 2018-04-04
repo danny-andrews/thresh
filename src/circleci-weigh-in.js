@@ -191,6 +191,8 @@ const circleCiWeighInUnchecked = opts => {
 
 export default (...args) => ReaderPromise.fromReaderFn(
   config => circleCiWeighInUnchecked(...args).run(config).catch(err => {
+    effects.postErrorPrStatus({...prStatusParams, description: err.message})
+      .run(config).catch(logError);
     const logError = () => config.logError(err.message);
 
     if(isWarningType(err)) {
