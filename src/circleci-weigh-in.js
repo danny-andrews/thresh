@@ -40,8 +40,7 @@ const circleCiWeighInUnchecked = opts => {
     manifestFilepath,
     outputDirectory,
     projectName,
-    buildSha,
-    buildUrl,
+    prStatusParams,
     pullRequestId,
     artifactsDirectory,
     effects = {
@@ -86,12 +85,6 @@ const circleCiWeighInUnchecked = opts => {
         assetSizesFilepath: ASSET_STATS_FILENAME
       })
     );
-
-  const prStatusParams = {
-    sha: buildSha,
-    targetUrl: `${buildUrl}#artifacts`,
-    label: compactAndJoin(': ', ['Asset Sizes', projectName.orSome(null)])
-  };
 
   const assetStatListToMap = assetStats => R.reduce(
     (acc, {filename, ...rest}) => ({...acc, [filename]: rest}),
@@ -189,20 +182,32 @@ const circleCiWeighInUnchecked = opts => {
   );
 };
 
-export default (...args) => ReaderPromise.fromReaderFn(
-  config => circleCiWeighInUnchecked(...args).run(config).catch(err => {
-    effects.postErrorPrStatus({...prStatusParams, description: err.message})
-      .run(config).catch(logError);
-    const logError = () => config.logError(err.message);
+export default opts => {
+  const prStatusParams = {
+    sha: opts.buildSha,
+    targetUrl: `${opts.buildUrl}#artifacts`,
+    label: compactAndJoin(': ', ['Asset Sizes', opts.projectName.orSome(null)])
+  };
 
-    if(isWarningType(err)) {
-      config.logMessage(err.message);
+  return ReaderPromise.fromReaderFn(
+    config => circleCiWeighInUnchecked({...opts, prStatusParams}).run(config).catch(err => {
+      const logError = () => config.logError(err.message);
+      opts.effects.postErrorPrStatus({
+        ...prStatusParams,
+        description: err.message
+      })
+        .run(config)
+        .catch(logError);
 
-      return Promise.resolve(err);
-    }
+      if(isWarningType(err)) {
+        config.logMessage(err.message);
 
-    logError(err);
+        return Promise.resolve(err);
+      }
 
-    return Promise.reject(err);
-  })
-);
+      logError(err);
+
+      return Promise.reject(err);
+    })
+  );
+};
