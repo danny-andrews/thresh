@@ -1,6 +1,8 @@
 Use async/await in test.
 
-Check for the existence of the running asset value in file database. If it exists, we don't need to make separate request for the previous asset stats artifact.
+Check for the existence of the running asset value in file database. If it
+exists, we don't need to make separate request for the previous asset stats
+artifact.
 
 Write test for cli.js.
 

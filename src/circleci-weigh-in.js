@@ -40,22 +40,10 @@ const circleCiWeighInUnchecked = opts => {
     manifestFilepath,
     outputDirectory,
     projectName,
-    buildSha,
-    buildUrl,
+    prStatusParams,
     pullRequestId,
     artifactsDirectory,
-    effects = {
-      retrieveAssetSizes,
-      postFinalPrStatus,
-      postPendingPrStatus,
-      postErrorPrStatus,
-      readManifest,
-      makeArtifactDirectory,
-      writeAssetStats,
-      writeAssetDiffs,
-      getAssetFileStats,
-      saveStats
-    }
+    effects
   } = opts;
   const failureThresholds = opts.failureThresholds.map(
     threshold => ({
@@ -86,12 +74,6 @@ const circleCiWeighInUnchecked = opts => {
         assetSizesFilepath: ASSET_STATS_FILENAME
       })
     );
-
-  const prStatusParams = {
-    sha: buildSha,
-    targetUrl: `${buildUrl}#artifacts`,
-    label: compactAndJoin(': ', ['Asset Sizes', projectName.orSome(null)])
-  };
 
   const assetStatListToMap = assetStats => R.reduce(
     (acc, {filename, ...rest}) => ({...acc, [filename]: rest}),
@@ -189,18 +171,50 @@ const circleCiWeighInUnchecked = opts => {
   );
 };
 
-export default (...args) => ReaderPromise.fromReaderFn(
-  config => circleCiWeighInUnchecked(...args).run(config).catch(err => {
-    const logError = () => config.logError(err.message);
+export default opts => {
+  const finalOpts = {
+    prStatusParams: {
+      sha: opts.buildSha,
+      targetUrl: `${opts.buildUrl}#artifacts`,
+      label: compactAndJoin(': ', [
+        'Asset Sizes',
+        opts.projectName.orSome(null)
+      ])
+    },
+    effects: {
+      retrieveAssetSizes,
+      postFinalPrStatus,
+      postPendingPrStatus,
+      postErrorPrStatus,
+      readManifest,
+      makeArtifactDirectory,
+      writeAssetStats,
+      writeAssetDiffs,
+      getAssetFileStats,
+      saveStats
+    },
+    ...opts
+  };
 
-    if(isWarningType(err)) {
-      config.logMessage(err.message);
+  return ReaderPromise.fromReaderFn(
+    config => circleCiWeighInUnchecked(finalOpts).run(config).catch(err => {
+      const logError = () => config.logError(err.message);
+      finalOpts.effects.postErrorPrStatus({
+        ...finalOpts.prStatusParams,
+        description: err.message
+      })
+        .run(config)
+        .catch(logError);
 
-      return Promise.resolve(err);
-    }
+      if(isWarningType(err)) {
+        config.logMessage(err.message);
 
-    logError(err);
+        return Promise.resolve(err);
+      }
 
-    return Promise.reject(err);
-  })
-);
+      logError(err);
+
+      return Promise.reject(err);
+    })
+  );
+};
