@@ -190,24 +190,26 @@ export default opts => {
   };
 
   return ReaderPromise.fromReaderFn(
-    config => circleCiWeighInUnchecked({...opts, prStatusParams}).run(config).catch(err => {
-      const logError = () => config.logError(err.message);
-      opts.effects.postErrorPrStatus({
-        ...prStatusParams,
-        description: err.message
+    config => circleCiWeighInUnchecked({...opts, prStatusParams})
+      .run(config)
+      .catch(err => {
+        const logError = () => config.logError(err.message);
+        opts.effects.postErrorPrStatus({
+          ...prStatusParams,
+          description: err.message
+        })
+          .run(config)
+          .catch(logError);
+
+        if(isWarningType(err)) {
+          config.logMessage(err.message);
+
+          return Promise.resolve(err);
+        }
+
+        logError(err);
+
+        return Promise.reject(err);
       })
-        .run(config)
-        .catch(logError);
-
-      if(isWarningType(err)) {
-        config.logMessage(err.message);
-
-        return Promise.resolve(err);
-      }
-
-      logError(err);
-
-      return Promise.reject(err);
-    })
   );
 };
