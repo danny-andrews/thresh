@@ -10,6 +10,10 @@
     "rollup",
     "size"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danny-andrews/circleci-weigh-in.git"
+  },
   "license": "MIT",
   "author": "Danny Andrews",
   "files": [
@@ -19,10 +23,6 @@
   "main": "index.js",
   "bin": {
     "circleci-weigh-in": "./circleci-weigh-in"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/danny-andrews/circleci-weigh-in.git"
   },
   "scripts": {
     "build": "rm -rf lib && babel src --out-dir lib",
