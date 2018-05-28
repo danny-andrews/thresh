@@ -85,3 +85,8 @@ export const NoAssetStatsArtifactFoundErr = (...args) => ({
   message: sprintf('No asset stats artifact found for latest build of: %s. Build number: %s', ...args),
   constructor: NoAssetStatsArtifactFoundErr
 });
+
+export const NoPreviousStatsFoundForFilepath = (...args) => ({
+  message: sprintf('No previous stats found for %s. Did you rename that file recently?', ...args),
+  constructor: NoPreviousStatsFoundForFilepath
+});

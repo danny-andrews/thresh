@@ -5,7 +5,8 @@ import {Maybe, Either} from 'monet';
 import {
   NoOpenPullRequestFoundErr,
   InvalidFailureThresholdErr,
-  InvalidFailureThresholdOptionErr
+  InvalidFailureThresholdOptionErr,
+  NoPreviousStatsFoundForFilepath
 } from '../core/errors';
 import circleciWeighIn from '../circleci-weigh-in';
 import ReaderPromise from '../core/reader-promise';
@@ -256,6 +257,30 @@ test('saves stats to local db when project name is given', () => {
         }
       }
     });
+  });
+});
+
+test('writes message to the console when no previous stat found for given filepath', () => {
+  const logMessageSpy = createSpy();
+
+  return subject({
+    logMessage: logMessageSpy,
+    effects: {
+      getAssetFileStats: () => ReaderPromise.of([{
+        size: 100,
+        filename: 'vendor.js',
+        path: 'dist/vendor.js'
+      }]),
+      retrieveAssetSizes: () => R.pipe(Either.Right, ReaderPromise.of)({
+        'app.js': {
+          size: 100,
+          path: 'dist/app.js'
+        }
+      })
+    }
+  }).then(() => {
+    expect(logMessageSpy)
+      .toHaveBeenCalledWith(NoPreviousStatsFoundForFilepath('vendor.js').message);
   });
 });
 

@@ -8,7 +8,8 @@ import {
   NoOpenPullRequestFoundErr,
   InvalidFailureThresholdOptionErr,
   NoRecentBuildsFoundErr,
-  NoAssetStatsArtifactFoundErr
+  NoAssetStatsArtifactFoundErr,
+  NoPreviousStatsFoundForFilepath
 } from './core/errors';
 import ReaderPromise from './core/reader-promise';
 import {failureThresholdListSchema, DFAULT_FAILURE_THRESHOLD_STRATEGY}
@@ -137,7 +138,9 @@ const circleCiWeighInUnchecked = opts => {
           : assetStats,
         original: projectName.isSome()
           ? previousAssetSizes.right()[projectName.some()]
-          : previousAssetSizes.right()
+          : previousAssetSizes.right(),
+        onMismatchFound: filepath =>
+          config.logMessage(NoPreviousStatsFoundForFilepath(filepath).message)
       });
 
       const thresholdFailures = getThresholdFailures({
