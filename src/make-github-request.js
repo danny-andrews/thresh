@@ -31,6 +31,10 @@ export default ({path, fetchOpts = {}}) => {
     const headers = {
       Accept: 'application/vnd.github.v3+json',
       Authorization: `token ${githubApiToken}`,
+      ...(fetchOpts.method === 'POST'
+        ? {'Content-Type': 'application/json'}
+        : {}
+      ),
       ...fetchOpts.headers
     };
 

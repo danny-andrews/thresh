@@ -45,10 +45,9 @@ test('postFinalPrStatus posts success pr status to GitHub when there are no fail
     repoName: 'my-repo'
   });
 
-  const [url, {headers, method, body}] = spy.calls[0].arguments;
+  const [url, {headers, body}] = spy.calls[0].arguments;
   expect(headers.Authorization).toBe('token h832hfo');
   expect(headers['Content-Type']).toBe('application/json');
-  expect(method).toBe('POST');
   expect(JSON.parse(body)).toEqual({
     state: 'success',
     target_url: 'info.com/53', // eslint-disable-line camelcase
@@ -76,10 +75,9 @@ test('postFinalPrStatus posts failure pr status to GitHub when there are failure
     repoName: 'my-repo'
   });
 
-  const [url, {headers, method, body}] = spy.calls[0].arguments;
+  const [url, {headers, body}] = spy.calls[0].arguments;
   expect(headers.Authorization).toBe('token h832hfo');
   expect(headers['Content-Type']).toBe('application/json');
-  expect(method).toBe('POST');
   expect(JSON.parse(body)).toEqual({
     state: 'failure',
     target_url: 'info.com/53', // eslint-disable-line camelcase
@@ -102,10 +100,9 @@ test('postPendingPrStatus makes request to post pending pr status to GitHub', ()
     repoName: 'my-repo'
   });
 
-  const [url, {headers, method, body}] = spy.calls[0].arguments;
+  const [url, {headers, body}] = spy.calls[0].arguments;
   expect(headers.Authorization).toBe('token h832hfo');
   expect(headers['Content-Type']).toBe('application/json');
-  expect(method).toBe('POST');
   expect(JSON.parse(body)).toEqual({
     state: 'pending',
     target_url: 'info.com/53', // eslint-disable-line camelcase
@@ -128,10 +125,9 @@ test('postErrorPrStatus makes request to post error pr status to GitHub', () => 
     repoName: 'my-repo'
   });
 
-  const [url, {headers, method, body}] = spy.calls[0].arguments;
+  const [url, {headers, body}] = spy.calls[0].arguments;
   expect(headers.Authorization).toBe('token h832hfo');
   expect(headers['Content-Type']).toBe('application/json');
-  expect(method).toBe('POST');
   expect(JSON.parse(body)).toEqual({
     state: 'error',
     target_url: 'info.com/53', // eslint-disable-line camelcase
