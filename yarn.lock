@@ -2985,6 +2985,10 @@ natural-compare@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/natural-compare/-/natural-compare-1.4.0.tgz#4abebfeed7541f2c27acfb29bdbbd15c8d5ba4f7"
 
+ncurry@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/ncurry/-/ncurry-1.0.0.tgz#73331834cfc04df5f40775f936303a9307959b74"
+
 needle@^2.2.0:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/needle/-/needle-2.2.1.tgz#b5e325bd3aae8c2678902fa296f729455d1d3a7d"
