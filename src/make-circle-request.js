@@ -27,5 +27,5 @@ export default ({path, url, fetchOpts = {}, raw = false}) =>
           response.statusText
         );
       })
-      .then(raw ? a => a : circleDeserializer);
+      .then(raw ? R.identity : circleDeserializer);
   });
