@@ -130,7 +130,7 @@ test('returns error if body parsing fails', () => {
 test('returns error if non-200 status code received', () => {
   const spy = createSpy().andReturn(
     R.pipe(Non200ResponseError, a => Promise.reject(a))({
-      statusText: 'Internal Server Error'
+      data: 'Internal Server Error'
     })
   );
 
@@ -143,7 +143,7 @@ test('returns error if non-200 status code received', () => {
 test('returns authorization error if UNATHORIZED status received', () => {
   const spy = createSpy().andReturn(
     R.pipe(Non200ResponseError, a => Promise.reject(a))(
-      {status: 401, statusText: 'Unathorized'}
+      {status: 401, data: 'Unathorized'}
     )
   );
 
@@ -156,7 +156,7 @@ test('returns authorization error if UNATHORIZED status received', () => {
 test('returns authorization error if FORBIDDEN status received', () => {
   const spy = createSpy().andReturn(
     R.pipe(Non200ResponseError, a => Promise.reject(a))(
-      {status: 403, statusText: 'Forbidden'}
+      {status: 403, data: 'Forbidden'}
     )
   );
 

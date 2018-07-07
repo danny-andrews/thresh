@@ -13,7 +13,7 @@ const mapError = ({url, context, constructor}) =>
   switchCaseF({
     [NoResponseError]: CircleCiFetchErr(url, context),
     [InvalidResponseError]: CircleCiInvalidResponseErr(url, context),
-    [Non200ResponseError]: CircleCiInvalidResponseErr(url, context.statusText)
+    [Non200ResponseError]: CircleCiInvalidResponseErr(url, context.data)
   })()(constructor);
 
 export default ({path, url, fetchOpts = {}, raw = false}) =>

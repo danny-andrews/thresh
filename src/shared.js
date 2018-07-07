@@ -69,14 +69,12 @@ const rejectWith = Type =>
   R.pipe(Type, a => Promise.reject(a));
 
 export const request = (...args) => fetch(...args)
-  .then(response => {
-    if(response.ok) {
-      return response.json()
-        .catch(rejectWith(InvalidResponseError));
-    }
-
-    return rejectWith(Non200ResponseError)(response);
-  })
+  .then(response => response.json()
+    .then(data =>
+      response.ok ? data : rejectWith(Non200ResponseError)({...response, data})
+    )
+    .catch(rejectWith(InvalidResponseError))
+  )
   .catch(
     rejectWith(NoResponseError)
   );

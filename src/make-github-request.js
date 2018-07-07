@@ -30,8 +30,8 @@ const mapError = ({url, context, constructor}) =>
     [NoResponseError]: GitHubFetchErr(url, context),
     [InvalidResponseError]: GitHubInvalidResponseErr(url, context),
     [Non200ResponseError]: isAuthError(context.status)
-      ? GitHubAuthorizationErr(url, context.statusText)
-      : GitHubInvalidResponseErr(url, context.statusText)
+      ? GitHubAuthorizationErr(url, context.data)
+      : GitHubInvalidResponseErr(url, context.data)
   })()(constructor);
 
 export default ({path, fetchOpts = {}}) => {

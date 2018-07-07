@@ -111,8 +111,7 @@ test('returns Error if request fails', () => {
 test('returns error if non-200 status code received', () => {
   const spy = createSpy().andReturn(
     R.pipe(Non200ResponseError, a => Promise.reject(a))({
-      status: 500,
-      statusText: 'Internal Server Error'
+      data: 'Internal Server Error'
     })
   );
 
