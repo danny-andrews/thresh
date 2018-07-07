@@ -5,6 +5,7 @@ import FlatFileDb from 'flat-file-db';
 import mkdirp from 'mkdirp';
 import {Either} from 'monet';
 import {promisify} from 'util';
+import fetch from 'node-fetch';
 import {JSON_OUTPUT_SPACING} from './core/constants';
 
 export const compact = list => R.reject(item => !item, list);
@@ -48,3 +49,43 @@ export const truncate = R.curry(({maxSize, contSuffix = '...'}, string) => (
 
 export const serializeForFile = val =>
   JSON.stringify(val, null, JSON_OUTPUT_SPACING);
+
+export const NoResponseError = context => ({
+  constructor: NoResponseError,
+  context
+});
+
+export const Non200ResponseError = context => ({
+  constructor: Non200ResponseError,
+  context
+});
+
+export const InvalidResponseError = context => ({
+  constructor: InvalidResponseError,
+  context
+});
+
+const rejectWith = Type =>
+  R.pipe(Type, a => Promise.reject(a));
+
+export const request = (...args) => fetch(...args)
+  .then(response => {
+    if(response.ok) {
+      return response.json()
+        .catch(rejectWith(InvalidResponseError));
+    }
+
+    return rejectWith(Non200ResponseError)(response);
+  })
+  .catch(
+    rejectWith(NoResponseError)
+  );
+
+const executeIfFunction = f =>
+  typeof f === 'function' ? f() : f;
+
+export const switchCase = cases => defaultCase => key =>
+  cases.hasOwnProperty(key) ? cases[key] : defaultCase;
+
+export const switchCaseF = cases => defaultCase => key =>
+  executeIfFunction(switchCase(cases)(defaultCase)(key));

@@ -2,7 +2,6 @@ import test from 'ava';
 import R from 'ramda';
 import expect, {createSpy} from 'expect';
 import {postFinalPrStatus, postPendingPrStatus, postErrorPrStatus} from '../post-pr-status';
-import {ResponsePromise} from '../../test/helpers';
 
 const postErrorPrStatusFac = (opts = {}) =>
   postErrorPrStatus({
@@ -12,7 +11,7 @@ const postErrorPrStatusFac = (opts = {}) =>
     description: 'blah blah blah',
     ...R.pick(['sha', 'targetUrl', 'label', 'description'], opts)
   }).run({
-    request: () => ResponsePromise({}),
+    request: () => Promise.resolve(),
     githubApiToken: 'h832hfo',
     repoOwner: 'me',
     repoName: 'my-repo',
@@ -20,7 +19,7 @@ const postErrorPrStatusFac = (opts = {}) =>
   });
 
 test('postFinalPrStatus posts success pr status to GitHub when there are no failures', () => {
-  const spy = createSpy().andReturn(ResponsePromise({}));
+  const spy = createSpy().andReturn(Promise.resolve());
   postFinalPrStatus({
     sha: 'h8g94hg9',
     assetDiffs: {
@@ -58,7 +57,7 @@ test('postFinalPrStatus posts success pr status to GitHub when there are no fail
 });
 
 test('postFinalPrStatus posts failure pr status to GitHub when there are failures', () => {
-  const spy = createSpy().andReturn(ResponsePromise({}));
+  const spy = createSpy().andReturn(Promise.resolve());
   postFinalPrStatus({
     sha: 'h8g94hg9',
     assetDiffs: {},
@@ -88,7 +87,7 @@ test('postFinalPrStatus posts failure pr status to GitHub when there are failure
 });
 
 test('postPendingPrStatus makes request to post pending pr status to GitHub', () => {
-  const spy = createSpy().andReturn(ResponsePromise({}));
+  const spy = createSpy().andReturn(Promise.resolve());
   postPendingPrStatus({
     sha: 'h8g94hg9',
     targetUrl: 'info.com/53',
@@ -113,7 +112,7 @@ test('postPendingPrStatus makes request to post pending pr status to GitHub', ()
 });
 
 test('postErrorPrStatus makes request to post error pr status to GitHub', () => {
-  const spy = createSpy().andReturn(ResponsePromise({}));
+  const spy = createSpy().andReturn(Promise.resolve());
   postErrorPrStatusFac({
     sha: 'h8g94hg9',
     targetUrl: 'info.com/53',
@@ -139,7 +138,7 @@ test('postErrorPrStatus makes request to post error pr status to GitHub', () => 
 
 test('postErrorPrStatus truncates description to 140 characters (using ellipsis)', () => {
   const message = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.";
-  const spy = createSpy().andReturn(ResponsePromise({}));
+  const spy = createSpy().andReturn(Promise.resolve());
   postErrorPrStatusFac({
     description: message,
     request: spy

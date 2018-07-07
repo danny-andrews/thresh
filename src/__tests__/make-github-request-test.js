@@ -1,12 +1,12 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
+import R from 'ramda';
 import makeGithubRequest from '../make-github-request';
-import {ResponsePromise} from '../test/helpers';
 import {
-  GitHubFetchErr,
-  GitHubAuthorizationErr,
-  GitHubInvalidResponseErr
-} from '../core/errors';
+  NoResponseError,
+  Non200ResponseError,
+  InvalidResponseError
+} from '../shared';
 
 const subject = (opts = {}) => {
   const {
@@ -23,7 +23,7 @@ const subject = (opts = {}) => {
 };
 
 test('sends request to https://api.github.com + path', () => {
-  const spy = createSpy().andReturn(ResponsePromise({}));
+  const spy = createSpy().andReturn(Promise.resolve());
   subject({path: 'me/my-repo', request: spy});
 
   const [actual] = spy.calls[0].arguments;
@@ -31,7 +31,7 @@ test('sends request to https://api.github.com + path', () => {
 });
 
 test('sets Accept header to application/vnd.github.v3+json', () => {
-  const spy = createSpy().andReturn(ResponsePromise({}));
+  const spy = createSpy().andReturn(Promise.resolve());
   subject({request: spy});
 
   const [, {headers}] = spy.calls[0].arguments;
@@ -39,7 +39,7 @@ test('sets Accept header to application/vnd.github.v3+json', () => {
 });
 
 test('sets Authorization header to token + apiToken', () => {
-  const spy = createSpy().andReturn(ResponsePromise({}));
+  const spy = createSpy().andReturn(Promise.resolve());
   subject({request: spy, githubApiToken: 'fdlsy892'});
 
   const [, {headers}] = spy.calls[0].arguments;
@@ -47,7 +47,7 @@ test('sets Authorization header to token + apiToken', () => {
 });
 
 test('accepts additional headers', () => {
-  const spy = createSpy().andReturn(ResponsePromise({}));
+  const spy = createSpy().andReturn(Promise.resolve());
   subject({
     fetchOpts: {
       headers: {
@@ -63,8 +63,8 @@ test('accepts additional headers', () => {
   expect(headers['Content-Type']).toBe('application/json');
 });
 
-test('accepts other fetch optioms', () => {
-  const spy = createSpy().andReturn(ResponsePromise({}));
+test('accepts other fetch options', () => {
+  const spy = createSpy().andReturn(Promise.resolve());
   subject({
     fetchOpts: {
       method: 'POST'
@@ -79,7 +79,7 @@ test('accepts other fetch optioms', () => {
 
 test('decamelizes and stringifies body', () => {
   // eslint-disable-next-line camelcase
-  const spy = createSpy().andReturn(ResponsePromise({my_msg: 'hello'}));
+  const spy = createSpy().andReturn(Promise.resolve({my_msg: 'hello'}));
   subject({
     fetchOpts: {
       body: {
@@ -95,67 +95,73 @@ test('decamelizes and stringifies body', () => {
 
 test('camelizes response', async () => {
   // eslint-disable-next-line camelcase
-  const spy = createSpy().andReturn(ResponsePromise({my_msg: 'hello'}));
+  const spy = createSpy().andReturn(Promise.resolve({my_msg: 'hello'}));
   const actual = await subject({request: spy});
 
   expect(actual).toEqual({myMsg: 'hello'});
 });
 
-test('returns Error if response fails', () => {
-  const spy = createSpy().andReturn(Promise.reject('oh no'));
+test('returns error if response fails', () => {
+  const spy = createSpy().andReturn(
+    Promise.reject(
+      NoResponseError('oh no')
+    )
+  );
 
   return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
     .catch(actual => {
-      expect(actual.message).toBe(
-        GitHubFetchErr('https://api.github.com/owner/repo', 'oh no').message
-      );
+      expect(actual.message).toBe('Error making request to GitHub https://api.github.com/owner/repo: oh no');
+    });
+});
+
+test('returns error if body parsing fails', () => {
+  const spy = createSpy().andReturn(
+    R.pipe(InvalidResponseError, a => Promise.reject(a))(
+      'Cannot parse body'
+    )
+  );
+
+  return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
+    .catch(actual => {
+      expect(actual.message).toBe('Error making request to GitHub https://api.github.com/owner/repo: Cannot parse body');
     });
 });
 
 test('returns error if non-200 status code received', () => {
   const spy = createSpy().andReturn(
-    ResponsePromise('oh no', {status: 500, statusText: 'Internal Server Error'})
+    R.pipe(Non200ResponseError, a => Promise.reject(a))({
+      statusText: 'Internal Server Error'
+    })
   );
 
   return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
     .catch(actual => {
-      expect(actual.message).toBe(
-        GitHubInvalidResponseErr(
-          'https://api.github.com/owner/repo',
-          'Internal Server Error'
-        ).message
-      );
+      expect(actual.message).toBe('Error making request to GitHub https://api.github.com/owner/repo: Internal Server Error');
     });
 });
 
 test('returns authorization error if UNATHORIZED status received', () => {
   const spy = createSpy().andReturn(
-    ResponsePromise('oh no', {status: 401, statusText: 'Unathorized'})
+    R.pipe(Non200ResponseError, a => Promise.reject(a))(
+      {status: 401, statusText: 'Unathorized'}
+    )
   );
 
   return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
     .catch(actual => {
-      expect(actual.message).toBe(
-        GitHubAuthorizationErr(
-          'https://api.github.com/owner/repo',
-          'Unathorized'
-        ).message
-      );
+      expect(actual.message).toBe('Authorization failed for request to GitHub https://api.github.com/owner/repo. Did you provide a correct GitHub Api Token? Original response: Unathorized');
     });
 });
 
 test('returns authorization error if FORBIDDEN status received', () => {
   const spy = createSpy().andReturn(
-    ResponsePromise('oh no', {status: 403, statusText: 'Forbidden'})
+    R.pipe(Non200ResponseError, a => Promise.reject(a))(
+      {status: 403, statusText: 'Forbidden'}
+    )
   );
 
   return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
     .catch(actual => {
-      expect(actual.message).toBe(
-        GitHubAuthorizationErr(
-          'https://api.github.com/owner/repo',
-          'Forbidden'
-        ).message
-      );
+      expect(actual.message).toBe('Authorization failed for request to GitHub https://api.github.com/owner/repo. Did you provide a correct GitHub Api Token? Original response: Forbidden');
     });
 });
