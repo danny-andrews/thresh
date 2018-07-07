@@ -3,9 +3,8 @@ import R from 'ramda';
 import assert from 'assert';
 import commandLineArgs from 'command-line-args';
 import path from 'path';
-import fetch from 'node-fetch';
 import {Maybe} from 'monet';
-import {parseJSON, mkdir, writeFile, readFile, getFileStats, Database}
+import {parseJSON, mkdir, writeFile, readFile, getFileStats, Database, request}
   from './shared';
 import circleciWeighIn from './circleci-weigh-in';
 import {MissingEnvVarErr, CliOptionInvalidJsonErr, MissingCliOptionErr}
@@ -68,7 +67,7 @@ main.run({
   writeFile,
   readFile,
   resolve: path.resolve,
-  request: fetch,
+  request,
   db: Database('my.db'),
   mkdir,
   getFileStats,

@@ -2,7 +2,7 @@ import test from 'ava';
 import R from 'ramda';
 import expect, {createSpy} from 'expect';
 import retrieveAssetSizes from '../get-previous-asset-sizes';
-import {FakeFetch} from '../../test/helpers';
+import {FakeRequest} from '../../test/helpers';
 import {PrResource, BuildResource, ArtifactResource} from '../../test/factories';
 import {
   GetBaseBranchHandler,
@@ -50,7 +50,7 @@ export const createResponseSequence = (opts = {}) => {
 
 // Factory which makes this easy to test.
 const subject = ({responseData, repoOwner, repoName, ...opts} = {}) => {
-  const fakeFetch = R.pipe(createResponseSequence, FakeFetch)({
+  const fakeRequest = R.pipe(createResponseSequence, FakeRequest)({
     artifactPath: 'blah8372blah/dist/app.js',
     ...responseData
   });
@@ -59,7 +59,7 @@ const subject = ({responseData, repoOwner, repoName, ...opts} = {}) => {
     assetSizesFilepath: 'dist/app.js',
     ...opts
   }).run({
-    request: fakeFetch,
+    request: fakeRequest,
     repoOwner,
     repoName
   });

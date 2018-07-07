@@ -83,8 +83,8 @@
     ],
     "check-coverage": true,
     "per-file": false,
-    "lines": 95,
-    "statements": 95,
-    "branches": 95
+    "lines": 90,
+    "statements": 90,
+    "branches": 90
   }
 }

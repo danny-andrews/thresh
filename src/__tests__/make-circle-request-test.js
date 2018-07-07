@@ -1,8 +1,9 @@
 import test from 'ava';
+import R from 'ramda';
 import expect, {createSpy} from 'expect';
 import makeCircleRequest from '../make-circle-request';
-import {ResponsePromise} from '../test/helpers';
-import {CircleCiFetchErr, CircleCiInvalidResponseErr} from '../core/errors';
+import {NoResponseError, Non200ResponseError, InvalidResponseError}
+  from '../shared';
 
 const subject = (opts = {}) => {
   const {
@@ -19,7 +20,7 @@ const subject = (opts = {}) => {
 };
 
 test('sends request to url, if given', () => {
-  const spy = createSpy().andReturn(ResponsePromise({}));
+  const spy = createSpy().andReturn(Promise.resolve());
   subject({
     url: 'circleci.artifacts/my-artifact.json',
     request: spy,
@@ -32,7 +33,7 @@ test('sends request to url, if given', () => {
 });
 
 test('sends request to https://circleci.com/api/v1.1 + path', () => {
-  const spy = createSpy().andReturn(ResponsePromise({}));
+  const spy = createSpy().andReturn(Promise.resolve());
   subject({path: 'my-account/my-repo', request: spy, circleApiToken: '4dfasg'});
 
   const [actual] = spy.calls[0].arguments;
@@ -40,7 +41,7 @@ test('sends request to https://circleci.com/api/v1.1 + path', () => {
 });
 
 test('sets Accept header to application/json', () => {
-  const spy = createSpy().andReturn(ResponsePromise({}));
+  const spy = createSpy().andReturn(Promise.resolve());
   subject({request: spy});
 
   const [, {headers: actual}] = spy.calls[0].arguments;
@@ -48,7 +49,7 @@ test('sets Accept header to application/json', () => {
 });
 
 test('accepts additional headers', () => {
-  const spy = createSpy().andReturn(ResponsePromise({}));
+  const spy = createSpy().andReturn(Promise.resolve());
   subject({
     fetchOpts: {
       headers: {
@@ -67,7 +68,7 @@ test('accepts additional headers', () => {
 });
 
 test('accepts other fetch optioms', () => {
-  const spy = createSpy().andReturn(ResponsePromise({}));
+  const spy = createSpy().andReturn(Promise.resolve());
   subject({
     fetchOpts: {
       body: 'hi',
@@ -84,7 +85,7 @@ test('accepts other fetch optioms', () => {
 
 test('camelizes response', async () => {
   // eslint-disable-next-line camelcase
-  const spy = createSpy().andReturn(ResponsePromise({my_msg: 'hello'}));
+  const spy = createSpy().andReturn(Promise.resolve({my_msg: 'hello'}));
   const actual = await subject({request: spy});
 
   expect(actual).toEqual({myMsg: 'hello'});
@@ -92,38 +93,43 @@ test('camelizes response', async () => {
 
 test("if raw is true, it doesn't deserialize response", async () => {
   // eslint-disable-next-line camelcase
-  const spy = createSpy().andReturn(ResponsePromise({my_msg: 'hello'}));
+  const spy = createSpy().andReturn(Promise.resolve({my_msg: 'hello'}));
   const actual = await subject({raw: true, request: spy});
 
   expect(actual).toEqual({my_msg: 'hello'}); // eslint-disable-line camelcase
 });
 
 test('returns Error if request fails', () => {
-  const spy = createSpy().andReturn(Promise.reject('oh no'));
+  const spy = createSpy().andReturn(Promise.reject(NoResponseError('oh no')));
 
   return subject({request: spy, circleApiToken: 'fdlsar32'})
     .catch(actual => {
-      expect(actual.message).toBe(
-        CircleCiFetchErr(
-          'https://circleci.com/api/v1.1/hey?circle-token=fdlsar32',
-          'oh no'
-        ).message
-      );
+      expect(actual.message).toBe('Error making request to CircleCI https://circleci.com/api/v1.1/hey?circle-token=fdlsar32: oh no');
     });
 });
 
 test('returns error if non-200 status code received', () => {
   const spy = createSpy().andReturn(
-    ResponsePromise('oh no', {status: 500, statusText: 'Internal Server Error'})
+    R.pipe(Non200ResponseError, a => Promise.reject(a))({
+      data: 'Internal Server Error'
+    })
   );
 
   return subject({request: spy, circleApiToken: 'djklay32r'})
     .catch(actual => {
-      expect(actual.message).toBe(
-        CircleCiInvalidResponseErr(
-          'https://circleci.com/api/v1.1/hey?circle-token=djklay32r',
-          'Internal Server Error'
-        ).message
-      );
+      expect(actual.message).toBe('Error making request to CircleCI https://circleci.com/api/v1.1/hey?circle-token=djklay32r: Internal Server Error');
+    });
+});
+
+test('returns error if body parsing fails', () => {
+  const spy = createSpy().andReturn(
+    R.pipe(InvalidResponseError, a => Promise.reject(a))(
+      'Cannot parse body'
+    )
+  );
+
+  return subject({request: spy, circleApiToken: 'djklay32r'})
+    .catch(actual => {
+      expect(actual.message).toBe('Error making request to CircleCI https://circleci.com/api/v1.1/hey?circle-token=djklay32r: Cannot parse body');
     });
 });

@@ -26,8 +26,6 @@ const postPrStatus = ncurry(
       makeGitHubRequest({
         path: `repos/${config.repoOwner}/${config.repoName}/statuses/${sha}`,
         fetchOpts: {
-          // TODO: Should we default these headers in make-github-request?
-          headers: {'Content-Type': 'application/json'},
           method: 'POST',
           body: {
             state,

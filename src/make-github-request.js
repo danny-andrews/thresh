@@ -6,6 +6,8 @@ import {
   GitHubAuthorizationErr,
   GitHubInvalidResponseErr
 } from './core/errors';
+import {NoResponseError, Non200ResponseError, InvalidResponseError, switchCaseF}
+  from './shared';
 
 /* eslint-disable no-magic-numbers */
 const Statuses = {
@@ -23,6 +25,15 @@ const serializer = payload => JSON.stringify(decamelizeKeys(payload));
 const deserializer = payload => camelizeKeys(payload);
 const HOSTNAME = 'https://api.github.com';
 
+const mapError = ({url, context, constructor}) =>
+  switchCaseF({
+    [NoResponseError]: GitHubFetchErr(url, context),
+    [InvalidResponseError]: GitHubInvalidResponseErr(url, context),
+    [Non200ResponseError]: isAuthError(context.status)
+      ? GitHubAuthorizationErr(url, context.data)
+      : GitHubInvalidResponseErr(url, context.data)
+  })()(constructor);
+
 export default ({path, fetchOpts = {}}) => {
   const body = serializer(fetchOpts.body);
   const url = `${HOSTNAME}/${path}`;
@@ -31,6 +42,10 @@ export default ({path, fetchOpts = {}}) => {
     const headers = {
       Accept: 'application/vnd.github.v3+json',
       Authorization: `token ${githubApiToken}`,
+      ...(fetchOpts.method === 'POST'
+        ? {'Content-Type': 'application/json'}
+        : {}
+      ),
       ...fetchOpts.headers
     };
 
@@ -39,22 +54,9 @@ export default ({path, fetchOpts = {}}) => {
       body,
       ...R.omit(['headers', 'body'], fetchOpts)
     })
-      .catch(response =>
-        R.pipe(GitHubFetchErr, a => Promise.reject(a))(url, response)
-      ).then(response => {
-        if(response.ok) {
-          return response.json();
-        } else if(isAuthError(response.status)) {
-          return R.pipe(GitHubAuthorizationErr, a => Promise.reject(a))(
-            url,
-            response.statusText
-          );
-        }
-
-        return R.pipe(GitHubInvalidResponseErr, a => Promise.reject(a))(
-          url,
-          response.statusText
-        );
-      }).then(deserializer);
+      .then(deserializer)
+      .catch(({constructor, context}) =>
+        Promise.reject(mapError({url, context, constructor}))
+      );
   });
 };
