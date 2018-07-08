@@ -9,7 +9,7 @@ import {
   NoPreviousStatsFoundForFilepath
 } from '../core/errors';
 import circleciWeighIn from '../circleci-weigh-in';
-import ReaderPromise from '../core/reader-promise';
+import ReaderPromise from '../shared/reader-promise';
 
 const subject = (opts = {}) => {
   const {

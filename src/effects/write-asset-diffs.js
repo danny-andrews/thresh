@@ -1,6 +1,6 @@
 import {serializeForFile} from '../shared';
 import {ErrorWritingAssetDiffsArtifactErr} from '../core/errors';
-import ReaderPromise from '../core/reader-promise';
+import ReaderPromise from '../shared/reader-promise';
 import resolve from '../resolve';
 import {ASSET_DIFFS_FILENAME, OUTPUT_FILEPATH} from '../core/constants';
 

@@ -1,6 +1,6 @@
 import {camelizeKeys, decamelizeKeys} from 'humps';
 import R from 'ramda';
-import ReaderPromise from './core/reader-promise';
+import ReaderPromise from './shared/reader-promise';
 import {
   GitHubFetchErr,
   GitHubAuthorizationErr,
@@ -25,14 +25,19 @@ const serializer = payload => JSON.stringify(decamelizeKeys(payload));
 const deserializer = payload => camelizeKeys(payload);
 const HOSTNAME = 'https://api.github.com';
 
-const mapError = ({url, context, constructor}) =>
-  switchCaseF({
-    [NoResponseError]: GitHubFetchErr(url, context),
-    [InvalidResponseError]: GitHubInvalidResponseErr(url, context),
-    [Non200ResponseError]: isAuthError(context.status)
-      ? GitHubAuthorizationErr(url, context.data)
-      : GitHubInvalidResponseErr(url, context.data)
-  })()(constructor);
+const mapError = ({url, context}) =>
+  switchCaseF(
+    new Map([
+      [NoResponseError, GitHubFetchErr(url, context)],
+      [InvalidResponseError, GitHubInvalidResponseErr(url, context)],
+      [
+        Non200ResponseError,
+        () => isAuthError(context.status)
+          ? GitHubAuthorizationErr(url, context.data)
+          : GitHubInvalidResponseErr(url, context.data)
+      ]
+    ])
+  )();
 
 export default ({path, fetchOpts = {}}) => {
   const body = serializer(fetchOpts.body);
@@ -55,8 +60,8 @@ export default ({path, fetchOpts = {}}) => {
       ...R.omit(['headers', 'body'], fetchOpts)
     })
       .then(deserializer)
-      .catch(({constructor, context}) =>
-        Promise.reject(mapError({url, context, constructor}))
+      .catch(({context, constructor}) =>
+        Promise.reject(mapError({url, context})(constructor))
       );
   });
 };

@@ -2,7 +2,7 @@ import R from 'ramda';
 import {Either} from 'monet';
 import makeGitHubRequest from '../make-github-request';
 import makeCircleRequest from '../make-circle-request';
-import ReaderPromise from '../core/reader-promise';
+import ReaderPromise from '../shared/reader-promise';
 import {CircleCiBuildStatuses} from '../core/constants';
 import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr}
   from '../core/errors';
