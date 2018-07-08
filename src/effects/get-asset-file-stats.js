@@ -1,4 +1,4 @@
-import ReaderPromise from '../core/reader-promise';
+import ReaderPromise from '../shared/reader-promise';
 
 export default stats =>
   ReaderPromise.fromReaderFn(

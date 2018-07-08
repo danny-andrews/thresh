@@ -11,7 +11,7 @@ import {
   NoAssetStatsArtifactFoundErr,
   NoPreviousStatsFoundForFilepath
 } from './core/errors';
-import ReaderPromise from './core/reader-promise';
+import ReaderPromise from './shared/reader-promise';
 import {failureThresholdListSchema, DFAULT_FAILURE_THRESHOLD_STRATEGY}
   from './core/schemas';
 import {

@@ -1,6 +1,6 @@
 import {ErrorWritingAssetSizesArtifactErr} from '../core/errors';
 import {serializeForFile} from '../shared';
-import ReaderPromise from '../core/reader-promise';
+import ReaderPromise from '../shared/reader-promise';
 import resolve from '../resolve';
 import {ASSET_STATS_FILENAME, OUTPUT_FILEPATH} from '../core/constants';
 

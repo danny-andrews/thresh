@@ -1,5 +1,5 @@
 import {ErrorCreatingArtifactDirectoryErr} from '../core/errors';
-import ReaderPromise from '../core/reader-promise';
+import ReaderPromise from '../shared/reader-promise';
 import resolve from '../resolve';
 import {OUTPUT_FILEPATH} from '../core/constants';
 
