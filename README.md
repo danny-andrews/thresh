@@ -66,7 +66,12 @@ A CircleCI integration for tracking file size changes across deploys.
 
 ## CLI Options
 
-### --manifest-filepath
+### --config-path
+- Description: Filepath to your bundler's manifest output.
+- Type: `String`
+- Default: './.circleci-weigh-in.toml'
+
+### --manifest-path
 - Description: Filepath to your bundler's manifest output.
 - Type: `String`
 - Required?: `true`

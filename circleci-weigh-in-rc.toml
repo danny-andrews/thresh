@@ -1,0 +1,8 @@
+manifest-path = "example/dist/manifest.json"
+
+output-directory = "example/dist"
+
+[failure-thresholds]
+targets = ".js"
+maxSize = 20000
+strategy = "total"

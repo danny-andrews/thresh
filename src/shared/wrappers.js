@@ -2,7 +2,8 @@ import Ajv from 'ajv';
 import FlatFileDb from 'flat-file-db';
 import R from 'ramda';
 import fetch from 'node-fetch';
-import {CreateErrorFactory} from './util';
+import toml from 'toml';
+import {CreateErrorFactory, unthrow} from './util';
 
 export const Database = (...args) => {
   const flatFileDb = FlatFileDb(...args);
@@ -31,3 +32,5 @@ export const request = (...args) => fetch(...args)
   .catch(
     rejectWith(NoResponseError)
   );
+
+export const parseTOML = unthrow(toml.parse);
