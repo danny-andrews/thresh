@@ -43,7 +43,8 @@
     "ncurry": "^1.0.0",
     "node-fetch": "^1.7.1",
     "ramda": "^0.24.1",
-    "sprintf-js": "^1.1.1"
+    "sprintf-js": "^1.1.1",
+    "toml": "^2.3.3"
   },
   "devDependencies": {
     "@danny.andrews/eslint-config": "^5.0.0",
