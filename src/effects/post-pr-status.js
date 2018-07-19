@@ -55,15 +55,15 @@ export const postFinalPrStatus = ({
   ...rest
 }) => {
   const formatMessages = R.join(' \n');
-  const successDescription = R.pipe(
-    R.toPairs,
-    R.map(([filename, assetDiff]) => formatAssetDiff({filename, ...assetDiff})),
-    formatMessages
-  )(assetDiffs);
-  const failureDescription = R.pipe(
-    R.map(R.prop('message')),
-    formatMessages
-  )(thresholdFailures);
+  const successDescription = assetDiffs
+    |> R.toPairs
+    |> R.map(
+      ([filename, assetDiff]) => formatAssetDiff({filename, ...assetDiff})
+    )
+    |> formatMessages;
+  const failureDescription = thresholdFailures
+    |> R.map(R.prop('message'))
+    |> formatMessages;
 
   return (
     R.isEmpty(thresholdFailures)

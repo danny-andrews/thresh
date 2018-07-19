@@ -29,7 +29,7 @@
     "ci": "yarn lint && yarn test:coverage && yarn stats",
     "lint": "eslint . && sort-package-json",
     "stats": "echo 'LOC IN PROJECT...' && find src -name '*.js' -not -path '**/__tests__/*' | xargs wc -l",
-    "test": "BABEL_ENV=test ava",
+    "test": "ava",
     "test:coverage": "nyc yarn test"
   },
   "dependencies": {
@@ -47,12 +47,15 @@
     "toml": "^2.3.3"
   },
   "devDependencies": {
+    "@babel/cli": "^7.0.0-beta.54",
+    "@babel/core": "^7.0.0-beta.54",
+    "@babel/plugin-proposal-object-rest-spread": "^7.0.0-beta.54",
+    "@babel/plugin-proposal-pipeline-operator": "^7.0.0-beta.54",
+    "@babel/preset-env": "^7.0.0-beta.54",
+    "@babel/register": "^7.0.0-beta.54",
     "@danny.andrews/eslint-config": "^5.0.0",
-    "ava": "^0.22.0",
-    "babel-cli": "^6.24.1",
-    "babel-eslint": "^7.2.3",
-    "babel-plugin-transform-object-rest-spread": "^6.23.0",
-    "babel-preset-env": "^1.5.2",
+    "ava": "1.0.0-beta.6",
+    "babel-eslint": "^8.2.6",
     "eslint": "^4.1.1",
     "expect": "^1.20.2",
     "nyc": "^11.1.0",
@@ -64,9 +67,8 @@
       "!**/shared/**"
     ],
     "require": [
-      "babel-register"
+      "@babel/register"
     ],
-    "babel": "inherit",
     "failWithoutAssertions": false
   },
   "nyc": {

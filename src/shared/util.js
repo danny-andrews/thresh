@@ -13,7 +13,7 @@ export const switchCaseF = cases => defaultCase => key =>
 export const compact = R.reject(item => !item);
 
 export const compactAndJoin = (separator, list) =>
-  R.pipe(compact, R.join(separator))(list);
+  compact(list) |> R.join(separator);
 
 export const unthrow = fn => (...args) => {
   try {

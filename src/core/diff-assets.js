@@ -1,8 +1,8 @@
 import R from 'ramda';
 
-export default ({current, original, onMismatchFound = R.identity}) => R.pipe(
-  R.toPairs,
-  R.reduce((acc, [filepath, fileStats]) => {
+export default ({current, original, onMismatchFound = R.identity}) => current
+  |> R.toPairs
+  |> R.reduce((acc, [filepath, fileStats]) => {
     const originalStat = original[filepath];
     if(!originalStat) {
       onMismatchFound(filepath);
@@ -22,5 +22,4 @@ export default ({current, original, onMismatchFound = R.identity}) => R.pipe(
         percentChange: difference / originalStat.size * 100
       }
     };
-  }, {})
-)(current);
+  }, {});

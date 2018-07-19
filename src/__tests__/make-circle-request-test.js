@@ -1,5 +1,4 @@
 import test from 'ava';
-import R from 'ramda';
 import expect, {createSpy} from 'expect';
 import makeCircleRequest from '../make-circle-request';
 import {NoResponseError, Non200ResponseError, InvalidResponseError}
@@ -110,9 +109,11 @@ test('returns Error if request fails', () => {
 
 test('returns error if non-200 status code received', () => {
   const spy = createSpy().andReturn(
-    R.pipe(Non200ResponseError, a => Promise.reject(a))({
-      data: 'Internal Server Error'
-    })
+    Promise.reject(
+      Non200ResponseError({
+        data: 'Internal Server Error'
+      })
+    )
   );
 
   return subject({request: spy, circleApiToken: 'djklay32r'})
@@ -123,8 +124,8 @@ test('returns error if non-200 status code received', () => {
 
 test('returns error if body parsing fails', () => {
   const spy = createSpy().andReturn(
-    R.pipe(InvalidResponseError, a => Promise.reject(a))(
-      'Cannot parse body'
+    Promise.reject(
+      InvalidResponseError('Cannot parse body')
     )
   );
 
