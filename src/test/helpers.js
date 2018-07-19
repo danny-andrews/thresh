@@ -1,6 +1,6 @@
 import R from 'ramda';
 
-export const PromiseError = R.pipe(Error, a => Promise.reject(a));
+export const PromiseError = a => Promise.reject(Error(a));
 
 export const FakeRequest = (handlers = []) => (...args) => {
   const [url] = args;

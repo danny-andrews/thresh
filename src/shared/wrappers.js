@@ -1,6 +1,5 @@
 import Ajv from 'ajv';
 import FlatFileDb from 'flat-file-db';
-import R from 'ramda';
 import fetch from 'node-fetch';
 import toml from 'toml';
 import {CreateErrorFactory, unthrow} from './util';
@@ -20,7 +19,7 @@ export const NoResponseError = CreateErrorFactory();
 export const InvalidResponseError = CreateErrorFactory();
 
 const rejectWith = Type =>
-  R.pipe(Type, a => Promise.reject(a));
+  a => Promise.reject(Type(a));
 
 export const request = (...args) => fetch(...args)
   .then(response => response.json()

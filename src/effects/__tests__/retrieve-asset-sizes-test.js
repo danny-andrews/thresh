@@ -1,5 +1,4 @@
 import test from 'ava';
-import R from 'ramda';
 import expect, {createSpy} from 'expect';
 import retrieveAssetSizes from '../get-previous-asset-sizes';
 import {FakeRequest} from '../../test/helpers';
@@ -50,15 +49,18 @@ export const createResponseSequence = (opts = {}) => {
 
 // Factory which makes this easy to test.
 const subject = ({responseData, repoOwner, repoName, ...opts} = {}) => {
-  const fakeRequest = R.pipe(createResponseSequence, FakeRequest)({
+  const fakeRequest = createResponseSequence({
     artifactPath: 'blah8372blah/dist/app.js',
     ...responseData
-  });
+  }) |> FakeRequest;
 
-  return R.pipe(optsFac, retrieveAssetSizes)({
-    assetSizesFilepath: 'dist/app.js',
-    ...opts
-  }).run({
+  return (
+    optsFac({
+      assetSizesFilepath: 'dist/app.js',
+      ...opts
+    })
+    |> retrieveAssetSizes
+  ).run({
     request: fakeRequest,
     repoOwner,
     repoName

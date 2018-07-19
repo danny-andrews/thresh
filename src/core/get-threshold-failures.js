@@ -61,9 +61,9 @@ const uncheckedGetThresholdFailures = ({assetStats, failureThresholds}) => {
         return buildFailureObject({message, offendingAssets: targetSet});
       };
 
-      return R.pipe(
-        target => [].concat(target),
-        R.chain(target => {
+      return targets
+        |> [].concat
+        |> R.chain(target => {
           const targetSet = R.cond([
             [isFileExtensionTarget, assetStatsWithExt],
             [isAllTarget, R.always(assetStats)],
@@ -77,10 +77,13 @@ const uncheckedGetThresholdFailures = ({assetStats, failureThresholds}) => {
           }
 
           return targetSet;
-        }),
-        R.uniq,
-        strategy === FailureThresholdStategies.ANY ? anyStrategy : allStrategy
-      )(targets);
+        })
+        |> R.uniq
+        |> (
+          strategy === FailureThresholdStategies.ANY
+            ? anyStrategy
+            : allStrategy
+        );
     },
     failureThresholds
   );

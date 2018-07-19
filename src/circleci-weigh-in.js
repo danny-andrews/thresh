@@ -60,16 +60,14 @@ const circleCiWeighInUnchecked = opts => {
   );
 
   if(!isfailureThresholdsValid) {
-    return R.pipe(
-      validator.errorsText,
-      InvalidFailureThresholdOptionErr,
-      ReaderPromise.fromError
-    )(validator.errors, {separator: '\n'});
+    return validator.errorsText(validator.errors, {separator: '\n'})
+      |> InvalidFailureThresholdOptionErr
+      |> ReaderPromise.fromError;
   }
 
   const retrieveAssetSizes2 = () =>
     pullRequestId.toEither().cata(
-      R.pipe(NoOpenPullRequestFoundErr, Either.Left, ReaderPromise.of),
+      a => NoOpenPullRequestFoundErr(a) |> Either.Left |> ReaderPromise.of,
       prId => effects.retrieveAssetSizes({
         pullRequestId: prId,
         assetSizesFilepath: ASSET_STATS_FILENAME
@@ -82,15 +80,13 @@ const circleCiWeighInUnchecked = opts => {
     assetStats
   );
 
-  const assetStatMapToList = R.pipe(
-    R.toPairs,
-    R.map(
+  const assetStatMapToList = a => R.toPairs(a)
+    |> R.map(
       ([filename, filepath]) => ({
         filename,
         path: filepath
       })
-    )
-  );
+    );
 
   const resolvePath = ({path, ...rest}) => ({
     ...rest,
@@ -145,10 +141,9 @@ const circleCiWeighInUnchecked = opts => {
 
       const thresholdFailures = getThresholdFailures({
         failureThresholds,
-        assetStats: R.pipe(
-          R.toPairs,
-          R.map(([filepath, {current: size}]) => ({filepath, size}))
-        )(assetDiffs)
+        assetStats: assetDiffs
+          |> R.toPairs
+          |> R.map(([filepath, {current: size}]) => ({filepath, size}))
       });
 
       if(thresholdFailures.isLeft()) {

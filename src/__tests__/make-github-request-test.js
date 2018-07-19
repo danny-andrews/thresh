@@ -1,6 +1,5 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
-import R from 'ramda';
 import makeGithubRequest from '../make-github-request';
 import {
   NoResponseError,
@@ -116,8 +115,8 @@ test('returns error if response fails', () => {
 
 test('returns error if body parsing fails', () => {
   const spy = createSpy().andReturn(
-    R.pipe(InvalidResponseError, a => Promise.reject(a))(
-      'Cannot parse body'
+    Promise.reject(
+      InvalidResponseError('Cannot parse body')
     )
   );
 
@@ -129,9 +128,9 @@ test('returns error if body parsing fails', () => {
 
 test('returns error if non-200 status code received', () => {
   const spy = createSpy().andReturn(
-    R.pipe(Non200ResponseError, a => Promise.reject(a))({
-      data: 'Internal Server Error'
-    })
+    Promise.reject(
+      Non200ResponseError({data: 'Internal Server Error'})
+    )
   );
 
   return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
@@ -142,8 +141,8 @@ test('returns error if non-200 status code received', () => {
 
 test('returns authorization error if UNATHORIZED status received', () => {
   const spy = createSpy().andReturn(
-    R.pipe(Non200ResponseError, a => Promise.reject(a))(
-      {status: 401, data: 'Unathorized'}
+    Promise.reject(
+      Non200ResponseError({status: 401, data: 'Unathorized'})
     )
   );
 
@@ -155,8 +154,8 @@ test('returns authorization error if UNATHORIZED status received', () => {
 
 test('returns authorization error if FORBIDDEN status received', () => {
   const spy = createSpy().andReturn(
-    R.pipe(Non200ResponseError, a => Promise.reject(a))(
-      {status: 403, data: 'Forbidden'}
+    Promise.reject(
+      Non200ResponseError({status: 403, data: 'Forbidden'})
     )
   );
 

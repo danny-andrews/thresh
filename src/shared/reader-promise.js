@@ -25,25 +25,12 @@ const ReaderPromise = CreateFactory(value => {
   });
 });
 
-ReaderPromise.fromPromise = R.pipe(
-  promise => () => promise,
-  Reader,
-  ReaderPromise
-);
+ReaderPromise.fromPromise = a => R.always(a) |> Reader |> ReaderPromise;
 
-ReaderPromise.of = R.pipe(
-  a => Promise.resolve(a),
-  ReaderPromise.fromPromise,
-);
+ReaderPromise.of = a => Promise.resolve(a) |> ReaderPromise.fromPromise;
 
-ReaderPromise.fromError = R.pipe(
-  a => Promise.reject(a),
-  ReaderPromise.fromPromise,
-);
+ReaderPromise.fromError = a => Promise.reject(a) |> ReaderPromise.fromPromise;
 
-ReaderPromise.fromReaderFn = R.pipe(
-  Reader,
-  ReaderPromise
-);
+ReaderPromise.fromReaderFn = a => Reader(a) |> ReaderPromise;
 
 export default ReaderPromise;
