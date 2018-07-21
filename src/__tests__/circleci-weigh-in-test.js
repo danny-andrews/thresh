@@ -11,15 +11,14 @@ import {
 import circleciWeighIn from '../circleci-weigh-in';
 import ReaderPromise from '../shared/reader-promise';
 
-const subject = (opts = {}) => {
-  const {
-    logError = console.error,
-    logMessage = console.log,
-    getFileStats = () => Promise.resolve({size: 452}),
-    ...rest
-  } = opts;
-
-  return circleciWeighIn({
+const subject = ({
+  logError = console.error,
+  logMessage = console.log,
+  getFileStats = () => Promise.resolve({size: 452}),
+  effects,
+  ...rest
+} = {}) =>
+  circleciWeighIn({
     statsFilepath: 'dist/stats.js',
     projectName: Maybe.None(),
     outputDirectory: '',
@@ -28,6 +27,11 @@ const subject = (opts = {}) => {
     buildUrl: 'http://circle.com/my-build',
     pullRequestId: Maybe.of('f820yf3h'),
     artifactsDirectory: 'lfjk3208hohefi4/artifacts',
+    ...rest
+  }).run({
+    logMessage,
+    logError,
+    getFileStats,
     effects: {
       getAssetFileStats: () => ReaderPromise.of([{
         size: 242,
@@ -49,11 +53,9 @@ const subject = (opts = {}) => {
       writeAssetStats: () => ReaderPromise.of(),
       writeAssetDiffs: () => ReaderPromise.of(),
       saveStats: ReaderPromise.of,
-      ...(opts.effects ? opts.effects : {})
-    },
-    ...R.omit(['effects'], rest)
-  }).run({logMessage, logError, getFileStats});
-};
+      ...effects
+    }
+  });
 
 const firstCallFirstArgument = R.path(['calls', 0, 'arguments', 0]);
 

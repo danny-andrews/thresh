@@ -3,8 +3,9 @@ import path from 'path';
 import {mkdir, writeFile, readFile, getFileStats, Database, request}
   from './shared';
 import circleciWeighIn from './circleci-weigh-in';
+import * as effects from './effects';
 
-export default (...args) => {
+export default (...args) =>
   circleciWeighIn(...args)
     .run({
       writeFile,
@@ -19,6 +20,6 @@ export default (...args) => {
       githubApiToken: process.env.GITHUB_API_TOKEN,
       circleApiToken: process.env.CIRCLE_API_TOKEN,
       logMessage: console.log,
-      logError: console.error
+      logError: console.error,
+      effects
     });
-};
