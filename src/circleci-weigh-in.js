@@ -14,18 +14,6 @@ import {
 import ReaderPromise from './shared/reader-promise';
 import {failureThresholdListSchema, DFAULT_FAILURE_THRESHOLD_STRATEGY}
   from './core/schemas';
-import {
-  makeArtifactDirectory,
-  postFinalPrStatus,
-  postPendingPrStatus,
-  postErrorPrStatus,
-  readManifest,
-  retrieveAssetSizes,
-  writeAssetDiffs,
-  writeAssetStats,
-  getAssetFileStats,
-  saveStats
-} from './effects';
 
 const warningTypes = [
   NoOpenPullRequestFoundErr,
@@ -43,8 +31,7 @@ const circleCiWeighInUnchecked = opts => {
     projectName,
     prStatusParams,
     pullRequestId,
-    artifactsDirectory,
-    effects
+    artifactsDirectory
   } = opts;
   const failureThresholds = opts.failureThresholds.map(
     threshold => ({
@@ -65,44 +52,44 @@ const circleCiWeighInUnchecked = opts => {
       |> ReaderPromise.fromError;
   }
 
-  const retrieveAssetSizes2 = () =>
-    pullRequestId.toEither().cata(
-      a => NoOpenPullRequestFoundErr(a) |> Either.Left |> ReaderPromise.of,
-      prId => effects.retrieveAssetSizes({
-        pullRequestId: prId,
-        assetSizesFilepath: ASSET_STATS_FILENAME
-      })
-    );
-
-  const assetStatListToMap = assetStats => R.reduce(
-    (acc, {filename, ...rest}) => ({...acc, [filename]: rest}),
-    {},
-    assetStats
-  );
-
-  const assetStatMapToList = a => R.toPairs(a)
-    |> R.map(
-      ([filename, filepath]) => ({
-        filename,
-        path: filepath
-      })
-    );
-
-  const resolvePath = ({path, ...rest}) => ({
-    ...rest,
-    path: [outputDirectory, path].join('/')
-  });
-
   return ReaderPromise.fromReaderFn(
     async config => {
+      const retrieveAssetSizes2 = () =>
+        pullRequestId.toEither().cata(
+          a => NoOpenPullRequestFoundErr(a) |> Either.Left |> ReaderPromise.of,
+          prId => config.effects.retrieveAssetSizes({
+            pullRequestId: prId,
+            assetSizesFilepath: ASSET_STATS_FILENAME
+          })
+        );
+
+      const assetStatListToMap = assetStats => R.reduce(
+        (acc, {filename, ...rest}) => ({...acc, [filename]: rest}),
+        {},
+        assetStats
+      );
+
+      const assetStatMapToList = a => R.toPairs(a)
+        |> R.map(
+          ([filename, filepath]) => ({
+            filename,
+            path: filepath
+          })
+        );
+
+      const resolvePath = ({path, ...rest}) => ({
+        ...rest,
+        path: [outputDirectory, path].join('/')
+      });
+
       const [,, currentAssetStats, previousAssetSizes] = await Promise.all([
-        effects.postPendingPrStatus(prStatusParams).run(config),
-        effects.makeArtifactDirectory({rootPath: artifactsDirectory})
+        config.effects.postPendingPrStatus(prStatusParams).run(config),
+        config.effects.makeArtifactDirectory({rootPath: artifactsDirectory})
           .run(config),
-        effects.readManifest(manifestFilepath)
+        config.effects.readManifest(manifestFilepath)
           .map(assetStatMapToList)
           .map(R.map(resolvePath))
-          .chain(effects.getAssetFileStats)
+          .chain(config.effects.getAssetFileStats)
           .map(assetStatListToMap)
           .run(config),
         retrieveAssetSizes2().run(config)
@@ -112,13 +99,13 @@ const circleCiWeighInUnchecked = opts => {
       // projectName. Also, use some semantic variable like isMonorepo.
       const assetStats = await projectName.toEither().cata(
         () => Promise.resolve(currentAssetStats),
-        () => effects.saveStats({
+        () => config.effects.saveStats({
           ...(previousAssetSizes.isRight() ? previousAssetSizes.right() : {}),
           [projectName.some()]: currentAssetStats
         }).run(config)
       );
 
-      const writeAssetStats2 = effects.writeAssetStats({
+      const writeAssetStats2 = config.effects.writeAssetStats({
         rootPath: artifactsDirectory,
         assetStats
       }).run(config);
@@ -154,12 +141,12 @@ const circleCiWeighInUnchecked = opts => {
 
       return Promise.all([
         writeAssetStats2,
-        effects.writeAssetDiffs({
+        config.effects.writeAssetDiffs({
           rootPath: artifactsDirectory,
           assetDiffs,
           thresholdFailures: thresholdFailures.right()
         }).run(config),
-        effects.postFinalPrStatus({
+        config.effects.postFinalPrStatus({
           ...prStatusParams,
           assetDiffs,
           thresholdFailures: thresholdFailures.right()
@@ -179,25 +166,13 @@ export default opts => {
         opts.projectName.orSome(null)
       ])
     },
-    effects: {
-      retrieveAssetSizes,
-      postFinalPrStatus,
-      postPendingPrStatus,
-      postErrorPrStatus,
-      readManifest,
-      makeArtifactDirectory,
-      writeAssetStats,
-      writeAssetDiffs,
-      getAssetFileStats,
-      saveStats
-    },
     ...opts
   };
 
   return ReaderPromise.fromReaderFn(
     config => circleCiWeighInUnchecked(finalOpts).run(config).catch(err => {
       const logError = () => config.logError(err.message);
-      finalOpts.effects.postErrorPrStatus({
+      config.effects.postErrorPrStatus({
         ...finalOpts.prStatusParams,
         description: err.message
       })
