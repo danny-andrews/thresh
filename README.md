@@ -2,9 +2,10 @@
 A CircleCI integration for tracking file size changes across deploys.
 
 ## What it Does
-- Saves file containing file sizes of assets (by reading from your bundler's manifest output) to the `$CIRCLE_ARTIFACTS/circleci-weigh-in/asset-sizes.json` directory in order to save it as an artifact for later reference.
+- Saves file containing file sizes of assets (by reading from your bundler's manifest output) to the `$CIRCLE_ARTIFACTS/circleci-weigh-in/asset-sizes.json` directory as an artifact for later reference.
 
-  Example output:
+<details>
+  <summary>Example output:</summary>
 
 ```json
 {
@@ -26,12 +27,18 @@ A CircleCI integration for tracking file size changes across deploys.
   }
 }
 ```
+</details>
 
-- Generates diff of base branch file sizes with current branch.
+- Posts failing commit status if there are any asset size threshold failures.
+
+  **The following only happens if a pull request is associated with the Circle build:**
+
+- Generates diff of base branch asset sizes with current branch.
 
 - Saves file containing that diff information to `$CIRCLE_ARTIFACTS/circleci-weigh-in/asset-diffs.json`.
 
-  Example output
+<details>
+  <summary>Example output:</summary>
 
 ```json
 {
@@ -61,80 +68,43 @@ A CircleCI integration for tracking file size changes across deploys.
   }
 }
 ```
+</details>
+<br/>
 
-- Posts that diff as a status to PR associated with the build.
+- Posts that diff as a status to PR associated with the build (if any) to give you insight into how the patch affects asset sizes.
 
 ## CLI Options
 
 ### --config-path
 - Description: Filepath to your bundler's manifest output.
 - Type: `String`
-- Default: './.circleci-weigh-in.toml'
+- Default: `./.circleci-weigh-in.toml`
 
-### --manifest-path
-- Description: Filepath to your bundler's manifest output.
-- Type: `String`
-- Required?: `true`
+## Configuation Values (in JSDoc Format)
 
-### --output-directory
-- Description: Directory where your assets are output to.
-- Type: `String`
-- Required?: `false`
+- `{string} manifest-path` - Filepath to your bundler's manifest output.
+- `{string} [output-directory]` - Directory where your assets are output.
+- `{string} [project-name]` - The name of the project for which the asset stats will be generated. (Only use in monorepo situations where you may want to generate asset stats for multiple projects during the same build.) The asset size artifact will be scoped by project name and the CI status label (`Asset Sizes: [PROJECT_NAME]`) will be updated accordingly.
+- `{string} [failure-thresholds]` - A list of configuration objects used to determine the conditions under which the [GitHub status](https://developer.github.com/v3/repos/statuses/#create-a-status) will be posted as "failed." The shape of this object is described [here](#failure-threshold-config-shape).
+  - `{string} failureThresholds.maxSize`
+  - `{string="any","total"} [failureThresholds.strategy="any"]` - How the threshold is applied. If set to "any", it will fail if any asset in the target set is above the threshold. If set to "total" it will fail if the total of all assets in the set is above the threshold.
+  - `{(string|string[])} [failureThresholds.targets="all"]` - The target(s) of the threshold. Each target can be either a file extension (e.g. ".js" for all javascript assets), an asset path "vendor.js" for the "vendor.js" asset, or the special keyword "all" for all assets (default).
 
-### --project-name
-- Description: The name of the project for which the asset stats will be generated. (Only use in monorepo situations where you may want to generate asset stats for multiple projects during the same build.) The asset size artifact will be scoped by project name and the CI status label (`Asset Sizes: [PROJECT_NAME]`) will be updated accordingly.
-- Type: `String`
-- Required?: `false`
+<details>
+  <summary>Example config file:</summary>
 
-### --failure-thresholds
-- Description: A JSON array of configuration objects used to determine the conditions under which the [GitHub status](https://developer.github.com/v3/repos/statuses/#create-a-status) will be posted as "failed." The shape of this object is described [here](#failure-threshold-config-shape).
-- Type: `String`
-- Required?: `false`
+```toml
+manifest-path = "example/dist/manifest.json"
 
-### Failure Threshold Config Shape
-```js
-{
-  title: 'Failure Threshold',
-  type: 'object',
-  properties: {
-    maxSize: {
-      type: 'number'
-    },
-    strategy: {
-      type: 'string',
-      enum: ['any', 'total'],
-      default: 'total',
-      description: `How the threshold is applied. If set to "any", it
-        will fail if any asset in the target set is above the threshold. If set
-        to "total" it will fail if the total of all assets in the set is above
-        the threshold.`
-    },
-    targets: {
-      oneOf: [
-        {type: 'string'},
-        {
-          type: 'array',
-          items: {type: 'string'}
-        }
-      ],
-      description: `The target(s) of the threshold. Each target can be either a
-        file extension (e.g. ".js" for all javascript assets), an asset path
-        "vendor.js" for the "vendor.js" asset, or the special keyword "all" for
-        all assets (default).`
-    }
-  },
-  required: ['maxSize']
-}
+output-directory = "example/dist"
+
+[[failure-thresholds]]
+targets = ".js"
+maxSize = 20000
+strategy = "total"
 ```
-
-#### Example threshold config:
-```json
-[{
-  "targets": ".js",
-  "maxSize": 70000
-}]
-```
-This example would post a failed GitHub status if the total size of all javascript assets was larger than 70kB.
+This example would post a failed GitHub status if the total size of all javascript assets was larger than 20kB.
+</details>
 
 ## Required Environment Variables
 
@@ -172,7 +142,7 @@ jobs:
 ```
 
 ## Future Plans
-I've tried to keep the CI environment-agnostic code (reading config, reading asset stats, calculating asset diffs, etc.) separate from the code specific to CircleCI (reading environment variables, storing build artifacts, retrieving build info, etc.) in an effort to ease development of similar integrations for other CI environments (Jenkins, Travis, etc.) I'll split this repo up accordingly when more integrations are made.
+I've tried to keep the CI environment-agnostic code (reading config, reading asset stats, calculating asset diffs, etc.) separate from the code specific to CircleCI (reading environment variables, storing build artifacts, retrieving build info, etc.) in an effort to ease development of similar integrations for other CI environments (Jenkins, Travis, etc.). I'll split this repo up accordingly when more integrations are made.
 
 ## Contributing
 If you see something missing, please open an issue! This project is my real-world testbed for software design patterns or other ideas I want to play around with, so I plan to be very active in maintaining it in the foreseeable future.
