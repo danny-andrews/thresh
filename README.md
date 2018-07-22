@@ -10,19 +10,19 @@ A CircleCI integration for tracking file size changes across deploys.
 {
   "app.css": {
     "size": 52336,
-    "path": "publid/css/app.54bbcf6f50ed582c98f5cf3841d5c837.css"
+    "path": "public/css/app.54bbcf6f50ed582c98f5cf3841d5c837.css"
   },
   "app.js": {
     "size": 408489,
-    "path": "publid/js/app.18db3f4eb6b95f3ac8ea.js"
+    "path": "public/js/app.18db3f4eb6b95f3ac8ea.js"
   },
   "manifest.js": {
     "size": 1463,
-    "path": "publid/js/manifest.5cb70be29d3945c8ee59.js"
+    "path": "public/js/manifest.5cb70be29d3945c8ee59.js"
   },
   "vendor.js": {
     "size": 2284786,
-    "path": "publid/js/vendor.af1abaa45f10408b578e.js"
+    "path": "public/js/vendor.af1abaa45f10408b578e.js"
   }
 }
 ```
