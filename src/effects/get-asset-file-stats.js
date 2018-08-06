@@ -1,10 +1,8 @@
 import ReaderPromise from '../shared/reader-promise';
+import {getFileStats} from './base';
 
-export default stats =>
-  ReaderPromise.fromReaderFn(
-    ({getFileStats}) => Promise.all(
-      stats.map(stat =>
-        getFileStats(stat.path).then(({size}) => ({...stat, size}))
-      )
-    )
-  );
+export default stats => ReaderPromise.parallel(
+  stats.map(
+    stat => getFileStats(stat.path).map(({size}) => ({...stat, size}))
+  )
+);

@@ -1,13 +1,7 @@
 import {ErrorCreatingArtifactDirectoryErr} from '../core/errors';
-import ReaderPromise from '../shared/reader-promise';
-import resolve from '../resolve';
 import {OUTPUT_FILEPATH} from '../core/constants';
+import {mkdir, resolve} from './base';
 
-export default ({rootPath}) =>
-  resolve(rootPath, OUTPUT_FILEPATH).chain(filepath =>
-    ReaderPromise.fromReaderFn(({mkdir}) =>
-      mkdir(filepath).catch(
-        error => Promise.reject(ErrorCreatingArtifactDirectoryErr(error))
-      )
-    )
-  );
+export default ({rootPath}) => resolve(rootPath, OUTPUT_FILEPATH)
+  .chain(filepath => mkdir(filepath))
+  .mapErr(ErrorCreatingArtifactDirectoryErr);
