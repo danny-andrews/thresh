@@ -5,8 +5,8 @@ import {mkdir, writeFile, readFile, getFileStats, Database, request}
 import circleciWeighIn from './circleci-weigh-in';
 import * as effects from './effects';
 
-export default (...args) =>
-  circleciWeighIn(...args)
+export default options =>
+  circleciWeighIn(options)
     .run({
       writeFile,
       readFile,
@@ -15,10 +15,6 @@ export default (...args) =>
       db: Database('my.db'),
       mkdir,
       getFileStats,
-      repoOwner: process.env.CIRCLE_PROJECT_USERNAME,
-      repoName: process.env.CIRCLE_PROJECT_REPONAME,
-      githubApiToken: process.env.GITHUB_API_TOKEN,
-      circleApiToken: process.env.CIRCLE_API_TOKEN,
       logMessage: console.log,
       logError: console.error,
       effects

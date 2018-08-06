@@ -1,31 +1,41 @@
 import {Either} from 'monet';
-import makeGitHubRequest from '../make-github-request';
-import makeCircleRequest from '../make-circle-request';
+import makeGitHubRequest from './make-github-request';
+import makeCircleRequest from './make-circle-request';
 import ReaderPromise from '../shared/reader-promise';
 import {CircleCiBuildStatuses} from '../core/constants';
 import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr}
   from '../core/errors';
 
-export default ({pullRequestId, assetSizesFilepath}) =>
+export default ({
+  pullRequestId,
+  assetSizesFilepath,
+  circleApiToken,
+  githubApiToken,
+  repoOwner,
+  repoName
+}) =>
   ReaderPromise.fromReaderFn(config => {
-    const repoProjectPath = [config.repoOwner, config.repoName].join('/');
+    const repoProjectPath = [repoOwner, repoName].join('/');
 
     const getBaseBranch = makeGitHubRequest({
-      path: `repos/${repoProjectPath}/pulls/${pullRequestId}`
+      path: `repos/${repoProjectPath}/pulls/${pullRequestId}`,
+      githubApiToken
     });
 
     const getRecentBuilds = baseBranch =>
       makeCircleRequest({
-        path: `project/github/${repoProjectPath}/tree/${baseBranch}`
+        path: `project/github/${repoProjectPath}/tree/${baseBranch}`,
+        circleApiToken
       });
 
     const getBuildArtifacts = buildNumber =>
       makeCircleRequest({
-        path: `project/github/${repoProjectPath}/${buildNumber}/artifacts`
+        path: `project/github/${repoProjectPath}/${buildNumber}/artifacts`,
+        circleApiToken
       });
 
     const getAssetSizeArtifact = assetSizeArtifactUrl =>
-      makeCircleRequest({url: assetSizeArtifactUrl, raw: true});
+      makeCircleRequest({url: assetSizeArtifactUrl, raw: true, circleApiToken});
 
     return getBaseBranch.chain(prData => {
       const baseBranch = prData.base.ref;

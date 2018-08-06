@@ -27,6 +27,8 @@ const subject = ({
     buildUrl: 'http://circle.com/my-build',
     pullRequestId: Maybe.of('f820yf3h'),
     artifactsDirectory: 'lfjk3208hohefi4/artifacts',
+    circleApiToken: '93hfdkhf',
+    githubApiToken: '8hfey89r',
     ...rest
   }).run({
     logMessage,

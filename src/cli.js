@@ -92,7 +92,11 @@ readFile(cliOptions['config-path'])
       failureThresholds,
       buildSha: process.env.CIRCLE_SHA1,
       buildUrl: process.env.CIRCLE_BUILD_URL,
-      artifactsDirectory: process.env.CIRCLE_ARTIFACTS
+      artifactsDirectory: process.env.CIRCLE_ARTIFACTS,
+      circleApiToken: process.env.CIRCLE_API_TOKEN,
+      githubApiToken: process.env.GITHUB_API_TOKEN,
+      repoOwner: process.env.CIRCLE_PROJECT_USERNAME,
+      repoName: process.env.CIRCLE_PROJECT_REPONAME
     })
   )
   .catch(err => {

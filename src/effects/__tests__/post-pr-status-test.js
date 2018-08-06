@@ -3,19 +3,22 @@ import R from 'ramda';
 import expect, {createSpy} from 'expect';
 import {postFinalPrStatus, postPendingPrStatus, postErrorPrStatus} from '../post-pr-status';
 
-const postErrorPrStatusFac = (opts = {}) =>
+const subject = (opts = {}) =>
   postErrorPrStatus({
     sha: 'h8g94hg9',
     targetUrl: 'info.com/53',
     label: 'interesting info',
     description: 'blah blah blah',
-    ...R.pick(['sha', 'targetUrl', 'label', 'description'], opts)
-  }).run({
-    request: () => Promise.resolve(),
     githubApiToken: 'h832hfo',
     repoOwner: 'me',
     repoName: 'my-repo',
-    ...R.pick(['request', 'githubApiToken', 'repoOwner', 'repoName'], opts)
+    ...R.pick(
+      ['sha', 'targetUrl', 'label', 'description', 'githubApiToken'],
+      opts
+    )
+  }).run({
+    request: () => Promise.resolve(),
+    ...R.pick(['request', 'repoOwner', 'repoName'], opts)
   });
 
 test('postFinalPrStatus posts success pr status to GitHub when there are no failures', () => {
@@ -36,13 +39,11 @@ test('postFinalPrStatus posts success pr status to GitHub when there are no fail
     },
     thresholdFailures: [],
     targetUrl: 'info.com/53',
-    label: 'interesting info'
-  }).run({
-    request: spy,
-    githubApiToken: 'h832hfo',
+    label: 'interesting info',
     repoOwner: 'me',
-    repoName: 'my-repo'
-  });
+    repoName: 'my-repo',
+    githubApiToken: 'h832hfo'
+  }).run({request: spy});
 
   const [url, {headers, body}] = spy.calls[0].arguments;
   expect(headers.Authorization).toBe('token h832hfo');
@@ -66,13 +67,11 @@ test('postFinalPrStatus posts failure pr status to GitHub when there are failure
       {message: 'vendor asset is too big'}
     ],
     targetUrl: 'info.com/53',
-    label: 'interesting info'
-  }).run({
-    request: spy,
+    label: 'interesting info',
     githubApiToken: 'h832hfo',
     repoOwner: 'me',
     repoName: 'my-repo'
-  });
+  }).run({request: spy});
 
   const [url, {headers, body}] = spy.calls[0].arguments;
   expect(headers.Authorization).toBe('token h832hfo');
@@ -91,13 +90,11 @@ test('postPendingPrStatus makes request to post pending pr status to GitHub', ()
   postPendingPrStatus({
     sha: 'h8g94hg9',
     targetUrl: 'info.com/53',
-    label: 'interesting info'
-  }).run({
-    request: spy,
+    label: 'interesting info',
     githubApiToken: 'h832hfo',
     repoOwner: 'me',
     repoName: 'my-repo'
-  });
+  }).run({request: spy});
 
   const [url, {headers, body}] = spy.calls[0].arguments;
   expect(headers.Authorization).toBe('token h832hfo');
@@ -113,7 +110,7 @@ test('postPendingPrStatus makes request to post pending pr status to GitHub', ()
 
 test('postErrorPrStatus makes request to post error pr status to GitHub', () => {
   const spy = createSpy().andReturn(Promise.resolve());
-  postErrorPrStatusFac({
+  subject({
     sha: 'h8g94hg9',
     targetUrl: 'info.com/53',
     label: 'interesting info',
@@ -139,7 +136,7 @@ test('postErrorPrStatus makes request to post error pr status to GitHub', () => 
 test('postErrorPrStatus truncates description to 140 characters (using ellipsis)', () => {
   const message = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.";
   const spy = createSpy().andReturn(Promise.resolve());
-  postErrorPrStatusFac({
+  subject({
     description: message,
     request: spy
   });

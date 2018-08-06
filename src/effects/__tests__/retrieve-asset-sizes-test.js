@@ -12,12 +12,6 @@ import {
 import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr}
   from '../../core/errors';
 
-const optsFac = (opts = {}) => ({
-  pullRequestId: '45',
-  assetSizesFilepath: 'dist/vendor.js',
-  ...opts
-});
-
 export const createResponseSequence = (opts = {}) => {
   const {
     getBaseBranchResponse,
@@ -55,16 +49,14 @@ const subject = ({responseData, repoOwner, repoName, ...opts} = {}) => {
   }) |> FakeRequest;
 
   return (
-    optsFac({
+    retrieveAssetSizes({
+      pullRequestId: '45',
       assetSizesFilepath: 'dist/app.js',
+      repoOwner,
+      repoName,
       ...opts
     })
-    |> retrieveAssetSizes
-  ).run({
-    request: fakeRequest,
-    repoOwner,
-    repoName
-  });
+  ).run({request: fakeRequest});
 };
 
 test('happy path (returns artifact body)', async () => {
