@@ -171,7 +171,8 @@ export default opts => {
       'Asset Sizes',
       opts.projectName.orSome(null)
     ]),
-    ...R.pick(['buildSha', 'githubApiToken', 'repoOwner', 'repoName'])
+    sha: opts.buildSha,
+    ...R.pick(['githubApiToken', 'repoOwner', 'repoName'])
   };
 
   return ReaderPromise.fromReaderFn(
