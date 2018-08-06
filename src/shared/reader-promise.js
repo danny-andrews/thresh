@@ -17,10 +17,26 @@ const ReaderPromise = CreateFactory(value => {
       )
     )
   );
+  const mapErr = fn => ReaderPromise(
+    value.map(
+      promise => promise.catch(fn)
+    )
+  );
+  const chainErr = fn => ReaderPromise(
+    value.chain(
+      promise => Reader(
+        config => promise.catch(
+          (...args) => fn(...args).run(config)
+        )
+      )
+    )
+  );
 
   return Object.freeze({
     chain,
     map,
+    mapErr,
+    chainErr,
     run: config => value.run(config)
   });
 });
@@ -32,5 +48,9 @@ ReaderPromise.of = a => Promise.resolve(a) |> ReaderPromise.fromPromise;
 ReaderPromise.fromError = a => Promise.reject(a) |> ReaderPromise.fromPromise;
 
 ReaderPromise.fromReaderFn = a => Reader(a) |> ReaderPromise;
+
+ReaderPromise.parallel = readerPromises => ReaderPromise.fromReaderFn(
+  config => Promise.all(readerPromises.map(rp => rp.run(config)))
+);
 
 export default ReaderPromise;
