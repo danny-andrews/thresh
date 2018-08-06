@@ -15,10 +15,6 @@ export default options =>
       db: Database('my.db'),
       mkdir,
       getFileStats,
-      repoOwner: process.env.CIRCLE_PROJECT_USERNAME,
-      repoName: process.env.CIRCLE_PROJECT_REPONAME,
-      githubApiToken: process.env.GITHUB_API_TOKEN,
-      circleApiToken: process.env.CIRCLE_API_TOKEN,
       logMessage: console.log,
       logError: console.error,
       effects

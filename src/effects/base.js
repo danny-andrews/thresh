@@ -20,3 +20,7 @@ export const readFile = (...args) => ReaderPromise.fromReaderFn(
 export const writeFile = (...args) => ReaderPromise.fromReaderFn(
   ({writeFile}) => writeFile(...args)
 );
+
+export const request = (...args) => ReaderPromise.fromReaderFn(
+  ({request}) => request(...args)
+);

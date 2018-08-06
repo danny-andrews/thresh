@@ -9,16 +9,13 @@ import {
 
 const subject = (opts = {}) => {
   const {
-    githubApiToken,
+    githubApiToken = 'fjidq8y32',
+    path = 'owner/repo',
     request,
     ...rest
-  } = {
-    githubApiToken: 'fjidq8y32',
-    path: 'owner/repo',
-    ...opts
-  };
+  } = opts;
 
-  return makeGithubRequest(rest).run({githubApiToken, request});
+  return makeGithubRequest({githubApiToken, path, ...rest}).run({request});
 };
 
 test('sends request to https://api.github.com + path', () => {

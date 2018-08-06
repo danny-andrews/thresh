@@ -6,16 +6,13 @@ import {NoResponseError, Non200ResponseError, InvalidResponseError}
 
 const subject = (opts = {}) => {
   const {
-    circleApiToken,
     request,
+    circleApiToken = '894fuhg',
+    path = 'hey',
     ...rest
-  } = {
-    circleApiToken: '894fuhg',
-    path: 'hey',
-    ...opts
-  };
+  } = opts;
 
-  return makeCircleRequest(rest).run({circleApiToken, request});
+  return makeCircleRequest({circleApiToken, path, ...rest}).run({request});
 };
 
 test('sends request to url, if given', () => {

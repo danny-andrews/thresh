@@ -1,6 +1,5 @@
 import {camelizeKeys, decamelizeKeys} from 'humps';
 import R from 'ramda';
-import ReaderPromise from '../shared/reader-promise';
 import {
   GitHubFetchErr,
   GitHubAuthorizationErr,
@@ -8,6 +7,7 @@ import {
 } from '../core/errors';
 import {NoResponseError, Non200ResponseError, InvalidResponseError, switchCaseF}
   from '../shared';
+import {request} from './base';
 
 /* eslint-disable no-magic-numbers */
 const Statuses = {
@@ -39,29 +39,25 @@ const mapError = ({url, context}) =>
     ])
   )();
 
-export default ({path, fetchOpts = {}}) => {
+export default ({path, githubApiToken, fetchOpts = {}}) => {
   const body = serializer(fetchOpts.body);
   const url = `${HOSTNAME}/${path}`;
 
-  return ReaderPromise.fromReaderFn(({request, githubApiToken}) => {
-    const headers = {
-      Accept: 'application/vnd.github.v3+json',
-      Authorization: `token ${githubApiToken}`,
-      ...(fetchOpts.method === 'POST'
-        ? {'Content-Type': 'application/json'}
-        : {}
-      ),
-      ...fetchOpts.headers
-    };
+  const headers = {
+    Accept: 'application/vnd.github.v3+json',
+    Authorization: `token ${githubApiToken}`,
+    ...(fetchOpts.method === 'POST'
+      ? {'Content-Type': 'application/json'}
+      : {}
+    ),
+    ...fetchOpts.headers
+  };
 
-    return request(url, {
-      headers,
-      body,
-      ...R.omit(['headers', 'body'], fetchOpts)
-    })
-      .then(deserializer)
-      .catch(({context, constructor}) =>
-        Promise.reject(mapError({url, context})(constructor))
-      );
-  });
+  return request(url, {
+    headers,
+    body,
+    ...R.omit(['headers', 'body'], fetchOpts)
+  })
+    .map(deserializer)
+    .mapErr(({context, constructor}) => mapError({url, context})(constructor));
 };

@@ -31,7 +31,11 @@ const circleCiWeighInUnchecked = opts => {
     projectName,
     prStatusParams,
     pullRequestId,
-    artifactsDirectory
+    artifactsDirectory,
+    circleApiToken,
+    githubApiToken,
+    repoOwner,
+    repoName
   } = opts;
   const failureThresholds = opts.failureThresholds.map(
     threshold => ({
@@ -59,7 +63,11 @@ const circleCiWeighInUnchecked = opts => {
           a => NoOpenPullRequestFoundErr(a) |> Either.Left |> ReaderPromise.of,
           prId => config.effects.retrieveAssetSizes({
             pullRequestId: prId,
-            assetSizesFilepath: ASSET_STATS_FILENAME
+            assetSizesFilepath: ASSET_STATS_FILENAME,
+            circleApiToken,
+            githubApiToken,
+            repoOwner,
+            repoName
           })
         );
 
@@ -157,37 +165,36 @@ const circleCiWeighInUnchecked = opts => {
 };
 
 export default opts => {
-  const finalOpts = {
-    prStatusParams: {
-      sha: opts.buildSha,
-      targetUrl: `${opts.buildUrl}#artifacts`,
-      label: compactAndJoin(': ', [
-        'Asset Sizes',
-        opts.projectName.orSome(null)
-      ])
-    },
-    ...opts
+  const prStatusParams = {
+    targetUrl: `${opts.buildUrl}#artifacts`,
+    label: compactAndJoin(': ', [
+      'Asset Sizes',
+      opts.projectName.orSome(null)
+    ]),
+    ...R.pick(['buildSha', 'githubApiToken', 'repoOwner', 'repoName'])
   };
 
   return ReaderPromise.fromReaderFn(
-    config => circleCiWeighInUnchecked(finalOpts).run(config).catch(err => {
-      const logError = () => config.logError(err.message);
-      config.effects.postErrorPrStatus({
-        ...finalOpts.prStatusParams,
-        description: err.message
+    config => circleCiWeighInUnchecked({prStatusParams, ...opts})
+      .run(config)
+      .catch(err => {
+        const logError = () => config.logError(err.message);
+        config.effects.postErrorPrStatus({
+          ...prStatusParams,
+          description: err.message
+        })
+          .run(config)
+          .catch(logError);
+
+        if(isWarningType(err)) {
+          config.logMessage(err.message);
+
+          return Promise.resolve(err);
+        }
+
+        logError(err);
+
+        return Promise.reject(err);
       })
-        .run(config)
-        .catch(logError);
-
-      if(isWarningType(err)) {
-        config.logMessage(err.message);
-
-        return Promise.resolve(err);
-      }
-
-      logError(err);
-
-      return Promise.reject(err);
-    })
   );
 };

@@ -1,7 +1,6 @@
 import R from 'ramda';
 import ncurry from 'ncurry';
 import makeGitHubRequest from './make-github-request';
-import ReaderPromise from '../shared/reader-promise';
 import {truncate} from '../shared';
 import formatAssetDiff from '../core/format-asset-diff';
 
@@ -18,35 +17,52 @@ const StatusStates = {
 };
 
 const postPrStatus = ncurry(
-  ['sha', 'state', 'targetUrl', 'label', 'description'],
-  ({sha, state, targetUrl, label, description}) =>
-    ReaderPromise.fromReaderFn(config =>
-      // TODO: We should be injecting this dependency. It would make testing
-      //   much easier.
-      makeGitHubRequest({
-        path: `repos/${config.repoOwner}/${config.repoName}/statuses/${sha}`,
-        fetchOpts: {
-          method: 'POST',
-          body: {
-            state,
-            targetUrl,
-            context: label,
-            description: truncate(
-              {maxSize: MAX_DESCRIPTION_LENGTH},
-              description
-            )
-          }
-        }
-      }).run(config)
-    )
+  [
+    'sha',
+    'state',
+    'targetUrl',
+    'label',
+    'description',
+    'githubApiToken',
+    'repoOwner',
+    'repoName'
+  ],
+  ({
+    sha,
+    state,
+    targetUrl,
+    label,
+    description,
+    githubApiToken,
+    repoOwner,
+    repoName
+  }) => makeGitHubRequest({
+    path: `repos/${repoOwner}/${repoName}/statuses/${sha}`,
+    githubApiToken,
+    fetchOpts: {
+      method: 'POST',
+      body: {
+        state,
+        targetUrl,
+        context: label,
+        description: truncate(
+          {maxSize: MAX_DESCRIPTION_LENGTH},
+          description
+        )
+      }
+    }
+  })
 );
 
 export const postPendingPrStatus = postPrStatus({
   state: StatusStates.PENDING,
   description: PENDING_STATUS_TEXT
 });
+
 export const postErrorPrStatus = postPrStatus({state: StatusStates.ERROR});
+
 const postSuccessPrStatus = postPrStatus({state: StatusStates.SUCCESS});
+
 const postFailurePrStatus = postPrStatus({state: StatusStates.FAILURE});
 
 export const postFinalPrStatus = ({
