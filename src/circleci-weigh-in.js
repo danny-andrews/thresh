@@ -172,7 +172,7 @@ export default opts => {
       opts.projectName.orSome(null)
     ]),
     sha: opts.buildSha,
-    ...R.pick(['githubApiToken', 'repoOwner', 'repoName'])
+    ...R.pick(['githubApiToken', 'repoOwner', 'repoName'], opts)
   };
 
   return ReaderPromise.fromReaderFn(
