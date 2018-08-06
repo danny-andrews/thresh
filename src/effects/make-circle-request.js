@@ -1,9 +1,9 @@
 import {camelizeKeys} from 'humps';
 import R from 'ramda';
-import ReaderPromise from './shared/reader-promise';
-import {CircleCiFetchErr, CircleCiInvalidResponseErr} from './core/errors';
+import ReaderPromise from '../shared/reader-promise';
+import {CircleCiFetchErr, CircleCiInvalidResponseErr} from '../core/errors';
 import {NoResponseError, Non200ResponseError, InvalidResponseError, switchCaseF}
-  from './shared';
+  from '../shared';
 
 const circleDeserializer = payload => camelizeKeys(payload);
 

@@ -5,7 +5,7 @@ import {
   NoResponseError,
   Non200ResponseError,
   InvalidResponseError
-} from '../shared';
+} from '../../shared';
 
 const subject = (opts = {}) => {
   const {

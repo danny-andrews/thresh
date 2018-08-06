@@ -1,6 +1,6 @@
 import {Either} from 'monet';
-import makeGitHubRequest from '../make-github-request';
-import makeCircleRequest from '../make-circle-request';
+import makeGitHubRequest from './make-github-request';
+import makeCircleRequest from './make-circle-request';
 import ReaderPromise from '../shared/reader-promise';
 import {CircleCiBuildStatuses} from '../core/constants';
 import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr}

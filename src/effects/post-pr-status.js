@@ -1,6 +1,6 @@
 import R from 'ramda';
 import ncurry from 'ncurry';
-import makeGitHubRequest from '../make-github-request';
+import makeGitHubRequest from './make-github-request';
 import ReaderPromise from '../shared/reader-promise';
 import {truncate} from '../shared';
 import formatAssetDiff from '../core/format-asset-diff';

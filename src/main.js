@@ -5,8 +5,8 @@ import {mkdir, writeFile, readFile, getFileStats, Database, request}
 import circleciWeighIn from './circleci-weigh-in';
 import * as effects from './effects';
 
-export default (...args) =>
-  circleciWeighIn(...args)
+export default options =>
+  circleciWeighIn(options)
     .run({
       writeFile,
       readFile,

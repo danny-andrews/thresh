@@ -2,7 +2,7 @@ import test from 'ava';
 import expect, {createSpy} from 'expect';
 import makeCircleRequest from '../make-circle-request';
 import {NoResponseError, Non200ResponseError, InvalidResponseError}
-  from '../shared';
+  from '../../shared';
 
 const subject = (opts = {}) => {
   const {

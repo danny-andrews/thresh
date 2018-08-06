@@ -1,13 +1,13 @@
 import {camelizeKeys, decamelizeKeys} from 'humps';
 import R from 'ramda';
-import ReaderPromise from './shared/reader-promise';
+import ReaderPromise from '../shared/reader-promise';
 import {
   GitHubFetchErr,
   GitHubAuthorizationErr,
   GitHubInvalidResponseErr
-} from './core/errors';
+} from '../core/errors';
 import {NoResponseError, Non200ResponseError, InvalidResponseError, switchCaseF}
-  from './shared';
+  from '../shared';
 
 /* eslint-disable no-magic-numbers */
 const Statuses = {
