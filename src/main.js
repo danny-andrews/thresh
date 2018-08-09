@@ -9,7 +9,8 @@ export default options =>
   circleciWeighIn({
     postFinalPrStatus: effects.postFinalPrStatus,
     postPendingPrStatus: effects.postPendingPrStatus,
-    postErrorPrStatus: effects.postErrorPrStatus
+    postErrorPrStatus: effects.postErrorPrStatus,
+    retreiveAssetSizes: effects.retreiveAssetSizes
   })(options)
     .run({
       writeFile,

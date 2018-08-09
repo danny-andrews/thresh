@@ -11,17 +11,31 @@ import circleciWeighIn from '../circleci-weigh-in';
 import ReaderPromise from '../shared/reader-promise';
 import {firstCallFirstArgument} from '../test/helpers';
 
+const defaultAssetSize = {
+  'app.js': {
+    size: 300,
+    path: 'dist/app.js'
+  }
+};
+
 const subject = ({
   logError = console.error,
   logMessage = console.log,
   getFileStats = () => Promise.resolve({size: 452}),
   effects,
+  postFinalPrStatus = () => () => ReaderPromise.of(),
+  postPendingPrStatus = () => () => ReaderPromise.of(),
+  postErrorPrStatus = () => () => ReaderPromise.of(),
+  retrieveAssetSizes = () => defaultAssetSize
+    |> Either.Right
+    |> ReaderPromise.of,
   ...rest
 } = {}) =>
   circleciWeighIn({
-    postFinalPrStatus: () => () => ReaderPromise.of(),
-    postPendingPrStatus: () => () => ReaderPromise.of(),
-    postErrorPrStatus: () => () => ReaderPromise.of()
+    postFinalPrStatus,
+    postPendingPrStatus,
+    postErrorPrStatus,
+    retrieveAssetSizes
   })({
     statsFilepath: 'dist/stats.js',
     projectName: Maybe.None(),
@@ -44,12 +58,6 @@ const subject = ({
         filename: 'app.js',
         path: 'dist/app.js'
       }]),
-      retrieveAssetSizes: () => Either.Right({
-        'app.js': {
-          size: 300,
-          path: 'dist/app.js'
-        }
-      }) |> ReaderPromise.of,
       readManifest: () => ReaderPromise.of({'app.js': 'app.js'}),
       resolve: (...args) => ReaderPromise.of(['/root/builds', args.join('/')].join('/')),
       makeArtifactDirectory: () => ReaderPromise.of(),
@@ -64,8 +72,17 @@ test('happy path (makes artifact directory, writes asset stats to file, and writ
   const writeAssetDiffsSpy = createSpy().andReturn(ReaderPromise.of());
   const writeAssetStatsSpy = createSpy().andReturn(ReaderPromise.of());
   const makeArtifactDirectorySpy = createSpy().andReturn(ReaderPromise.of());
+  const originalAssetSizes = {
+    'app.js': {
+      size: 20,
+      path: 'dist/app.js'
+    }
+  };
 
   return subject({
+    retrieveAssetSizes: () => originalAssetSizes
+      |> Either.Right
+      |> ReaderPromise.of,
     failureThresholds: [{targets: 'app.js', maxSize: 50}],
     outputDirectory: 'dist',
     effects: {
@@ -77,13 +94,7 @@ test('happy path (makes artifact directory, writes asset stats to file, and writ
       writeAssetDiffs: writeAssetDiffsSpy,
       writeAssetStats: writeAssetStatsSpy,
       makeArtifactDirectory: makeArtifactDirectorySpy,
-      readManifest: () => ReaderPromise.of({'app.js': 'app.js'}),
-      retrieveAssetSizes: () => Either.Right({
-        'app.js': {
-          size: 20,
-          path: 'dist/app.js'
-        }
-      }) |> ReaderPromise.of
+      readManifest: () => ReaderPromise.of({'app.js': 'app.js'})
     }
   }).then(() => {
     const {
@@ -220,30 +231,33 @@ test('surfaces errors writing asset diffs', () => {
 
 test('saves stats to local db when project name is given', () => {
   const saveStatsSpy = createSpy().andCall(ReaderPromise.of);
+  const originalAssetSizes = {
+    'other-proj': {
+      'app.js': {
+        size: 300,
+        path: 'dist/app.js'
+      }
+    },
+    'my-proj': {
+      'app.js': {
+        size: 242,
+        path: 'dist/app.js'
+      }
+    }
+  };
 
   return subject({
     projectName: Maybe.of('my-proj'),
+    retrieveAssetSizes: () => originalAssetSizes
+      |> Either.Right
+      |> ReaderPromise.of,
     effects: {
       saveStats: saveStatsSpy,
       getAssetFileStats: () => ReaderPromise.of([{
         filename: 'app.js',
         size: 983,
         path: 'dist/app.js'
-      }]),
-      retrieveAssetSizes: () => Either.Right({
-        'other-proj': {
-          'app.js': {
-            size: 300,
-            path: 'dist/app.js'
-          }
-        },
-        'my-proj': {
-          'app.js': {
-            size: 242,
-            path: 'dist/app.js'
-          }
-        }
-      }) |> ReaderPromise.of
+      }])
     }
   }).then(() => {
     expect(saveStatsSpy).toHaveBeenCalledWith({

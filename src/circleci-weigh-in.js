@@ -27,7 +27,8 @@ const isWarningType = err =>
 
 const circleCiWeighInUnchecked = ({
   postFinalPrStatus,
-  postPendingPrStatus
+  postPendingPrStatus,
+  retrieveAssetSizes
 }) => opts => {
   const {
     manifestFilepath,
@@ -65,7 +66,7 @@ const circleCiWeighInUnchecked = ({
       const retrieveAssetSizes2 = () =>
         pullRequestId.toEither().cata(
           a => NoOpenPullRequestFoundErr(a) |> Either.Left |> ReaderPromise.of,
-          prId => config.effects.retrieveAssetSizes({
+          prId => retrieveAssetSizes({
             pullRequestId: prId,
             assetSizesFilepath: ASSET_STATS_FILENAME,
             circleApiToken,
