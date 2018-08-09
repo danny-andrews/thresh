@@ -24,3 +24,11 @@ export const writeFile = (...args) => ReaderPromise.fromReaderFn(
 export const request = (...args) => ReaderPromise.fromReaderFn(
   ({request}) => request(...args)
 );
+
+export const logMessage = (...args) => ReaderPromise.fromReaderFn(
+  ({logMessage}) => Promise.resolve(logMessage(...args))
+);
+
+export const logError = (...args) => ReaderPromise.fromReaderFn(
+  ({logError}) => Promise.resolve(logError(...args))
+);

@@ -1,6 +1,5 @@
 import R from 'ramda';
 import ncurry from 'ncurry';
-import makeGitHubRequest from './make-github-request';
 import {truncate} from '../shared';
 import formatAssetDiff from '../core/format-asset-diff';
 
@@ -16,7 +15,7 @@ const StatusStates = {
   ERROR: 'error'
 };
 
-const postPrStatus = ncurry(
+const postPrStatus = makeGitHubRequest => ncurry(
   [
     'sha',
     'state',
@@ -54,18 +53,22 @@ const postPrStatus = ncurry(
   })
 );
 
-export const postPendingPrStatus = postPrStatus({
-  state: StatusStates.PENDING,
-  description: PENDING_STATUS_TEXT
-});
+export const postPendingPrStatus = _ =>
+  postPrStatus(_)({
+    state: StatusStates.PENDING,
+    description: PENDING_STATUS_TEXT
+  });
 
-export const postErrorPrStatus = postPrStatus({state: StatusStates.ERROR});
+export const postErrorPrStatus = _ =>
+  postPrStatus(_)({state: StatusStates.ERROR});
 
-const postSuccessPrStatus = postPrStatus({state: StatusStates.SUCCESS});
+const postSuccessPrStatus = _ =>
+  postPrStatus(_)({state: StatusStates.SUCCESS});
 
-const postFailurePrStatus = postPrStatus({state: StatusStates.FAILURE});
+const postFailurePrStatus = _ =>
+  postPrStatus(_)({state: StatusStates.FAILURE});
 
-export const postFinalPrStatus = ({
+export const postFinalPrStatus = _ => ({
   assetDiffs,
   thresholdFailures,
   ...rest
@@ -83,7 +86,11 @@ export const postFinalPrStatus = ({
 
   return (
     R.isEmpty(thresholdFailures)
-      ? postSuccessPrStatus({description: successDescription})
-      : postFailurePrStatus({description: failureDescription})
+      ? postSuccessPrStatus(_)({
+        description: successDescription
+      })
+      : postFailurePrStatus(_)({
+        description: failureDescription
+      })
   )({...rest});
 };
