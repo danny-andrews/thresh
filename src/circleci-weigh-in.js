@@ -15,6 +15,7 @@ import ReaderPromise from './shared/reader-promise';
 import {failureThresholdListSchema, DFAULT_FAILURE_THRESHOLD_STRATEGY}
   from './core/schemas';
 import {makeGithubRequest} from './effects';
+import {logMessage, logError} from './effects/base';
 
 const warningTypes = [
   NoOpenPullRequestFoundErr,
@@ -28,7 +29,13 @@ const isWarningType = err =>
 const circleCiWeighInUnchecked = ({
   postFinalPrStatus,
   postPendingPrStatus,
-  retrieveAssetSizes
+  retrieveAssetSizes,
+  makeArtifactDirectory,
+  readManifest,
+  getAssetFileStats,
+  saveStats,
+  writeAssetStats,
+  writeAssetDiffs
 }) => opts => {
   const {
     manifestFilepath,
@@ -60,113 +67,110 @@ const circleCiWeighInUnchecked = ({
       |> InvalidFailureThresholdOptionErr
       |> ReaderPromise.fromError;
   }
+  const retrieveAssetSizes2 = () =>
+    pullRequestId.toEither().cata(
+      a => NoOpenPullRequestFoundErr(a) |> Either.Left |> ReaderPromise.of,
+      prId => retrieveAssetSizes({
+        pullRequestId: prId,
+        assetSizesFilepath: ASSET_STATS_FILENAME,
+        circleApiToken,
+        githubApiToken,
+        repoOwner,
+        repoName
+      })
+    );
 
-  return ReaderPromise.fromReaderFn(
-    async config => {
-      const retrieveAssetSizes2 = () =>
-        pullRequestId.toEither().cata(
-          a => NoOpenPullRequestFoundErr(a) |> Either.Left |> ReaderPromise.of,
-          prId => retrieveAssetSizes({
-            pullRequestId: prId,
-            assetSizesFilepath: ASSET_STATS_FILENAME,
-            circleApiToken,
-            githubApiToken,
-            repoOwner,
-            repoName
-          })
-        );
+  const assetStatListToMap = assetStats => R.reduce(
+    (acc, {filename, ...rest}) => ({...acc, [filename]: rest}),
+    {},
+    assetStats
+  );
 
-      const assetStatListToMap = assetStats => R.reduce(
-        (acc, {filename, ...rest}) => ({...acc, [filename]: rest}),
-        {},
-        assetStats
-      );
+  const assetStatMapToList = a => R.toPairs(a)
+    |> R.map(
+      ([filename, filepath]) => ({
+        filename,
+        path: filepath
+      })
+    );
 
-      const assetStatMapToList = a => R.toPairs(a)
-        |> R.map(
-          ([filename, filepath]) => ({
-            filename,
-            path: filepath
-          })
-        );
+  const resolvePath = ({path, ...rest}) => ({
+    ...rest,
+    path: [outputDirectory, path].join('/')
+  });
 
-      const resolvePath = ({path, ...rest}) => ({
-        ...rest,
-        path: [outputDirectory, path].join('/')
-      });
-
-      const [,, currentAssetStats, previousAssetSizes] = await Promise.all([
-        postPendingPrStatus(makeGithubRequest)(prStatusParams)
-          .run(config),
-        config.effects.makeArtifactDirectory({rootPath: artifactsDirectory})
-          .run(config),
-        config.effects.readManifest(manifestFilepath)
-          .map(assetStatMapToList)
-          .map(R.map(resolvePath))
-          .chain(config.effects.getAssetFileStats)
-          .map(assetStatListToMap)
-          .run(config),
-        retrieveAssetSizes2().run(config)
-      ]);
-
-      // TODO: Use polymorphism to eliminate unsemantic branching off
-      // projectName. Also, use some semantic variable like isMonorepo.
-      const assetStats = await projectName.toEither().cata(
-        () => Promise.resolve(currentAssetStats),
-        () => config.effects.saveStats({
-          ...(previousAssetSizes.isRight() ? previousAssetSizes.right() : {}),
-          [projectName.some()]: currentAssetStats
-        }).run(config)
-      );
-
-      const writeAssetStats2 = config.effects.writeAssetStats({
+  return ReaderPromise.parallel([
+    postPendingPrStatus(makeGithubRequest)(prStatusParams),
+    makeArtifactDirectory({rootPath: artifactsDirectory}),
+    readManifest(manifestFilepath)
+      .map(assetStatMapToList)
+      .map(R.map(resolvePath))
+      .chain(getAssetFileStats)
+      .map(assetStatListToMap),
+    retrieveAssetSizes2()
+  ]).chain(([,, currentAssetStats, previousAssetSizes]) =>
+    // TODO: Use polymorphism to eliminate unsemantic branching off
+    // projectName. Also, use some semantic variable like isMonorepo.
+    projectName.toEither().cata(
+      () => ReaderPromise.of(currentAssetStats),
+      () => saveStats({
+        ...(previousAssetSizes.isRight() ? previousAssetSizes.right() : {}),
+        [projectName.some()]: currentAssetStats
+      })
+    ).chain(assetStats => {
+      const writeAssetStats2 = writeAssetStats({
         rootPath: artifactsDirectory,
         assetStats
-      }).run(config);
+      });
       if(previousAssetSizes.isLeft()) {
-        return writeAssetStats2.then(
-          () => Promise.reject(previousAssetSizes.left())
+        return writeAssetStats2.chain(
+          () => ReaderPromise.fromError(previousAssetSizes.left())
         );
       }
 
-      const assetDiffs = diffAssets({
-        current: projectName.isSome()
-          ? assetStats[projectName.some()]
-          : assetStats,
-        original: projectName.isSome()
-          ? previousAssetSizes.right()[projectName.some()]
-          : previousAssetSizes.right(),
-        onMismatchFound: filepath =>
-          config.logMessage(NoPreviousStatsFoundForFilepath(filepath).message)
+      return ReaderPromise.fromReaderFn(config => {
+        const assetDiffs = diffAssets({
+          current: projectName.isSome()
+            ? assetStats[projectName.some()]
+            : assetStats,
+          original: projectName.isSome()
+            ? previousAssetSizes.right()[projectName.some()]
+            : previousAssetSizes.right(),
+          onMismatchFound: filepath => config.logMessage(
+            NoPreviousStatsFoundForFilepath(filepath).message
+          )
+        });
+
+        return Promise.resolve(assetDiffs);
+      }).chain(assetDiffs => {
+        const thresholdFailures = getThresholdFailures({
+          failureThresholds,
+          assetStats: assetDiffs
+            |> R.toPairs
+            |> R.map(([filepath, {current: size}]) => ({filepath, size}))
+        });
+
+        if(thresholdFailures.isLeft()) {
+          return writeAssetStats2.chain(
+            () => ReaderPromise.fromError(thresholdFailures.left())
+          );
+        }
+
+        return ReaderPromise.parallel([
+          writeAssetStats2,
+          writeAssetDiffs({
+            rootPath: artifactsDirectory,
+            assetDiffs,
+            thresholdFailures: thresholdFailures.right()
+          }),
+          postFinalPrStatus(makeGithubRequest)({
+            ...prStatusParams,
+            assetDiffs,
+            thresholdFailures: thresholdFailures.right()
+          })
+        ]);
       });
-
-      const thresholdFailures = getThresholdFailures({
-        failureThresholds,
-        assetStats: assetDiffs
-          |> R.toPairs
-          |> R.map(([filepath, {current: size}]) => ({filepath, size}))
-      });
-
-      if(thresholdFailures.isLeft()) {
-        return writeAssetStats2.then(
-          () => Promise.reject(thresholdFailures.left())
-        );
-      }
-
-      return Promise.all([
-        writeAssetStats2,
-        config.effects.writeAssetDiffs({
-          rootPath: artifactsDirectory,
-          assetDiffs,
-          thresholdFailures: thresholdFailures.right()
-        }).run(config),
-        postFinalPrStatus(makeGithubRequest)({
-          ...prStatusParams,
-          assetDiffs,
-          thresholdFailures: thresholdFailures.right()
-        }).run(config)
-      ]);
-    }
+    })
   );
 };
 
@@ -181,27 +185,18 @@ export default deps => opts => {
     ...R.pick(['githubApiToken', 'repoOwner', 'repoName'], opts)
   };
 
-  return ReaderPromise.fromReaderFn(
-    config => circleCiWeighInUnchecked(deps)({prStatusParams, ...opts})
-      .run(config)
-      .catch(err => {
-        const logError = () => config.logError(err.message);
+  return circleCiWeighInUnchecked(deps)({prStatusParams, ...opts})
+    .chainErr(err => {
+      if(isWarningType(err)) {
+        return logMessage(err.message)
+          .chain(ReaderPromise.of);
+      }
+
+      return logError(err.message).chain(() =>
         deps.postErrorPrStatus(makeGithubRequest)({
           ...prStatusParams,
           description: err.message
-        })
-          .run(config)
-          .catch(logError);
-
-        if(isWarningType(err)) {
-          config.logMessage(err.message);
-
-          return Promise.resolve(err);
-        }
-
-        logError(err);
-
-        return Promise.reject(err);
-      })
-  );
+        }).chainErr(e => logError(e.message))
+      ).chain(() => ReaderPromise.fromError(err));
+    });
 };

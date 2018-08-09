@@ -22,20 +22,35 @@ const subject = ({
   logError = console.error,
   logMessage = console.log,
   getFileStats = () => Promise.resolve({size: 452}),
-  effects,
-  postFinalPrStatus = () => () => ReaderPromise.of(),
-  postPendingPrStatus = () => () => ReaderPromise.of(),
-  postErrorPrStatus = () => () => ReaderPromise.of(),
+  postFinalPrStatus = () => ReaderPromise.of,
+  postPendingPrStatus = () => ReaderPromise.of,
+  postErrorPrStatus = () => ReaderPromise.of,
   retrieveAssetSizes = () => defaultAssetSize
     |> Either.Right
     |> ReaderPromise.of,
+  makeArtifactDirectory = () => ReaderPromise.of(),
+  readManifest = () => ReaderPromise.of({'app.js': 'app.js'}),
+  getAssetFileStats = () => ReaderPromise.of([{
+    size: 242,
+    filename: 'app.js',
+    path: 'dist/app.js'
+  }]),
+  saveStats = ReaderPromise.of,
+  writeAssetStats = ReaderPromise.of,
+  writeAssetDiffs = ReaderPromise.of,
   ...rest
 } = {}) =>
   circleciWeighIn({
     postFinalPrStatus,
     postPendingPrStatus,
     postErrorPrStatus,
-    retrieveAssetSizes
+    retrieveAssetSizes,
+    makeArtifactDirectory,
+    readManifest,
+    getAssetFileStats,
+    saveStats,
+    writeAssetStats,
+    writeAssetDiffs
   })({
     statsFilepath: 'dist/stats.js',
     projectName: Maybe.None(),
@@ -51,21 +66,7 @@ const subject = ({
   }).run({
     logMessage,
     logError,
-    getFileStats,
-    effects: {
-      getAssetFileStats: () => ReaderPromise.of([{
-        size: 242,
-        filename: 'app.js',
-        path: 'dist/app.js'
-      }]),
-      readManifest: () => ReaderPromise.of({'app.js': 'app.js'}),
-      resolve: (...args) => ReaderPromise.of(['/root/builds', args.join('/')].join('/')),
-      makeArtifactDirectory: () => ReaderPromise.of(),
-      writeAssetStats: () => ReaderPromise.of(),
-      writeAssetDiffs: () => ReaderPromise.of(),
-      saveStats: ReaderPromise.of,
-      ...effects
-    }
+    getFileStats
   });
 
 test('happy path (makes artifact directory, writes asset stats to file, and writes asset diffs to file)', () => {
@@ -85,17 +86,15 @@ test('happy path (makes artifact directory, writes asset stats to file, and writ
       |> ReaderPromise.of,
     failureThresholds: [{targets: 'app.js', maxSize: 50}],
     outputDirectory: 'dist',
-    effects: {
-      getAssetFileStats: () => ReaderPromise.of([{
-        size: 200,
-        filename: 'app.js',
-        path: 'dist/app.js'
-      }]),
-      writeAssetDiffs: writeAssetDiffsSpy,
-      writeAssetStats: writeAssetStatsSpy,
-      makeArtifactDirectory: makeArtifactDirectorySpy,
-      readManifest: () => ReaderPromise.of({'app.js': 'app.js'})
-    }
+    makeArtifactDirectory: makeArtifactDirectorySpy,
+    getAssetFileStats: () => ReaderPromise.of([{
+      size: 200,
+      filename: 'app.js',
+      path: 'dist/app.js'
+    }]),
+    readManifest: () => ReaderPromise.of({'app.js': 'app.js'}),
+    writeAssetDiffs: writeAssetDiffsSpy,
+    writeAssetStats: writeAssetStatsSpy
   }).then(() => {
     const {
       rootPath: assetStatsRootPath,
@@ -181,9 +180,7 @@ test('surfaces errors reading stats file', () => {
   const logErrorSpy = createSpy();
 
   return subject({
-    effects: {
-      readManifest: () => ReaderPromise.fromError({message: 'oh noes'})
-    },
+    readManifest: () => ReaderPromise.fromError({message: 'oh noes'}),
     logError: logErrorSpy
   }).catch(() => {
     expect(logErrorSpy).toHaveBeenCalledWith('oh noes');
@@ -194,9 +191,7 @@ test('surfaces errors making artifact directory', () => {
   const logErrorSpy = createSpy();
 
   return subject({
-    effects: {
-      makeArtifactDirectory: () => ReaderPromise.fromError({message: 'oh noes'})
-    },
+    makeArtifactDirectory: () => ReaderPromise.fromError({message: 'oh noes'}),
     logError: logErrorSpy
   }).catch(() => {
     expect(logErrorSpy).toHaveBeenCalledWith('oh noes');
@@ -207,9 +202,7 @@ test('surfaces errors writing asset sizes', () => {
   const logErrorSpy = createSpy();
 
   return subject({
-    effects: {
-      writeAssetStats: () => ReaderPromise.fromError({message: 'uh oh'})
-    },
+    writeAssetStats: () => ReaderPromise.fromError({message: 'uh oh'}),
     logError: logErrorSpy
   }).catch(() => {
     expect(logErrorSpy).toHaveBeenCalledWith('uh oh');
@@ -220,9 +213,7 @@ test('surfaces errors writing asset diffs', () => {
   const logErrorSpy = createSpy();
 
   return subject({
-    effects: {
-      writeAssetDiffs: () => ReaderPromise.fromError({message: 'uh oh'})
-    },
+    writeAssetDiffs: () => ReaderPromise.fromError({message: 'uh oh'}),
     logError: logErrorSpy
   }).catch(() => {
     expect(logErrorSpy).toHaveBeenCalledWith('uh oh');
@@ -251,14 +242,12 @@ test('saves stats to local db when project name is given', () => {
     retrieveAssetSizes: () => originalAssetSizes
       |> Either.Right
       |> ReaderPromise.of,
-    effects: {
-      saveStats: saveStatsSpy,
-      getAssetFileStats: () => ReaderPromise.of([{
-        filename: 'app.js',
-        size: 983,
-        path: 'dist/app.js'
-      }])
-    }
+    getAssetFileStats: () => ReaderPromise.of([{
+      filename: 'app.js',
+      size: 983,
+      path: 'dist/app.js'
+    }]),
+    saveStats: saveStatsSpy
   }).then(() => {
     expect(saveStatsSpy).toHaveBeenCalledWith({
       'other-proj': {
@@ -282,19 +271,17 @@ test('writes message to the console when no previous stat found for given filepa
 
   return subject({
     logMessage: logMessageSpy,
-    effects: {
-      getAssetFileStats: () => ReaderPromise.of([{
+    getAssetFileStats: () => ReaderPromise.of([{
+      size: 100,
+      filename: 'vendor.js',
+      path: 'dist/vendor.js'
+    }]),
+    retrieveAssetSizes: () => Either.Right({
+      'app.js': {
         size: 100,
-        filename: 'vendor.js',
-        path: 'dist/vendor.js'
-      }]),
-      retrieveAssetSizes: () => Either.Right({
-        'app.js': {
-          size: 100,
-          path: 'dist/app.js'
-        }
-      }) |> ReaderPromise.of
-    }
+        path: 'dist/app.js'
+      }
+    }) |> ReaderPromise.of
   }).then(() => {
     expect(logMessageSpy)
       .toHaveBeenCalledWith(NoPreviousStatsFoundForFilepath('vendor.js').message);

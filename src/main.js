@@ -10,7 +10,13 @@ export default options =>
     postFinalPrStatus: effects.postFinalPrStatus,
     postPendingPrStatus: effects.postPendingPrStatus,
     postErrorPrStatus: effects.postErrorPrStatus,
-    retreiveAssetSizes: effects.retreiveAssetSizes
+    retreiveAssetSizes: effects.retreiveAssetSizes,
+    makeArtifactDirectory: effects.makeArtifactDirectory,
+    readManifest: effects.readManifest,
+    getAssetFileStats: effects.getAssetFileStats,
+    saveStats: effects.saveStats,
+    writeAssetStats: effects.writeAssetStats,
+    writeAssetDiffs: effects.writeAssetDiffs
   })(options)
     .run({
       writeFile,
@@ -21,6 +27,5 @@ export default options =>
       mkdir,
       getFileStats,
       logMessage: console.log,
-      logError: console.error,
-      effects
+      logError: console.error
     });
