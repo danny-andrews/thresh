@@ -10,7 +10,7 @@ export default options =>
     postFinalPrStatus: effects.postFinalPrStatus,
     postPendingPrStatus: effects.postPendingPrStatus,
     postErrorPrStatus: effects.postErrorPrStatus,
-    retreiveAssetSizes: effects.retreiveAssetSizes,
+    retrieveAssetSizes: effects.retrieveAssetSizes,
     makeArtifactDirectory: effects.makeArtifactDirectory,
     readManifest: effects.readManifest,
     getAssetFileStats: effects.getAssetFileStats,
