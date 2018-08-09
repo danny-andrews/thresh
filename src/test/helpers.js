@@ -24,3 +24,5 @@ export const FakeRequest = (handlers = []) => (...args) => {
     ? Promise.resolve(response(...args))
     : Promise.resolve(response);
 };
+
+export const firstCallFirstArgument = R.path(['calls', 0, 'arguments', 0]);

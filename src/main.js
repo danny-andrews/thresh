@@ -6,7 +6,11 @@ import circleciWeighIn from './circleci-weigh-in';
 import * as effects from './effects';
 
 export default options =>
-  circleciWeighIn(options)
+  circleciWeighIn({
+    postFinalPrStatus: effects.postFinalPrStatus,
+    postPendingPrStatus: effects.postPendingPrStatus,
+    postErrorPrStatus: effects.postErrorPrStatus
+  })(options)
     .run({
       writeFile,
       readFile,

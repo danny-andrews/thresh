@@ -4,6 +4,7 @@ export {
   postPendingPrStatus,
   postErrorPrStatus
 } from './post-pr-status';
+export {default as makeGithubRequest} from './make-github-request';
 export {default as readManifest} from './read-manifest';
 export {default as retrieveAssetSizes} from './get-previous-asset-sizes';
 export {default as writeAssetDiffs} from './write-asset-diffs';

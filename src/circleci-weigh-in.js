@@ -14,6 +14,7 @@ import {
 import ReaderPromise from './shared/reader-promise';
 import {failureThresholdListSchema, DFAULT_FAILURE_THRESHOLD_STRATEGY}
   from './core/schemas';
+import {makeGithubRequest} from './effects';
 
 const warningTypes = [
   NoOpenPullRequestFoundErr,
@@ -24,7 +25,10 @@ const warningTypes = [
 const isWarningType = err =>
   R.any(Type => err.constructor === Type, warningTypes);
 
-const circleCiWeighInUnchecked = opts => {
+const circleCiWeighInUnchecked = ({
+  postFinalPrStatus,
+  postPendingPrStatus
+}) => opts => {
   const {
     manifestFilepath,
     outputDirectory,
@@ -91,7 +95,8 @@ const circleCiWeighInUnchecked = opts => {
       });
 
       const [,, currentAssetStats, previousAssetSizes] = await Promise.all([
-        config.effects.postPendingPrStatus(prStatusParams).run(config),
+        postPendingPrStatus(makeGithubRequest)(prStatusParams)
+          .run(config),
         config.effects.makeArtifactDirectory({rootPath: artifactsDirectory})
           .run(config),
         config.effects.readManifest(manifestFilepath)
@@ -154,7 +159,7 @@ const circleCiWeighInUnchecked = opts => {
           assetDiffs,
           thresholdFailures: thresholdFailures.right()
         }).run(config),
-        config.effects.postFinalPrStatus({
+        postFinalPrStatus(makeGithubRequest)({
           ...prStatusParams,
           assetDiffs,
           thresholdFailures: thresholdFailures.right()
@@ -164,7 +169,7 @@ const circleCiWeighInUnchecked = opts => {
   );
 };
 
-export default opts => {
+export default deps => opts => {
   const prStatusParams = {
     targetUrl: `${opts.buildUrl}#artifacts`,
     label: compactAndJoin(': ', [
@@ -176,11 +181,11 @@ export default opts => {
   };
 
   return ReaderPromise.fromReaderFn(
-    config => circleCiWeighInUnchecked({prStatusParams, ...opts})
+    config => circleCiWeighInUnchecked(deps)({prStatusParams, ...opts})
       .run(config)
       .catch(err => {
         const logError = () => config.logError(err.message);
-        config.effects.postErrorPrStatus({
+        deps.postErrorPrStatus(makeGithubRequest)({
           ...prStatusParams,
           description: err.message
         })

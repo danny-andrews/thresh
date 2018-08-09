@@ -1,4 +1,3 @@
-import R from 'ramda';
 import test from 'ava';
 import expect, {createSpy} from 'expect';
 import {Maybe, Either} from 'monet';
@@ -10,6 +9,7 @@ import {
 } from '../core/errors';
 import circleciWeighIn from '../circleci-weigh-in';
 import ReaderPromise from '../shared/reader-promise';
+import {firstCallFirstArgument} from '../test/helpers';
 
 const subject = ({
   logError = console.error,
@@ -19,6 +19,10 @@ const subject = ({
   ...rest
 } = {}) =>
   circleciWeighIn({
+    postFinalPrStatus: () => () => ReaderPromise.of(),
+    postPendingPrStatus: () => () => ReaderPromise.of(),
+    postErrorPrStatus: () => () => ReaderPromise.of()
+  })({
     statsFilepath: 'dist/stats.js',
     projectName: Maybe.None(),
     outputDirectory: '',
@@ -46,9 +50,6 @@ const subject = ({
           path: 'dist/app.js'
         }
       }) |> ReaderPromise.of,
-      postFinalPrStatus: () => ReaderPromise.of(),
-      postPendingPrStatus: () => ReaderPromise.of(),
-      postErrorPrStatus: () => ReaderPromise.of(),
       readManifest: () => ReaderPromise.of({'app.js': 'app.js'}),
       resolve: (...args) => ReaderPromise.of(['/root/builds', args.join('/')].join('/')),
       makeArtifactDirectory: () => ReaderPromise.of(),
@@ -58,8 +59,6 @@ const subject = ({
       ...effects
     }
   });
-
-const firstCallFirstArgument = R.path(['calls', 0, 'arguments', 0]);
 
 test('happy path (makes artifact directory, writes asset stats to file, and writes asset diffs to file)', () => {
   const writeAssetDiffsSpy = createSpy().andReturn(ReaderPromise.of());
