@@ -31,7 +31,7 @@ const optionDefinitions = [
   {name: 'output-directory', defaultValue: ''},
   {
     name: 'config-path',
-    defaultValue: './circleci-weigh-in-rc.toml'
+    defaultValue: './.threshrc.toml'
   }
 ];
 

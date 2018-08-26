@@ -1,4 +1,4 @@
-export const OUTPUT_FILEPATH = 'circleci-weigh-in';
+export const OUTPUT_FILEPATH = 'thresh';
 
 export const ASSET_STATS_FILENAME = 'asset-stats.json';
 

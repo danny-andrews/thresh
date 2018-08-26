@@ -16,7 +16,7 @@ test('makes artifact directory', () => {
     rootPath: 'dist',
     mkdir: mkdirSpy
   }).then(() => {
-    expect(mkdirSpy).toHaveBeenCalledWith('dist/circleci-weigh-in');
+    expect(mkdirSpy).toHaveBeenCalledWith('dist/thresh');
   });
 });
 

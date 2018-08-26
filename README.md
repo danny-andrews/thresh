@@ -1,8 +1,10 @@
-# circleci-weigh-in
+# thresh
+Separate the wheat from the chaff in your static asset bundles.
+
 A CircleCI integration for tracking file size changes across deploys.
 
 ## What it Does
-- Saves file containing file sizes of assets (by reading from your bundler's manifest output) to the `$CIRCLE_ARTIFACTS/circleci-weigh-in/asset-sizes.json` directory as an artifact for later reference.
+- Saves file containing file sizes of assets (by reading from your bundler's manifest output) to the `$CIRCLE_ARTIFACTS/thresh/asset-sizes.json` directory as an artifact for later reference.
 
 <details>
   <summary>Example output:</summary>
@@ -35,7 +37,7 @@ A CircleCI integration for tracking file size changes across deploys.
 
 - Generates diff of base branch asset sizes with current branch.
 
-- Saves file containing that diff information to `$CIRCLE_ARTIFACTS/circleci-weigh-in/asset-diffs.json`.
+- Saves file containing that diff information to `$CIRCLE_ARTIFACTS/thresh/asset-diffs.json`.
 
 <details>
   <summary>Example output:</summary>
@@ -78,7 +80,7 @@ A CircleCI integration for tracking file size changes across deploys.
 ### --config-path
 - Description: Filepath to your bundler's manifest output.
 - Type: `String`
-- Default: `./.circleci-weigh-in.toml`
+- Default: `./.threshrc.toml`
 
 ## Configuation Values (in JSDoc Format)
 

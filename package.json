@@ -1,5 +1,5 @@
 {
-  "name": "circleci-weigh-in",
+  "name": "thresh",
   "version": "0.2.5",
   "description": "A CircleCI integration script for tracking file size changes across deploys.",
   "keywords": [
@@ -12,17 +12,17 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/danny-andrews/circleci-weigh-in.git"
+    "url": "git+https://github.com/danny-andrews/thresh.git"
   },
   "license": "MIT",
   "author": "Danny Andrews",
   "files": [
     "lib/",
-    "circleci-weigh-in"
+    "thresh"
   ],
   "main": "index.js",
   "bin": {
-    "circleci-weigh-in": "./circleci-weigh-in"
+    "thresh": "./thresh"
   },
   "scripts": {
     "build": "rm -rf lib && babel src --out-dir lib",

@@ -7,7 +7,7 @@ import {
   InvalidFailureThresholdOptionErr,
   NoPreviousStatsFoundForFilepath
 } from '../core/errors';
-import circleciWeighIn from '../circleci-weigh-in';
+import thresh from '../thresh';
 import ReaderPromise from '../shared/reader-promise';
 import {firstCallFirstArgument} from '../test/helpers';
 
@@ -40,7 +40,7 @@ const subject = ({
   writeAssetDiffs = ReaderPromise.of,
   ...rest
 } = {}) =>
-  circleciWeighIn({
+  thresh({
     postFinalPrStatus,
     postPendingPrStatus,
     postErrorPrStatus,

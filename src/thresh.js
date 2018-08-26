@@ -26,7 +26,7 @@ const warningTypes = [
 const isWarningType = err =>
   R.any(Type => err.constructor === Type, warningTypes);
 
-const circleCiWeighInUnchecked = ({
+const threshUnchecked = ({
   postFinalPrStatus,
   postPendingPrStatus,
   retrieveAssetSizes,
@@ -185,7 +185,7 @@ export default deps => opts => {
     ...R.pick(['githubApiToken', 'repoOwner', 'repoName'], opts)
   };
 
-  return circleCiWeighInUnchecked(deps)({prStatusParams, ...opts})
+  return threshUnchecked(deps)({prStatusParams, ...opts})
     .chainErr(err => {
       if(isWarningType(err)) {
         return logMessage(err.message)

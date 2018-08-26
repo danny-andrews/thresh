@@ -1,3 +1,5 @@
+Move config out of package.json
+
 Use async/await in test.
 
 Check for the existence of the running asset value in file database. If it

@@ -37,7 +37,7 @@ test('writes asset stats file', () => {
     writeFile: writeFileSpy
   }).then(() => {
     expect(writeFileSpy).toHaveBeenCalledWith(
-      'dist/circleci-weigh-in/asset-diffs.json',
+      'dist/thresh/asset-diffs.json',
       JSON.stringify({diffs, failures}, null, 2)
     );
   });
