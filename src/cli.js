@@ -6,23 +6,26 @@ import main from './main';
 import {parseJSON, parseTOML, readFile} from './shared';
 import {MissingEnvVarErr, CliOptionInvalidJsonErr, MissingCliOptionErr}
   from './core/errors';
+import circleciAdapter from './shared/ci-adapters/circleci-adapter';
 
-const requiredEnvVariables = [
-  'CIRCLE_ARTIFACTS',
-  'CIRCLE_PROJECT_USERNAME',
-  'CIRCLE_PROJECT_REPONAME',
-  'CIRCLE_SHA1',
-  'CIRCLE_BUILD_URL',
-  'GITHUB_API_TOKEN',
-  'CIRCLE_API_TOKEN'
-];
+const getRequiredEnvVar = name => {
+  const value = process.env[name];
+  assert(value, MissingEnvVarErr(name));
 
-requiredEnvVariables.forEach(variable =>
-  assert(process.env[variable], MissingEnvVarErr(variable).message)
-);
+  return value;
+};
 
-const pullRequestId = process.env.CI_PULL_REQUEST
-    && R.last(process.env.CI_PULL_REQUEST.split('/'));
+const githubApiToken = getRequiredEnvVar('GITHUB_API_TOKEN');
+const circleApiToken = getRequiredEnvVar('CIRCLE_API_TOKEN');
+
+const {
+  buildSha,
+  buildUrl,
+  artifactsDirectory,
+  repoOwner,
+  repoName,
+  pullRequestId
+} = circleciAdapter().getEnvVars();
 
 const optionDefinitions = [
   {name: 'manifest-path'},
@@ -60,7 +63,7 @@ readFile(cliOptions['config-path'])
     } = cliOptions;
 
     assert(
-      !R.isNil(manifestFilepath),
+      R.is(String, manifestFilepath),
       MissingCliOptionErr('manifest-path').message
     );
 
@@ -88,19 +91,18 @@ readFile(cliOptions['config-path'])
       manifestFilepath,
       projectName: Maybe.fromNull(projectName),
       outputDirectory,
-      pullRequestId: Maybe.fromNull(pullRequestId),
+      pullRequestId,
       failureThresholds,
-      buildSha: process.env.CIRCLE_SHA1,
-      buildUrl: process.env.CIRCLE_BUILD_URL,
-      artifactsDirectory: process.env.CIRCLE_ARTIFACTS,
-      circleApiToken: process.env.CIRCLE_API_TOKEN,
-      githubApiToken: process.env.GITHUB_API_TOKEN,
-      repoOwner: process.env.CIRCLE_PROJECT_USERNAME,
-      repoName: process.env.CIRCLE_PROJECT_REPONAME
+      buildSha,
+      buildUrl,
+      repoOwner,
+      repoName,
+      artifactsDirectory,
+      circleApiToken,
+      githubApiToken
     })
   )
   .catch(err => {
-    // Catchall in case our error logging logic has an error. :D
     console.error(err); // eslint-disable-line no-console
     process.exit(1); // eslint-disable-line no-process-exit
   });
