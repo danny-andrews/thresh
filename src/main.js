@@ -3,20 +3,30 @@ import path from 'path';
 import {mkdir, writeFile, readFile, getFileStats, Database, request}
   from './shared';
 import thresh from './thresh';
-import * as effects from './effects';
+import {
+  postFinalPrStatus,
+  postPendingPrStatus,
+  postErrorPrStatus,
+  makeArtifactDirectory,
+  readManifest,
+  getAssetFileStats,
+  saveStats,
+  writeAssetStats,
+  writeAssetDiffs
+} from './effects';
 
 export default options =>
   thresh({
-    postFinalPrStatus: effects.postFinalPrStatus,
-    postPendingPrStatus: effects.postPendingPrStatus,
-    postErrorPrStatus: effects.postErrorPrStatus,
-    retrieveAssetSizes: effects.retrieveAssetSizes,
-    makeArtifactDirectory: effects.makeArtifactDirectory,
-    readManifest: effects.readManifest,
-    getAssetFileStats: effects.getAssetFileStats,
-    saveStats: effects.saveStats,
-    writeAssetStats: effects.writeAssetStats,
-    writeAssetDiffs: effects.writeAssetDiffs
+    postFinalPrStatus,
+    postPendingPrStatus,
+    postErrorPrStatus,
+    makeArtifactDirectory,
+    readManifest,
+    getAssetFileStats,
+    saveStats,
+    writeAssetStats,
+    writeAssetDiffs,
+    artifactStore: options.artifactStore
   })(options)
     .run({
       writeFile,

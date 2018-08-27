@@ -29,13 +29,13 @@ const isWarningType = err =>
 const threshUnchecked = ({
   postFinalPrStatus,
   postPendingPrStatus,
-  retrieveAssetSizes,
   makeArtifactDirectory,
   readManifest,
   getAssetFileStats,
   saveStats,
   writeAssetStats,
-  writeAssetDiffs
+  writeAssetDiffs,
+  artifactStore
 }) => opts => {
   const {
     manifestFilepath,
@@ -44,8 +44,6 @@ const threshUnchecked = ({
     prStatusParams,
     pullRequestId,
     artifactsDirectory,
-    circleApiToken,
-    githubApiToken,
     repoOwner,
     repoName
   } = opts;
@@ -70,11 +68,9 @@ const threshUnchecked = ({
   const retrieveAssetSizes2 = () =>
     pullRequestId.toEither().cata(
       a => NoOpenPullRequestFoundErr(a) |> Either.Left |> ReaderPromise.of,
-      prId => retrieveAssetSizes({
+      prId => artifactStore.getAssetStats({
         pullRequestId: prId,
         assetSizesFilepath: ASSET_STATS_FILENAME,
-        circleApiToken,
-        githubApiToken,
         repoOwner,
         repoName
       })
