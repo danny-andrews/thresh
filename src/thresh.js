@@ -96,7 +96,13 @@ const threshUnchecked = ({
   });
 
   console.log('before first parallel');
-  console.log(retrieveAssetSizes2());
+  console.log(postPendingPrStatus(makeGithubRequest)(prStatusParams));
+  console.log(readManifest(manifestFilepath)
+      .map(assetStatMapToList)
+      .map(R.map(resolvePath))
+      .chain(getAssetFileStats)
+      .map(assetStatListToMap))
+  console.log(makeArtifactDirectory({rootPath: artifactsDirectory}));
 
   return ReaderPromise.parallel([
     postPendingPrStatus(makeGithubRequest)(prStatusParams),
