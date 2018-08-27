@@ -95,6 +95,9 @@ const threshUnchecked = ({
     path: [outputDirectory, path].join('/')
   });
 
+  console.log('before first parallel');
+  console.log(retrieveAssetSizes2());
+
   return ReaderPromise.parallel([
     postPendingPrStatus(makeGithubRequest)(prStatusParams),
     makeArtifactDirectory({rootPath: artifactsDirectory}),
@@ -151,6 +154,8 @@ const threshUnchecked = ({
             () => ReaderPromise.fromError(thresholdFailures.left())
           );
         }
+
+        console.log('after first parallel');
 
         return ReaderPromise.parallel([
           writeAssetStats2,
