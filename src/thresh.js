@@ -67,7 +67,7 @@ const threshUnchecked = ({
   }
   const retrieveAssetSizes2 = () =>
     pullRequestId.toEither().cata(
-      NoOpenPullRequestFoundErr() |> Either.Left |> ReaderPromise.of,
+      () => NoOpenPullRequestFoundErr() |> Either.Left |> ReaderPromise.of,
       prId => artifactStore.getAssetStats({
         pullRequestId: prId,
         assetSizesFilepath: ASSET_STATS_FILENAME,
