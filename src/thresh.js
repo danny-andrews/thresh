@@ -95,9 +95,6 @@ const threshUnchecked = ({
     path: [outputDirectory, path].join('/')
   });
 
-  console.log('before first parallel');
-  console.log(postPendingPrStatus(makeGithubRequest)(prStatusParams).toString());
-
   return ReaderPromise.parallel([
     postPendingPrStatus(makeGithubRequest)(prStatusParams),
     makeArtifactDirectory({rootPath: artifactsDirectory}),
