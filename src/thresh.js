@@ -68,14 +68,14 @@ const threshUnchecked = ({
   const retrieveAssetSizes2 = () =>
     pullRequestId.toEither().cata(
       NoOpenPullRequestFoundErr() |> Either.Left |> ReaderPromise.of,
-      // eslint-disable-next-line
-      prId => console.log(artifactStore.getAssetStats({
+      prId => artifactStore.getAssetStats({
         pullRequestId: prId,
         assetSizesFilepath: ASSET_STATS_FILENAME,
         repoOwner,
         repoName
-      }))
+      })
     );
+  console.log(retrieveAssetSizes2()); // eslint-disable-line
 
   const assetStatListToMap = assetStats => R.reduce(
     (acc, {filename, ...rest}) => ({...acc, [filename]: rest}),
