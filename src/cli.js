@@ -17,8 +17,10 @@ const {
   pullRequestId
 } = circleciAdapter().getEnvVars();
 
+const githubApiToken = process.env.GITHUB_API_TOKEN;
+
 const artifactStore = circleciArtifactStore({
-  githubApiToken: process.env.GITHUB_API_TOKEN,
+  githubApiToken,
   circleApiToken: process.env.CIRCLE_API_TOKEN
 });
 
@@ -93,7 +95,8 @@ readFile(cliOptions['config-path'])
       repoOwner,
       repoName,
       artifactsDirectory,
-      artifactStore
+      artifactStore,
+      githubApiToken
     })
   )
   .catch(err => {

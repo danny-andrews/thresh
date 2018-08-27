@@ -96,13 +96,7 @@ const threshUnchecked = ({
   });
 
   console.log('before first parallel');
-  console.log(postPendingPrStatus(makeGithubRequest)(prStatusParams));
-  console.log(readManifest(manifestFilepath)
-      .map(assetStatMapToList)
-      .map(R.map(resolvePath))
-      .chain(getAssetFileStats)
-      .map(assetStatListToMap))
-  console.log(makeArtifactDirectory({rootPath: artifactsDirectory}));
+  console.log(postPendingPrStatus(makeGithubRequest)(prStatusParams).toString());
 
   return ReaderPromise.parallel([
     postPendingPrStatus(makeGithubRequest)(prStatusParams),
@@ -160,8 +154,6 @@ const threshUnchecked = ({
             () => ReaderPromise.fromError(thresholdFailures.left())
           );
         }
-
-        console.log('after first parallel');
 
         return ReaderPromise.parallel([
           writeAssetStats2,
