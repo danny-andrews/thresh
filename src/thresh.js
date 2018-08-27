@@ -75,7 +75,6 @@ const threshUnchecked = ({
         repoName
       })
     );
-  console.log(retrieveAssetSizes2()); // eslint-disable-line
 
   const assetStatListToMap = assetStats => R.reduce(
     (acc, {filename, ...rest}) => ({...acc, [filename]: rest}),

@@ -12,7 +12,8 @@ import {
   retrieveAssetSizes,
   saveStats,
   writeAssetStats,
-  writeAssetDiffs
+  writeAssetDiffs,
+  getAssetFileStats
 } from './effects';
 
 export default options =>
@@ -20,9 +21,10 @@ export default options =>
     postFinalPrStatus,
     postPendingPrStatus,
     postErrorPrStatus,
+    retrieveAssetSizes,
     makeArtifactDirectory,
     readManifest,
-    retrieveAssetSizes,
+    getAssetFileStats,
     saveStats,
     writeAssetStats,
     writeAssetDiffs,
