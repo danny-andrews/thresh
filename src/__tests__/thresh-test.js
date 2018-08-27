@@ -25,9 +25,9 @@ const subject = ({
   postFinalPrStatus = () => ReaderPromise.of,
   postPendingPrStatus = () => ReaderPromise.of,
   postErrorPrStatus = () => ReaderPromise.of,
-  retrieveAssetSizes = () => defaultAssetSize
-    |> Either.Right
-    |> ReaderPromise.of,
+  artifactStore = {
+    getAssetStats: () => Either.Right(defaultAssetSize) |> ReaderPromise.of
+  },
   makeArtifactDirectory = () => ReaderPromise.of(),
   readManifest = () => ReaderPromise.of({'app.js': 'app.js'}),
   getAssetFileStats = () => ReaderPromise.of([{
@@ -44,7 +44,7 @@ const subject = ({
     postFinalPrStatus,
     postPendingPrStatus,
     postErrorPrStatus,
-    retrieveAssetSizes,
+    artifactStore,
     makeArtifactDirectory,
     readManifest,
     getAssetFileStats,
@@ -81,9 +81,9 @@ test('happy path (makes artifact directory, writes asset stats to file, and writ
   };
 
   return subject({
-    retrieveAssetSizes: () => originalAssetSizes
-      |> Either.Right
-      |> ReaderPromise.of,
+    artifactStore: {
+      getAssetStats: () => Either.Right(originalAssetSizes) |> ReaderPromise.of
+    },
     failureThresholds: [{targets: 'app.js', maxSize: 50}],
     outputDirectory: 'dist',
     makeArtifactDirectory: makeArtifactDirectorySpy,
@@ -239,9 +239,9 @@ test('saves stats to local db when project name is given', () => {
 
   return subject({
     projectName: Maybe.of('my-proj'),
-    retrieveAssetSizes: () => originalAssetSizes
-      |> Either.Right
-      |> ReaderPromise.of,
+    artifactStore: {
+      getAssetStats: () => Either.Right(originalAssetSizes) |> ReaderPromise.of
+    },
     getAssetFileStats: () => ReaderPromise.of([{
       filename: 'app.js',
       size: 983,
@@ -276,12 +276,14 @@ test('writes message to the console when no previous stat found for given filepa
       filename: 'vendor.js',
       path: 'dist/vendor.js'
     }]),
-    retrieveAssetSizes: () => Either.Right({
-      'app.js': {
-        size: 100,
-        path: 'dist/app.js'
-      }
-    }) |> ReaderPromise.of
+    artifactStore: {
+      getAssetStats: () => Either.Right({
+        'app.js': {
+          size: 100,
+          path: 'dist/app.js'
+        }
+      }) |> ReaderPromise.of
+    }
   }).then(() => {
     expect(logMessageSpy)
       .toHaveBeenCalledWith(NoPreviousStatsFoundForFilepath('vendor.js').message);

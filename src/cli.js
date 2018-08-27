@@ -4,19 +4,9 @@ import commandLineArgs from 'command-line-args';
 import {Maybe} from 'monet';
 import main from './main';
 import {parseJSON, parseTOML, readFile} from './shared';
-import {MissingEnvVarErr, CliOptionInvalidJsonErr, MissingCliOptionErr}
-  from './core/errors';
-import circleciAdapter from './shared/ci-adapters/circleci-adapter';
-
-const getRequiredEnvVar = name => {
-  const value = process.env[name];
-  assert(value, MissingEnvVarErr(name));
-
-  return value;
-};
-
-const githubApiToken = getRequiredEnvVar('GITHUB_API_TOKEN');
-const circleApiToken = getRequiredEnvVar('CIRCLE_API_TOKEN');
+import {CliOptionInvalidJsonErr, MissingCliOptionErr} from './core/errors';
+import circleciAdapter from './shared/ci-adapters/circleci';
+import circleciArtifactStore from './shared/artifact-stores/circleci';
 
 const {
   buildSha,
@@ -26,6 +16,13 @@ const {
   repoName,
   pullRequestId
 } = circleciAdapter().getEnvVars();
+
+const githubApiToken = process.env.GITHUB_API_TOKEN;
+
+const artifactStore = circleciArtifactStore({
+  githubApiToken,
+  circleApiToken: process.env.CIRCLE_API_TOKEN
+});
 
 const optionDefinitions = [
   {name: 'manifest-path'},
@@ -98,7 +95,7 @@ readFile(cliOptions['config-path'])
       repoOwner,
       repoName,
       artifactsDirectory,
-      circleApiToken,
+      artifactStore,
       githubApiToken
     })
   )
