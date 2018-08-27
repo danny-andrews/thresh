@@ -9,7 +9,7 @@ import {
   postErrorPrStatus,
   makeArtifactDirectory,
   readManifest,
-  getAssetFileStats,
+  retrieveAssetSizes,
   saveStats,
   writeAssetStats,
   writeAssetDiffs
@@ -22,7 +22,7 @@ export default options =>
     postErrorPrStatus,
     makeArtifactDirectory,
     readManifest,
-    getAssetFileStats,
+    retrieveAssetSizes,
     saveStats,
     writeAssetStats,
     writeAssetDiffs,
