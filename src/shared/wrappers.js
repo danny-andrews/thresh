@@ -7,8 +7,8 @@ import {CreateErrorFactory, unthrow} from './util';
 export const Database = (...args) => {
   const flatFileDb = FlatFileDb(...args);
 
-  return new Promise(resolve =>
-    flatFileDb.on('open', () => resolve(flatFileDb))
+  return new Promise(
+    resolve => flatFileDb.on('open', () => resolve(flatFileDb))
   );
 };
 
@@ -21,15 +21,12 @@ export const InvalidResponseError = CreateErrorFactory();
 const rejectWith = Type =>
   a => Promise.reject(Type(a));
 
-export const request = (...args) => fetch(...args)
-  .then(response => response.json()
-    .then(data =>
-      response.ok ? data : rejectWith(Non200ResponseError)({...response, data})
-    )
-    .catch(rejectWith(InvalidResponseError))
-  )
-  .catch(
-    rejectWith(NoResponseError)
-  );
+export const request = (...args) => fetch(...args).then(
+  response => response.json().then(
+    data => response.ok
+      ? data
+      : rejectWith(Non200ResponseError)({...response, data})
+  ).catch(rejectWith(InvalidResponseError))
+).catch(rejectWith(NoResponseError));
 
 export const parseTOML = unthrow(toml.parse);

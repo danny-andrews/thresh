@@ -2,8 +2,8 @@ import ReaderPromise from '../shared/reader-promise';
 
 const STATS_DB_KEY = 'asset-stats';
 
-export default stats => ReaderPromise.fromReaderFn(config =>
-  config.db.then(db => {
+export default stats => ReaderPromise.fromReaderFn(
+  config => config.db.then(db => {
     const combinedStats = {
       ...stats,
       ...(db.get(STATS_DB_KEY) || {})

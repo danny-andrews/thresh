@@ -146,6 +146,7 @@ test('postErrorPrStatus truncates description to 140 characters (using ellipsis)
   });
 
   const {fetchOpts} = firstCallFirstArgument(spy);
+
   // Sanity check
   expect(message.length).toBeGreaterThan(140);
   expect(fetchOpts.body.description).toBe("Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever s...");

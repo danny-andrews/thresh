@@ -98,7 +98,7 @@ test('uses most recent successful build if latest was unsuccessful', async () =>
   expect(getArtifactsSpy.calls[0].arguments[0]).toMatch(/.*\/452\/artifacts/);
 });
 
-test('returns error when there are no recent builds for the base branch', () =>
+test('returns error when there are no recent builds for the base branch', () => {
   subject({
     responseData: {
       ref: 'fjd0823rf2',
@@ -106,10 +106,10 @@ test('returns error when there are no recent builds for the base branch', () =>
     }
   }).catch(error => {
     expect(error.message).toBe(NoRecentBuildsFoundErr('fjd0823rf2').message);
-  })
-);
+  });
+});
 
-test('returns error when there is no asset stats artifact found for latest build of base branch', () =>
+test('returns error when there is no asset stats artifact found for latest build of base branch', () => {
   subject({
     responseData: {
       ref: 'lq3i7t42ug',
@@ -119,5 +119,5 @@ test('returns error when there is no asset stats artifact found for latest build
   }).catch(error => {
     expect(error.message)
       .toBe(NoAssetStatsArtifactFoundErr('lq3i7t42ug', '6390').message);
-  })
-);
+  });
+});

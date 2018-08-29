@@ -1,8 +1,7 @@
 import R from 'ramda';
 
-const mergeIgnoreUndefined = R.mergeWith((a, b) =>
-  (b === undefined ? a : b)
-);
+// eslint-disable-next-line no-undefined
+const mergeIgnoreUndefined = R.mergeWith((a, b) => (b === undefined ? a : b));
 
 const Factory = defaults => (data = {}) => mergeIgnoreUndefined(defaults, data);
 
