@@ -105,6 +105,7 @@ const threshUnchecked = ({
       .map(assetStatListToMap),
     retrieveAssetSizes2()
   ]).chain(([,, currentAssetStats, previousAssetSizes]) =>
+
     // TODO: Use polymorphism to eliminate unsemantic branching off
     // projectName. Also, use some semantic variable like isMonorepo.
     projectName.toEither().cata(
@@ -166,8 +167,7 @@ const threshUnchecked = ({
           })
         ]);
       });
-    })
-  );
+    }));
 };
 
 export default deps => opts => {
@@ -188,8 +188,8 @@ export default deps => opts => {
           .chain(ReaderPromise.of);
       }
 
-      return logError(err.message).chain(() =>
-        deps.postErrorPrStatus(makeGithubRequest)({
+      return logError(err.message).chain(
+        () => deps.postErrorPrStatus(makeGithubRequest)({
           ...prStatusParams,
           description: err.message
         }).chainErr(e => logError(e.message))

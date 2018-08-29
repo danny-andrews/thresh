@@ -20,8 +20,8 @@ test('makes artifact directory', () => {
   });
 });
 
-test('returns ErrorCreatingArtifactDirectoryErr when an error is encountered creating directory', () =>
+test('returns ErrorCreatingArtifactDirectoryErr when an error is encountered creating directory', () => {
   subject({mkdir: () => Promise.reject()}).catch(err => {
     expect(err).toEqual(ErrorCreatingArtifactDirectoryErr());
-  })
-);
+  });
+});

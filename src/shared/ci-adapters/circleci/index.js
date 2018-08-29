@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import R from 'ramda';
 import {Maybe} from 'monet';
 

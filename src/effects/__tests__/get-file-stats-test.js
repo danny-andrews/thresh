@@ -7,11 +7,11 @@ const subject = ({
   stats = [{path: 'my-stats.json'}]
 } = {}) => getAssetFileStats(stats).run({getFileStats});
 
-test('returns stat with file size', () =>
+test('returns stat with file size', () => {
   subject({
     getFileStats: () => Promise.resolve({size: 400}),
     stats: [{path: 'filestats.json'}]
   }).then(stats => {
     expect(stats).toEqual([{path: 'filestats.json', size: 400}]);
-  })
-);
+  });
+});

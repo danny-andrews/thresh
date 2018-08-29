@@ -27,7 +27,10 @@ export default ({path, url, fetchOpts = {}, raw = false, circleApiToken}) => {
     ...R.omit('headers', fetchOpts)
   })
     .map(raw ? R.identity : circleDeserializer)
-    .mapErr(({constructor, context}) =>
-      mapError({url: finalUrl, context})(constructor)
+    .mapErr(
+      ({constructor, context}) => mapError({
+        url: finalUrl,
+        context
+      })(constructor)
     );
 };

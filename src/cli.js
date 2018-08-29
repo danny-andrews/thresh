@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import R from 'ramda';
 import assert from 'assert';
 import commandLineArgs from 'command-line-args';
@@ -97,8 +98,7 @@ readFile(cliOptions['config-path'])
       artifactsDirectory,
       artifactStore,
       githubApiToken
-    })
-  )
+    }))
   .catch(err => {
     console.error(err); // eslint-disable-line no-console
     process.exit(1); // eslint-disable-line no-process-exit
