@@ -1,10 +1,9 @@
 import {Either} from 'monet';
-import makeGitHubRequest from './make-github-request';
-import makeCircleRequest from './make-circle-request';
-import ReaderPromise from '../shared/reader-promise';
-import {CircleCiBuildStatuses} from '../core/constants';
+import {makeGitHubRequest, makeCircleRequest} from '../../../effects';
+import ReaderPromise from '../../reader-promise';
+import {CircleCiBuildStatuses} from '../../../core/constants';
 import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr}
-  from '../core/errors';
+  from '../../../core/errors';
 
 export default ({
   pullRequestId,

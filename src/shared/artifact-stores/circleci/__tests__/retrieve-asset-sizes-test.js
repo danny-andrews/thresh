@@ -1,16 +1,17 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
-import retrieveAssetSizes from '../get-previous-asset-sizes';
-import {FakeRequest} from '../../test/helpers';
-import {PrResource, BuildResource, ArtifactResource} from '../../test/factories';
+import getPreviousAssetSizes from '../get-previous-asset-sizes';
+import {FakeRequest} from '../../../test/helpers';
+import {PrResource, BuildResource, ArtifactResource}
+  from '../../../test/factories';
 import {
   GetBaseBranchHandler,
   GetRecentBuildsHandler,
   GetArtifactsHandler,
   GetArtifactHandler
-} from '../../test/requests';
+} from '../../../test/requests';
 import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr}
-  from '../../core/errors';
+  from '../../../core/errors';
 
 export const createResponseSequence = (opts = {}) => {
   const {
@@ -49,7 +50,7 @@ const subject = ({responseData, repoOwner, repoName, ...opts} = {}) => {
   }) |> FakeRequest;
 
   return (
-    retrieveAssetSizes({
+    getPreviousAssetSizes({
       pullRequestId: '45',
       assetSizesFilepath: 'dist/app.js',
       repoOwner,
