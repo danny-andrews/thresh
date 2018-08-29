@@ -44,7 +44,7 @@ test('writes asset stats file', () => {
 });
 
 test('returns error when an error is encountered writing asset diffs file', () => {
-  subject({writeFile: () => Promise.reject('oh no')}).catch(err => {
+  subject({writeFile: () => Promise.reject(Error('oh no'))}).catch(err => {
     expect(err).toEqual(ErrorWritingAssetDiffsArtifactErr('oh no'));
   });
 });

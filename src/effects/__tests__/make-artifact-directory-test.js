@@ -21,7 +21,7 @@ test('makes artifact directory', () => {
 });
 
 test('returns ErrorCreatingArtifactDirectoryErr when an error is encountered creating directory', () => {
-  subject({mkdir: () => Promise.reject()}).catch(err => {
+  subject({mkdir: () => Promise.reject(Error('oh no'))}).catch(err => {
     expect(err).toEqual(ErrorCreatingArtifactDirectoryErr());
   });
 });

@@ -915,9 +915,9 @@
   dependencies:
     arrify "^1.0.1"
 
-"@danny.andrews/eslint-config@^7.0.0":
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/@danny.andrews/eslint-config/-/eslint-config-7.0.0.tgz#6858cd28f95f6cc5aa3a835c021d0d559e49090b"
+"@danny.andrews/eslint-config@^8.0.0":
+  version "8.0.0"
+  resolved "https://registry.yarnpkg.com/@danny.andrews/eslint-config/-/eslint-config-8.0.0.tgz#3d18541a02dcc6f4db984f1d83a50f50624db40a"
   dependencies:
     babel-eslint "^7.2.3"
     eslint-config-eslint "^4.0.0"

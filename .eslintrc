@@ -1,10 +1,4 @@
 extends: '@danny.andrews/eslint-config'
-rules:
-  newline-after-var: off
-  newline-per-chained-call: off
-  require-unicode-regexp: off
-  no-confusing-arrow: off
-  prefer-promise-reject-errors: off
 env:
   node: true
   browser: false
