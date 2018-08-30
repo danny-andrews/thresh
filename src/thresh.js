@@ -8,14 +8,14 @@ import {compactAndJoin, SchemaValidator} from './shared';
 import {
   NoOpenPullRequestFoundErr,
   InvalidFailureThresholdOptionErr,
-  NoRecentBuildsFoundErr,
-  NoAssetStatsArtifactFoundErr,
   NoPreviousStatsFoundForFilepath
 } from './core/errors';
+import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr}
+  from './shared/artifact-stores/circleci/errors';
 import ReaderPromise from './shared/reader-promise';
 import {failureThresholdListSchema, DFAULT_FAILURE_THRESHOLD_STRATEGY}
   from './core/schemas';
-import {makeGithubRequest} from './effects';
+import {makeGitHubRequest} from './effects';
 import {logMessage, logError} from './effects/base';
 
 const warningTypes = [
@@ -97,7 +97,7 @@ const threshUnchecked = ({
   });
 
   return ReaderPromise.parallel([
-    postPendingPrStatus(makeGithubRequest)(prStatusParams),
+    postPendingPrStatus(makeGitHubRequest)(prStatusParams),
     makeArtifactDirectory({rootPath: artifactsDirectory}),
     readManifest(manifestFilepath)
       .map(assetStatMapToList)
@@ -161,7 +161,7 @@ const threshUnchecked = ({
             assetDiffs,
             thresholdFailures: thresholdFailures.right()
           }),
-          postFinalPrStatus(makeGithubRequest)({
+          postFinalPrStatus(makeGitHubRequest)({
             ...prStatusParams,
             assetDiffs,
             thresholdFailures: thresholdFailures.right()
@@ -190,7 +190,7 @@ export default deps => opts => {
       }
 
       return logError(err.message).chain(
-        () => deps.postErrorPrStatus(makeGithubRequest)({
+        () => deps.postErrorPrStatus(makeGitHubRequest)({
           ...prStatusParams,
           description: err.message
         }).chainErr(e => logError(e.message))

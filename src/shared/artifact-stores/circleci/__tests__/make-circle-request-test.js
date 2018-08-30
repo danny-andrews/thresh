@@ -3,7 +3,7 @@ import expect, {createSpy} from 'expect';
 
 import makeCircleRequest from '../make-circle-request';
 import {NoResponseError, Non200ResponseError, InvalidResponseError}
-  from '../../shared';
+  from '../../..';
 
 const subject = (opts = {}) => {
   const {
