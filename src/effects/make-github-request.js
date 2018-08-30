@@ -1,5 +1,6 @@
 import {camelizeKeys, decamelizeKeys} from 'humps';
 import R from 'ramda';
+
 import {
   GitHubFetchErr,
   GitHubAuthorizationErr,
@@ -7,6 +8,7 @@ import {
 } from '../core/errors';
 import {NoResponseError, Non200ResponseError, InvalidResponseError, switchCaseF}
   from '../shared';
+
 import {request} from './base';
 
 /* eslint-disable no-magic-numbers */

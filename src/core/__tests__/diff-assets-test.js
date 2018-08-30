@@ -1,5 +1,6 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
+
 import subject from '../diff-assets';
 
 const assetFac = (opts = {}) => ({

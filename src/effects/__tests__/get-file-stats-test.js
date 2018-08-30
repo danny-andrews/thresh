@@ -1,5 +1,6 @@
 import test from 'ava';
 import expect from 'expect';
+
 import getAssetFileStats from '../get-asset-file-stats';
 
 const subject = ({

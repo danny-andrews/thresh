@@ -1,5 +1,6 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
+
 import ReaderPromise from '../../shared/reader-promise';
 import {postFinalPrStatus, postPendingPrStatus, postErrorPrStatus} from '../post-pr-status';
 import {firstCallFirstArgument} from '../../test/helpers';

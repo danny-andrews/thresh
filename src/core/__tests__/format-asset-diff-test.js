@@ -1,5 +1,6 @@
 import test from 'ava';
 import expect from 'expect';
+
 import subject from '../format-asset-diff';
 
 test('no difference', () => {

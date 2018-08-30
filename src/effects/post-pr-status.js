@@ -1,5 +1,6 @@
 import R from 'ramda';
 import ncurry from 'ncurry';
+
 import {truncate} from '../shared';
 import formatAssetDiff from '../core/format-asset-diff';
 

@@ -1,5 +1,6 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
+
 import retrieveAssetSizes from '../get-previous-asset-sizes';
 import {FakeRequest} from '../../test/helpers';
 import {PrResource, BuildResource, ArtifactResource} from '../../test/factories';

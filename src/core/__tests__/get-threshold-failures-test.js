@@ -1,6 +1,7 @@
 import test from 'ava';
 import expect from 'expect';
 import R from 'ramda';
+
 import {InvalidFailureThresholdErr} from '../errors';
 import subject from '../get-threshold-failures';
 

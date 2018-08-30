@@ -1,5 +1,6 @@
 import test from 'ava';
 import expect from 'expect';
+
 import readManifest from '../read-manifest';
 import {PromiseError} from '../../test/helpers';
 import {ManifestFileReadErr} from '../../core/errors';
