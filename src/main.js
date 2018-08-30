@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import path from 'path';
+
 import {mkdir, writeFile, readFile, getFileStats, Database, request}
   from './shared';
 import thresh from './thresh';

@@ -1,5 +1,6 @@
 import R from 'ramda';
 import {Either} from 'monet';
+
 import {ASSET_STATS_FILENAME} from './core/constants';
 import diffAssets from './core/diff-assets';
 import getThresholdFailures from './core/get-threshold-failures';

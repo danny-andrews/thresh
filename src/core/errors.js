@@ -1,4 +1,5 @@
 import {sprintf} from 'sprintf-js';
+
 import {CreateFactory} from '../shared';
 
 const CreateErrorFactory = messageTemplate => CreateFactory(

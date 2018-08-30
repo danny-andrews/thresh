@@ -3,6 +3,7 @@ import R from 'ramda';
 import assert from 'assert';
 import commandLineArgs from 'command-line-args';
 import {Maybe} from 'monet';
+
 import main from './main';
 import {parseJSON, parseTOML, readFile} from './shared';
 import {CliOptionInvalidJsonErr, MissingCliOptionErr} from './core/errors';

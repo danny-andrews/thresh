@@ -1,5 +1,6 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
+
 import writeAssetDiffs from '../write-asset-diffs';
 import {ErrorWritingAssetDiffsArtifactErr} from '../../core/errors';
 

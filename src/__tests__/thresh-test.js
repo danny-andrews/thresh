@@ -1,6 +1,7 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
 import {Maybe, Either} from 'monet';
+
 import {
   NoOpenPullRequestFoundErr,
   InvalidFailureThresholdErr,

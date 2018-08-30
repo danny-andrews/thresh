@@ -1,7 +1,8 @@
 import {ErrorWritingAssetSizesArtifactErr} from '../core/errors';
 import {serializeForFile} from '../shared';
-import {resolve, writeFile} from './base';
 import {ASSET_STATS_FILENAME, OUTPUT_FILEPATH} from '../core/constants';
+
+import {resolve, writeFile} from './base';
 
 export default ({rootPath, assetStats}) =>
   resolve(rootPath, OUTPUT_FILEPATH, ASSET_STATS_FILENAME)

@@ -1,5 +1,6 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
+
 import makeArtifactDirectory from '../make-artifact-directory';
 import {ErrorCreatingArtifactDirectoryErr} from '../../core/errors';
 

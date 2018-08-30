@@ -1,5 +1,6 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
+
 import writeAssetStats from '../write-asset-stats';
 import {ErrorWritingAssetSizesArtifactErr} from '../../core/errors';
 

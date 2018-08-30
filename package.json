@@ -35,6 +35,7 @@
   "dependencies": {
     "ajv": "^5.2.2",
     "command-line-args": "^4.0.6",
+    "eslint-plugin-import": "^2.14.0",
     "filesize": "^3.5.10",
     "flat-file-db": "^1.0.0",
     "humps": "^2.0.1",
@@ -53,7 +54,7 @@
     "@babel/plugin-proposal-pipeline-operator": "^7.0.0-beta.54",
     "@babel/preset-env": "^7.0.0-beta.54",
     "@babel/register": "^7.0.0-beta.54",
-    "@danny.andrews/eslint-config": "^8.0.0",
+    "@danny.andrews/eslint-config": "^9.0.0",
     "ava": "1.0.0-beta.6",
     "babel-eslint": "^8.2.6",
     "eslint": "^5.0.0",

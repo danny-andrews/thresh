@@ -1,5 +1,6 @@
 import test from 'ava';
 import expect from 'expect';
+
 import saveStats from '../save-stats';
 
 const FakeDb = initialData => {

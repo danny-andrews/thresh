@@ -2,6 +2,7 @@ import Ajv from 'ajv';
 import FlatFileDb from 'flat-file-db';
 import fetch from 'node-fetch';
 import toml from 'toml';
+
 import {CreateErrorFactory, unthrow} from './util';
 
 export const Database = (...args) => {

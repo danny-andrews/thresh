@@ -1,5 +1,6 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
+
 import makeGithubRequest from '../make-github-request';
 import {
   NoResponseError,

@@ -1,5 +1,6 @@
 import R from 'ramda';
 import {Either} from 'monet';
+
 import {JSON_OUTPUT_SPACING} from '../core/constants';
 
 const executeIfFunction = f => R.type(f) === 'Function' ? f() : f;

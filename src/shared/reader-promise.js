@@ -1,5 +1,6 @@
 import {Reader} from 'monet';
 import R from 'ramda';
+
 import {CreateFactory} from './util';
 
 const ReaderPromise = CreateFactory(value => {
