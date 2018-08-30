@@ -12,7 +12,3 @@ export const FailureThresholdStategies = {
 };
 
 export const FAILURE_THRESHOLD_TARGET_ALL = 'all';
-
-export const CircleCiBuildStatuses = {
-  SUCCESS: 'success'
-};

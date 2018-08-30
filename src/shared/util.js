@@ -1,5 +1,6 @@
 import R from 'ramda';
 import {Either} from 'monet';
+import {sprintf} from 'sprintf-js';
 
 import {JSON_OUTPUT_SPACING} from '../core/constants';
 
@@ -39,5 +40,11 @@ export const CreateFactory = f => {
   return constructor;
 };
 
-export const CreateErrorFactory = () =>
+export const CreateRequestErrorFactory = () =>
   CreateFactory(context => ({context}));
+
+export const CreateErrorFactory = messageTemplate => CreateFactory(
+  (...args) => ({
+    message: sprintf(messageTemplate, ...args)
+  })
+);

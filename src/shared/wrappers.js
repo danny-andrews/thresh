@@ -3,7 +3,7 @@ import FlatFileDb from 'flat-file-db';
 import fetch from 'node-fetch';
 import toml from 'toml';
 
-import {CreateErrorFactory, unthrow} from './util';
+import {CreateRequestErrorFactory, unthrow} from './util';
 
 export const Database = (...args) => {
   const flatFileDb = FlatFileDb(...args);
@@ -15,9 +15,9 @@ export const Database = (...args) => {
 
 export const SchemaValidator = () => new Ajv({allErrors: true});
 
-export const Non200ResponseError = CreateErrorFactory();
-export const NoResponseError = CreateErrorFactory();
-export const InvalidResponseError = CreateErrorFactory();
+export const Non200ResponseError = CreateRequestErrorFactory();
+export const NoResponseError = CreateRequestErrorFactory();
+export const InvalidResponseError = CreateRequestErrorFactory();
 
 const rejectWith = Type =>
   a => Promise.reject(Type(a));

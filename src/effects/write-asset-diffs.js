@@ -8,12 +8,12 @@ export default ({rootPath, assetDiffs, thresholdFailures}) => resolve(
   rootPath,
   OUTPUT_FILEPATH,
   ASSET_DIFFS_FILENAME
-)
-  .chain(filepath => writeFile(
+).chain(
+  filepath => writeFile(
     filepath,
     serializeForFile({
       diffs: assetDiffs,
       failures: thresholdFailures
     })
-  ))
-  .mapErr(ErrorWritingAssetDiffsArtifactErr);
+  )
+).mapErr(ErrorWritingAssetDiffsArtifactErr);

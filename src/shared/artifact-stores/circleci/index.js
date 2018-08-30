@@ -1,4 +1,4 @@
-import {retrieveAssetSizes} from '../../../effects';
+import getPreviousAssetStats from './get-previous-asset-stats';
 
 export default ({githubApiToken, circleApiToken}) => ({
   getAssetStats: ({
@@ -6,7 +6,7 @@ export default ({githubApiToken, circleApiToken}) => ({
     assetSizesFilepath,
     repoOwner,
     repoName
-  }) => retrieveAssetSizes({
+  }) => getPreviousAssetStats({
     githubApiToken,
     circleApiToken,
     pullRequestId,

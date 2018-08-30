@@ -1,11 +1,11 @@
 import {camelizeKeys} from 'humps';
 import R from 'ramda';
 
-import {CircleCiFetchErr, CircleCiInvalidResponseErr} from '../core/errors';
 import {NoResponseError, Non200ResponseError, InvalidResponseError, switchCaseF}
-  from '../shared';
+  from '../..';
+import {request} from '../../../effects/base';
 
-import {request} from './base';
+import {CircleCiFetchErr, CircleCiInvalidResponseErr} from './errors';
 
 const circleDeserializer = payload => camelizeKeys(payload);
 
