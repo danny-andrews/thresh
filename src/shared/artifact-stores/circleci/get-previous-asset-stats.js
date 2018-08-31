@@ -2,33 +2,17 @@ import {Either} from 'monet';
 
 import ReaderPromise from '../../reader-promise';
 
-import makeCircleRequest from './make-circle-request';
 import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr} from './errors';
 import {CircleCiBuildStatuses} from './constants';
 
-export default ({
-  assetSizesFilepath,
-  circleApiToken,
-  repoOwner,
-  repoName,
-  baseBranch
-}) => {
-  const repoProjectPath = [repoOwner, repoName].join('/');
-
-  const getRecentBuilds = branch =>
-    makeCircleRequest({
-      path: `project/github/${repoProjectPath}/tree/${branch}`,
-      circleApiToken
-    });
+export default makeCircleRequest => ({assetSizesFilepath, baseBranch}) => {
+  const getRecentBuilds = branch => makeCircleRequest({path: `tree/${branch}`});
 
   const getBuildArtifacts = buildNumber =>
-    makeCircleRequest({
-      path: `project/github/${repoProjectPath}/${buildNumber}/artifacts`,
-      circleApiToken
-    });
+    makeCircleRequest({path: `${buildNumber}/artifacts`});
 
   const getAssetSizeArtifact = assetSizeArtifactUrl =>
-    makeCircleRequest({url: assetSizeArtifactUrl, raw: true, circleApiToken});
+    makeCircleRequest({url: assetSizeArtifactUrl, raw: true});
 
   return getRecentBuilds(baseBranch).chain(recentBuilds => {
     if(recentBuilds.length === 0) {

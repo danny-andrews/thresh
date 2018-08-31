@@ -1,5 +1,6 @@
 import {camelizeKeys} from 'humps';
 import R from 'ramda';
+import {sprintf} from 'sprintf-js';
 
 import {NoResponseError, Non200ResponseError, InvalidResponseError, switchCaseF}
   from '../..';
@@ -20,9 +21,18 @@ const mapError = ({url, context}) =>
     ])
   )();
 
-export default ({path, url, fetchOpts = {}, raw = false, circleApiToken}) => {
-  const finalUrl = `${url || [API_ROOT, path].join('/')}`
-    + `?circle-token=${circleApiToken}`;
+export default ({circleApiToken, repoOwner, repoName}) => ({
+  path,
+  url,
+  fetchOpts = {},
+  raw = false
+}) => {
+  const finalUrl = sprintf(
+    '%s?circle-token=%s',
+    url || [API_ROOT, 'project', 'github', repoOwner, repoName, path]
+      .join('/'),
+    circleApiToken
+  );
 
   return request(finalUrl, {
     headers: {Accept: 'application/json', ...fetchOpts.headers},
