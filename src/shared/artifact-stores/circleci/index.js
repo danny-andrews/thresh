@@ -1,16 +1,15 @@
 import getPreviousAssetStats from './get-previous-asset-stats';
 
-export default ({githubApiToken, circleApiToken}) => ({
+export default ({circleApiToken}) => ({
   getAssetStats: ({
-    pullRequestId,
     assetSizesFilepath,
+    baseBranch,
     repoOwner,
     repoName
   }) => getPreviousAssetStats({
-    githubApiToken,
     circleApiToken,
-    pullRequestId,
     assetSizesFilepath,
+    baseBranch,
     repoOwner,
     repoName
   })

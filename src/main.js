@@ -13,7 +13,8 @@ import {
   saveStats,
   writeAssetStats,
   writeAssetDiffs,
-  getAssetFileStats
+  getAssetFileStats,
+  getBaseBranch
 } from './effects';
 
 export default options =>
@@ -27,6 +28,7 @@ export default options =>
     saveStats,
     writeAssetStats,
     writeAssetDiffs,
+    getBaseBranch,
     artifactStore: options.artifactStore
   })(options)
     .run({

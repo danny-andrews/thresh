@@ -36,7 +36,8 @@ const threshUnchecked = ({
   saveStats,
   writeAssetStats,
   writeAssetDiffs,
-  artifactStore
+  artifactStore,
+  getBaseBranch
 }) => opts => {
   const {
     manifestFilepath,
@@ -46,7 +47,8 @@ const threshUnchecked = ({
     pullRequestId,
     artifactsDirectory,
     repoOwner,
-    repoName
+    repoName,
+    githubApiToken
   } = opts;
   const failureThresholds = opts.failureThresholds.map(
     threshold => ({
@@ -66,15 +68,24 @@ const threshUnchecked = ({
       |> InvalidFailureThresholdOptionErr
       |> ReaderPromise.fromError;
   }
+
   const retrieveAssetSizes2 = () =>
     pullRequestId.toEither().cata(
       () => NoOpenPullRequestFoundErr() |> Either.Left |> ReaderPromise.of,
-      prId => artifactStore.getAssetStats({
-        pullRequestId: prId,
-        assetSizesFilepath: ASSET_STATS_FILENAME,
+      prId => getBaseBranch({
         repoOwner,
-        repoName
-      })
+        repoName,
+        pullRequestId: prId,
+        githubApiToken
+      }).chain(
+        baseBranch => artifactStore.getAssetStats({
+          pullRequestId: prId,
+          baseBranch,
+          assetSizesFilepath: ASSET_STATS_FILENAME,
+          repoOwner,
+          repoName
+        })
+      )
     );
 
   const assetStatListToMap = assetStats => R.reduce(

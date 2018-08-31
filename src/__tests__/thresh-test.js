@@ -36,6 +36,7 @@ const subject = ({
     filename: 'app.js',
     path: 'dist/app.js'
   }]),
+  getBaseBranch = ReaderPromise.of,
   saveStats = ReaderPromise.of,
   writeAssetStats = ReaderPromise.of,
   writeAssetDiffs = ReaderPromise.of,
@@ -51,7 +52,8 @@ const subject = ({
     getAssetFileStats,
     saveStats,
     writeAssetStats,
-    writeAssetDiffs
+    writeAssetDiffs,
+    getBaseBranch
   })({
     statsFilepath: 'dist/stats.js',
     projectName: Maybe.None(),
