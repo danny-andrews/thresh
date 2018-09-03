@@ -90,12 +90,13 @@ test('decamelizes and stringifies body', () => {
   expect(actual).toEqual('{"my_msg":"hello"}');
 });
 
-test('camelizes response', async () => {
+test('camelizes response', () => {
   // eslint-disable-next-line camelcase
   const spy = createSpy().andReturn(Promise.resolve({my_msg: 'hello'}));
-  const actual = await subject({request: spy});
 
-  expect(actual).toEqual({myMsg: 'hello'});
+  return subject({request: spy}).then(actual => {
+    expect(actual).toEqual({myMsg: 'hello'});
+  });
 });
 
 test('returns error if response fails', () => {
