@@ -35,7 +35,6 @@
   "dependencies": {
     "ajv": "^5.2.2",
     "command-line-args": "^4.0.6",
-    "eslint-plugin-import": "^2.14.0",
     "filesize": "^3.5.10",
     "flat-file-db": "^1.0.0",
     "humps": "^2.0.1",
@@ -58,6 +57,7 @@
     "ava": "1.0.0-beta.6",
     "babel-eslint": "^8.2.6",
     "eslint": "^5.0.0",
+    "eslint-plugin-import": "^2.14.0",
     "expect": "^1.20.2",
     "nyc": "^11.1.0",
     "sort-package-json": "^1.6.0"
