@@ -80,20 +80,22 @@ test('accepts other fetch optioms', () => {
   expect(body).toBe('hi');
 });
 
-test('camelizes response', async () => {
+test('camelizes response', () => {
   // eslint-disable-next-line camelcase
   const spy = createSpy().andReturn(Promise.resolve({my_msg: 'hello'}));
-  const actual = await subject({request: spy});
 
-  expect(actual).toEqual({myMsg: 'hello'});
+  return subject({request: spy}).then(actual => {
+    expect(actual).toEqual({myMsg: 'hello'});
+  });
 });
 
-test("if raw is true, it doesn't deserialize response", async () => {
+test("if raw is true, it doesn't deserialize response", () => {
   // eslint-disable-next-line camelcase
   const spy = createSpy().andReturn(Promise.resolve({my_msg: 'hello'}));
-  const actual = await subject({raw: true, request: spy});
 
-  expect(actual).toEqual({my_msg: 'hello'}); // eslint-disable-line camelcase
+  return subject({raw: true, request: spy}).then(actual => {
+    expect(actual).toEqual({my_msg: 'hello'}); // eslint-disable-line camelcase
+  });
 });
 
 test('returns Error if request fails', () => {

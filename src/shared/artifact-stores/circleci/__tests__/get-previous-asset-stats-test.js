@@ -61,17 +61,16 @@ const subject = ({responseData, repoOwner, repoName, ...opts} = {}) => {
   ).run({request: fakeRequest});
 };
 
-test('happy path (returns artifact body)', async () => {
-  const artifact = await subject({
+test('happy path (returns artifact body)', () =>
+  subject({
     responseData: {
       artifactBody: 'artifact text'
     }
-  });
+  }).then(artifact => {
+    expect(artifact.right()).toBe('artifact text');
+  }));
 
-  expect(artifact.right()).toBe('artifact text');
-});
-
-test('uses most recent successful build if latest was unsuccessful', async () => {
+test('uses most recent successful build if latest was unsuccessful', () => {
   const getArtifactsSpy = createSpy().andReturn([
     ArtifactResource({
       path: '8932hfdlsajlf/thing/dist/my-file.js',
@@ -79,7 +78,7 @@ test('uses most recent successful build if latest was unsuccessful', async () =>
     })
   ]);
 
-  await subject({
+  return subject({
     assetSizesFilepath: 'dist/my-file.js',
     responseData: {
       getRecentBuildsResponse: [
@@ -95,9 +94,9 @@ test('uses most recent successful build if latest was unsuccessful', async () =>
       ],
       getArtifactsResponse: getArtifactsSpy
     }
+  }).then(() => {
+    expect(getArtifactsSpy.calls[0].arguments[0]).toMatch(/.*\/452\/artifacts/);
   });
-
-  expect(getArtifactsSpy.calls[0].arguments[0]).toMatch(/.*\/452\/artifacts/);
 });
 
 test('returns error when there are no recent builds for the base branch', () => {
