@@ -2,12 +2,12 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/node:8.9.0
+      - image: circleci/node:8.11.4
     environment:
       - CIRCLE_ARTIFACTS: ./example/dist/artifacts
     steps:
       - checkout
-      - run: yarn install --ignore-engines
+      - run: yarn install
       - run: yarn ci
       - run: yarn build
       - run: ./thresh
