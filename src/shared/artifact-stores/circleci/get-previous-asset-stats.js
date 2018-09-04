@@ -4,7 +4,8 @@ import ReaderPromise from '../../reader-promise';
 
 import makeCircleRequest from './make-circle-request';
 import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr} from './errors';
-import {CircleCiBuildStatuses} from './constants';
+
+const CircleCiBuildStatuses = {SUCCESS: 'success'};
 
 export default ({
   assetSizesFilepath,
