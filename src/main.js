@@ -17,28 +17,26 @@ import {
   getBaseBranch
 } from './effects';
 
-export default options =>
-  thresh({
-    postFinalPrStatus,
-    postPendingPrStatus,
-    postErrorPrStatus,
-    makeArtifactDirectory,
-    readManifest,
-    getAssetFileStats,
-    saveStats,
-    writeAssetStats,
-    writeAssetDiffs,
-    getBaseBranch,
-    artifactStore: options.artifactStore
-  })(options)
-    .run({
-      writeFile,
-      readFile,
-      resolve: path.resolve,
-      request,
-      db: Database('my.db'),
-      mkdir,
-      getFileStats,
-      logMessage: console.log,
-      logError: console.error
-    });
+export default options => thresh({
+  postFinalPrStatus,
+  postPendingPrStatus,
+  postErrorPrStatus,
+  makeArtifactDirectory,
+  readManifest,
+  getAssetFileStats,
+  saveStats,
+  writeAssetStats,
+  writeAssetDiffs,
+  getBaseBranch,
+  artifactStore: options.artifactStore
+})(options).run({
+  writeFile,
+  readFile,
+  resolve: path.resolve,
+  request,
+  db: Database('my.db'),
+  mkdir,
+  getFileStats,
+  logMessage: console.log,
+  logError: console.error
+});

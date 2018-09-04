@@ -11,14 +11,13 @@ const circleDeserializer = payload => camelizeKeys(payload);
 
 const API_ROOT = 'https://circleci.com/api/v1.1';
 
-const mapError = ({url, context}) =>
-  switchCaseF(
-    new Map([
-      [NoResponseError, CircleCiFetchErr(url, context)],
-      [InvalidResponseError, CircleCiInvalidResponseErr(url, context)],
-      [Non200ResponseError, CircleCiInvalidResponseErr(url, context.data)]
-    ])
-  )();
+const mapError = ({url, context}) => switchCaseF(
+  new Map([
+    [NoResponseError, CircleCiFetchErr(url, context)],
+    [InvalidResponseError, CircleCiInvalidResponseErr(url, context)],
+    [Non200ResponseError, CircleCiInvalidResponseErr(url, context.data)]
+  ])
+)();
 
 export default ({path, url, fetchOpts = {}, raw = false, circleApiToken}) => {
   const finalUrl = `${url || [API_ROOT, path].join('/')}`

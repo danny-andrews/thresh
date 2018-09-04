@@ -80,13 +80,13 @@ readFile(cliOptions['config-path'])
       outputDirectory
     };
   })
-  .then(({
-    manifestFilepath,
-    projectName,
-    outputDirectory,
-    failureThresholds
-  }) =>
-    main({
+  .then(
+    ({
+      manifestFilepath,
+      projectName,
+      outputDirectory,
+      failureThresholds
+    }) => main({
       manifestFilepath,
       projectName: Maybe.fromNull(projectName),
       outputDirectory,
@@ -99,7 +99,8 @@ readFile(cliOptions['config-path'])
       artifactsDirectory,
       artifactStore,
       githubApiToken
-    }))
+    })
+  )
   .catch(err => {
     console.error(err); // eslint-disable-line no-console
     process.exit(1); // eslint-disable-line no-process-exit
