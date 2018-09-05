@@ -19,3 +19,8 @@ export const GetArtifactHandler = ({response, matcher}) => ({
   matcher,
   response: response || {}
 });
+
+export const PostPrStatusHandler = response => ({
+  matcher: /repos\/.*\/statuses/,
+  response
+});
