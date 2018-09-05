@@ -22,7 +22,6 @@ const {
 const githubApiToken = process.env.GITHUB_API_TOKEN;
 
 const artifactStore = circleciArtifactStore({
-  githubApiToken,
   circleApiToken: process.env.CIRCLE_API_TOKEN
 });
 
