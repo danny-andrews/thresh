@@ -1,22 +1,19 @@
 import R from 'ramda';
 import {Either} from 'monet';
 
-import {ASSET_STATS_FILENAME} from './core/constants';
-import diffAssets from './core/diff-assets';
-import getThresholdFailures from './core/get-threshold-failures';
-import {compactAndJoin, SchemaValidator} from './shared';
-import {
-  NoOpenPullRequestFoundErr,
-  InvalidFailureThresholdOptionErr,
-  NoPreviousStatsFoundForFilepath
-} from './core/errors';
+import {compactAndJoin} from './shared';
 import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr}
   from './shared/artifact-stores/circleci/errors';
 import ReaderPromise from './shared/reader-promise';
-import {failureThresholdListSchema, DFAULT_FAILURE_THRESHOLD_STRATEGY}
-  from './core/schemas';
-import {makeGitHubRequest} from './effects';
-import {logMessage, logError} from './effects/base';
+import {DFAULT_FAILURE_THRESHOLD_STRATEGY} from './core/schemas';
+import validateFailureThresholdSchema
+  from './core/validate-failure-threshold-schema';
+import {ASSET_STATS_FILENAME} from './core/constants';
+import diffAssets from './core/diff-assets';
+import getThresholdFailures from './core/get-threshold-failures';
+import {NoOpenPullRequestFoundErr, NoPreviousStatsFoundForFilepath}
+  from './core/errors';
+import {makeGitHubRequest, logMessage, logError} from './effects';
 
 const warningTypes = [
   NoOpenPullRequestFoundErr,
@@ -63,21 +60,10 @@ export default ({
       opts.projectName.orSome(null)
     ]),
     sha: opts.buildSha,
-    ...R.pick(['githubApiToken', 'repoOwner', 'repoName'], opts)
+    githubApiToken,
+    repoOwner,
+    repoName
   };
-
-  const validator = SchemaValidator();
-  const isfailureThresholdsValid = validator.validate(
-    failureThresholdListSchema,
-    failureThresholds
-  );
-
-  if(!isfailureThresholdsValid) {
-    const error = validator.errorsText(validator.errors, {separator: '\n'})
-      |> InvalidFailureThresholdOptionErr;
-
-    return logError(error.message);
-  }
 
   const retrieveAssetSizes2 = () =>
     pullRequestId.toEither().cata(
@@ -117,16 +103,23 @@ export default ({
     path: [outputDirectory, path].join('/')
   });
 
-  return ReaderPromise.parallel([
-    postPendingPrStatus(makeGitHubRequest)(prStatusParams),
-    makeArtifactDirectory({rootPath: artifactsDirectory}),
-    readManifest(manifestFilepath)
-      .map(assetStatMapToList)
-      .map(R.map(resolvePath))
-      .chain(getAssetFileStats)
-      .map(assetStatListToMap),
-    retrieveAssetSizes2()
-  ]).chain(
+  const validateFailureThresholdSchema2 = (
+    validateFailureThresholdSchema(failureThresholds)
+      |> ReaderPromise.fromEither
+  ).chainErr(e => logError(e.message));
+
+  return validateFailureThresholdSchema2.chain(
+    () => ReaderPromise.parallel([
+      postPendingPrStatus(makeGitHubRequest)(prStatusParams),
+      makeArtifactDirectory({rootPath: artifactsDirectory}),
+      readManifest(manifestFilepath)
+        .map(assetStatMapToList)
+        .map(R.map(resolvePath))
+        .chain(getAssetFileStats)
+        .map(assetStatListToMap),
+      retrieveAssetSizes2()
+    ])
+  ).chain(
     ([,, currentAssetStats, previousAssetSizes]) =>
 
       // TODO: Use polymorphism to eliminate unsemantic branching off
