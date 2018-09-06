@@ -50,6 +50,11 @@ ReaderPromise.fromError = a => Promise.reject(a) |> ReaderPromise.fromPromise;
 
 ReaderPromise.fromReaderFn = a => Reader(a) |> ReaderPromise;
 
+ReaderPromise.fromEither = a => a.cata(
+  ReaderPromise.fromError,
+  ReaderPromise.of
+);
+
 ReaderPromise.parallel = readerPromises => ReaderPromise.fromReaderFn(
   config => Promise.all(readerPromises.map(rp => rp.run(config)))
 );

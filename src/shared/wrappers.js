@@ -1,4 +1,3 @@
-import Ajv from 'ajv';
 import FlatFileDb from 'flat-file-db';
 import fetch from 'node-fetch';
 import toml from 'toml';
@@ -12,8 +11,6 @@ export const Database = (...args) => {
     resolve => flatFileDb.on('open', () => resolve(flatFileDb))
   );
 };
-
-export const SchemaValidator = () => new Ajv({allErrors: true});
 
 export const Non200ResponseError = CreateRequestErrorFactory();
 export const NoResponseError = CreateRequestErrorFactory();
