@@ -27,9 +27,10 @@ const warningTypes = [
 const isWarningType = err =>
   R.any(Type => err.constructor === Type, warningTypes);
 
-const threshUnchecked = ({
+export default ({
   postFinalPrStatus,
   postPendingPrStatus,
+  postErrorPrStatus,
   makeArtifactDirectory,
   readManifest,
   getAssetFileStats,
@@ -43,7 +44,6 @@ const threshUnchecked = ({
     manifestFilepath,
     outputDirectory,
     projectName,
-    prStatusParams,
     pullRequestId,
     artifactsDirectory,
     repoOwner,
@@ -56,6 +56,15 @@ const threshUnchecked = ({
       ...threshold
     })
   );
+  const prStatusParams = {
+    targetUrl: `${opts.buildUrl}#artifacts`,
+    label: compactAndJoin(': ', [
+      'Asset Sizes',
+      opts.projectName.orSome(null)
+    ]),
+    sha: opts.buildSha,
+    ...R.pick(['githubApiToken', 'repoOwner', 'repoName'], opts)
+  };
 
   const validator = SchemaValidator();
   const isfailureThresholdsValid = validator.validate(
@@ -64,9 +73,10 @@ const threshUnchecked = ({
   );
 
   if(!isfailureThresholdsValid) {
-    return validator.errorsText(validator.errors, {separator: '\n'})
-      |> InvalidFailureThresholdOptionErr
-      |> ReaderPromise.fromError;
+    const error = validator.errorsText(validator.errors, {separator: '\n'})
+      |> InvalidFailureThresholdOptionErr;
+
+    return logError(error.message);
   }
 
   const retrieveAssetSizes2 = () =>
@@ -116,95 +126,83 @@ const threshUnchecked = ({
       .chain(getAssetFileStats)
       .map(assetStatListToMap),
     retrieveAssetSizes2()
-  ]).chain(([,, currentAssetStats, previousAssetSizes]) =>
+  ]).chain(
+    ([,, currentAssetStats, previousAssetSizes]) =>
 
-    // TODO: Use polymorphism to eliminate unsemantic branching off
-    // projectName. Also, use some semantic variable like isMonorepo.
-    projectName.toEither().cata(
-      () => ReaderPromise.of(currentAssetStats),
-      () => saveStats({
-        ...(previousAssetSizes.isRight() ? previousAssetSizes.right() : {}),
-        [projectName.some()]: currentAssetStats
-      })
-    ).chain(assetStats => {
-      const writeAssetStats2 = writeAssetStats({
-        rootPath: artifactsDirectory,
-        assetStats
-      });
-      if(previousAssetSizes.isLeft()) {
-        return writeAssetStats2.chain(
-          () => ReaderPromise.fromError(previousAssetSizes.left())
-        );
-      }
-
-      return ReaderPromise.fromReaderFn(config => {
-        const assetDiffs = diffAssets({
-          current: projectName.isSome()
-            ? assetStats[projectName.some()]
-            : assetStats,
-          original: projectName.isSome()
-            ? previousAssetSizes.right()[projectName.some()]
-            : previousAssetSizes.right(),
-          onMismatchFound: filepath => config.logMessage(
-            NoPreviousStatsFoundForFilepath(filepath).message
-          )
-        });
-
-        return Promise.resolve(assetDiffs);
-      }).chain(assetDiffs => {
-        const thresholdFailures = getThresholdFailures({
-          failureThresholds,
-          assetStats: assetDiffs
-            |> R.toPairs
-            |> R.map(([filepath, {current: size}]) => ({filepath, size}))
-        });
-
-        if(thresholdFailures.isLeft()) {
-          return writeAssetStats2.chain(
-            () => ReaderPromise.fromError(thresholdFailures.left())
-          );
-        }
-
-        return ReaderPromise.parallel([
-          writeAssetStats2,
-          writeAssetDiffs({
+      // TODO: Use polymorphism to eliminate unsemantic branching off
+      // projectName. Also, use some semantic variable like isMonorepo.
+      projectName.toEither().cata(
+        () => ReaderPromise.of(currentAssetStats),
+        () => saveStats({
+          ...(previousAssetSizes.isRight() ? previousAssetSizes.right() : {}),
+          [projectName.some()]: currentAssetStats
+        })
+      ).chain(
+        assetStats => {
+          const writeAssetStats2 = writeAssetStats({
             rootPath: artifactsDirectory,
-            assetDiffs,
-            thresholdFailures: thresholdFailures.right()
-          }),
-          postFinalPrStatus(makeGitHubRequest)({
-            ...prStatusParams,
-            assetDiffs,
-            thresholdFailures: thresholdFailures.right()
-          })
-        ]);
-      });
-    }));
-};
+            assetStats
+          });
+          if(previousAssetSizes.isLeft()) {
+            return writeAssetStats2.chain(
+              () => ReaderPromise.fromError(previousAssetSizes.left())
+            );
+          }
 
-export default deps => opts => {
-  const prStatusParams = {
-    targetUrl: `${opts.buildUrl}#artifacts`,
-    label: compactAndJoin(': ', [
-      'Asset Sizes',
-      opts.projectName.orSome(null)
-    ]),
-    sha: opts.buildSha,
-    ...R.pick(['githubApiToken', 'repoOwner', 'repoName'], opts)
-  };
+          return ReaderPromise.fromReaderFn(config => {
+            const assetDiffs = diffAssets({
+              current: projectName.isSome()
+                ? assetStats[projectName.some()]
+                : assetStats,
+              original: projectName.isSome()
+                ? previousAssetSizes.right()[projectName.some()]
+                : previousAssetSizes.right(),
+              onMismatchFound: filepath => config.logMessage(
+                NoPreviousStatsFoundForFilepath(filepath).message
+              )
+            });
 
-  return threshUnchecked(deps)({prStatusParams, ...opts})
-    .chainErr(err => {
-      if(isWarningType(err)) {
-        return logMessage(err.message)
-          .chain(ReaderPromise.of);
-      }
+            return Promise.resolve(assetDiffs);
+          }).chain(assetDiffs => {
+            const thresholdFailures = getThresholdFailures({
+              failureThresholds,
+              assetStats: assetDiffs
+                |> R.toPairs
+                |> R.map(([filepath, {current: size}]) => ({filepath, size}))
+            });
 
-      return logError(err.message).chain(
-        () => deps.postErrorPrStatus(makeGitHubRequest)({
-          ...prStatusParams,
-          description: err.message
-        }).chainErr(e => logError(e.message))
-      ).chain(() => ReaderPromise.fromError(err));
-    });
+            if(thresholdFailures.isLeft()) {
+              return writeAssetStats2.chain(
+                () => ReaderPromise.fromError(thresholdFailures.left())
+              );
+            }
+
+            return ReaderPromise.parallel([
+              writeAssetStats2,
+              writeAssetDiffs({
+                rootPath: artifactsDirectory,
+                assetDiffs,
+                thresholdFailures: thresholdFailures.right()
+              }),
+              postFinalPrStatus(makeGitHubRequest)({
+                ...prStatusParams,
+                assetDiffs,
+                thresholdFailures: thresholdFailures.right()
+              })
+            ]);
+          });
+        }
+      )
+  ).chainErr(err => {
+    if(isWarningType(err)) {
+      return logMessage(err.message).chain(ReaderPromise.of);
+    }
+
+    return logError(err.message).chain(
+      () => postErrorPrStatus(makeGitHubRequest)({
+        ...prStatusParams,
+        description: err.message
+      }).chainErr(e => logError(e.message))
+    ).chain(() => ReaderPromise.fromError(err));
+  });
 };
