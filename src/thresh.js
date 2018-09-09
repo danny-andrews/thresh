@@ -13,7 +13,7 @@ import diffAssets from './core/diff-assets';
 import getThresholdFailures from './core/get-threshold-failures';
 import {NoOpenPullRequestFoundErr, NoPreviousStatsFoundForFilepath}
   from './core/errors';
-import {makeGitHubRequest, logMessage, logError} from './effects';
+import {logMessage, logError} from './effects';
 
 const warningTypes = [
   NoOpenPullRequestFoundErr,
