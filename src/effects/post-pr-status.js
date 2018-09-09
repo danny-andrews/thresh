@@ -4,6 +4,8 @@ import ncurry from 'ncurry';
 import {truncate} from '../shared';
 import formatAssetDiff from '../core/format-asset-diff';
 
+import makeGitHubRequestImpl from './make-github-request';
+
 const MAX_DESCRIPTION_LENGTH = 140;
 
 const PENDING_STATUS_TEXT =
@@ -16,7 +18,7 @@ const StatusStates = {
   ERROR: 'error'
 };
 
-const postPrStatus = makeGitHubRequest => ncurry(
+const postPrStatus = ncurry(
   [
     'sha',
     'state',
@@ -35,8 +37,9 @@ const postPrStatus = makeGitHubRequest => ncurry(
     description,
     githubApiToken,
     repoOwner,
-    repoName
-  }) => makeGitHubRequest({
+    repoName,
+    makeGitHubRequest
+  }) => (makeGitHubRequest || makeGitHubRequestImpl)({
     path: `repos/${repoOwner}/${repoName}/statuses/${sha}`,
     githubApiToken,
     fetchOpts: {
@@ -54,22 +57,18 @@ const postPrStatus = makeGitHubRequest => ncurry(
   })
 );
 
-export const postPendingPrStatus = _ =>
-  postPrStatus(_)({
-    state: StatusStates.PENDING,
-    description: PENDING_STATUS_TEXT
-  });
+export const postPendingPrStatus = postPrStatus({
+  state: StatusStates.PENDING,
+  description: PENDING_STATUS_TEXT
+});
 
-export const postErrorPrStatus = _ =>
-  postPrStatus(_)({state: StatusStates.ERROR});
+export const postErrorPrStatus = postPrStatus({state: StatusStates.ERROR});
 
-const postSuccessPrStatus = _ =>
-  postPrStatus(_)({state: StatusStates.SUCCESS});
+const postSuccessPrStatus = postPrStatus({state: StatusStates.SUCCESS});
 
-const postFailurePrStatus = _ =>
-  postPrStatus(_)({state: StatusStates.FAILURE});
+const postFailurePrStatus = postPrStatus({state: StatusStates.FAILURE});
 
-export const postFinalPrStatus = _ => ({
+export const postFinalPrStatus = ({
   assetDiffs,
   thresholdFailures,
   ...rest
@@ -87,11 +86,7 @@ export const postFinalPrStatus = _ => ({
 
   return (
     R.isEmpty(thresholdFailures)
-      ? postSuccessPrStatus(_)({
-        description: successDescription
-      })
-      : postFailurePrStatus(_)({
-        description: failureDescription
-      })
+      ? postSuccessPrStatus({description: successDescription})
+      : postFailurePrStatus({description: failureDescription})
   )({...rest});
 };

@@ -110,7 +110,7 @@ export default ({
 
   return validateFailureThresholdSchema2.chain(
     () => ReaderPromise.parallel([
-      postPendingPrStatus(makeGitHubRequest)(prStatusParams),
+      postPendingPrStatus(prStatusParams),
       makeArtifactDirectory({rootPath: artifactsDirectory}),
       readManifest(manifestFilepath)
         .map(assetStatMapToList)
@@ -177,7 +177,7 @@ export default ({
                 assetDiffs,
                 thresholdFailures: thresholdFailures.right()
               }),
-              postFinalPrStatus(makeGitHubRequest)({
+              postFinalPrStatus({
                 ...prStatusParams,
                 assetDiffs,
                 thresholdFailures: thresholdFailures.right()
@@ -192,10 +192,8 @@ export default ({
     }
 
     return logError(err.message).chain(
-      () => postErrorPrStatus(makeGitHubRequest)({
-        ...prStatusParams,
-        description: err.message
-      }).chainErr(e => logError(e.message))
+      () => postErrorPrStatus({...prStatusParams, description: err.message})
+        .chainErr(e => logError(e.message))
     ).chain(() => ReaderPromise.fromError(err));
   });
 };
