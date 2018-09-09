@@ -23,9 +23,9 @@ const subject = ({
   logError = console.error,
   logMessage = console.log,
   getFileStats = () => Promise.resolve({size: 452}),
-  postFinalPrStatus = () => ReaderPromise.of,
-  postPendingPrStatus = () => ReaderPromise.of,
-  postErrorPrStatus = () => ReaderPromise.of,
+  postFinalPrStatus = ReaderPromise.of,
+  postPendingPrStatus = ReaderPromise.of,
+  postErrorPrStatus = ReaderPromise.of,
   artifactStore = {
     getAssetStats: () => Either.Right(defaultAssetSize) |> ReaderPromise.of
   },
