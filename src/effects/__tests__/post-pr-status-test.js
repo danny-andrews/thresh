@@ -3,20 +3,17 @@ import expect, {createSpy} from 'expect';
 
 import ReaderPromise from '../../shared/reader-promise';
 import {postFinalPrStatus, postPendingPrStatus, postErrorPrStatus} from '../post-pr-status';
-import {firstCallFirstArgument} from '../../test/helpers';
+import {firstCallArguments} from '../../test/helpers';
 
-const subject = (opts = {}) =>
-  postErrorPrStatus({
-    sha: 'h8g94hg9',
-    targetUrl: 'info.com/53',
-    label: 'interesting info',
-    description: 'blah blah blah',
-    githubApiToken: 'h832hfo',
-    repoOwner: 'me',
-    repoName: 'my-repo',
-    makeGitHubRequest: ReaderPromise.of,
-    ...opts
-  }).run();
+const subject = ({
+  sha = 'h8g94hg9',
+  targetUrl = 'info.com/53',
+  label = 'interesting info',
+  description = 'blah blah blah',
+  makeGitHubRequest = ReaderPromise.of
+}) => postErrorPrStatus({sha, targetUrl, label, description}).run({
+  makeGitHubRequest
+});
 
 test('postFinalPrStatus posts success pr status to GitHub when there are no failures', () => {
   const spy = createSpy().andReturn(ReaderPromise.of());
@@ -36,16 +33,11 @@ test('postFinalPrStatus posts success pr status to GitHub when there are no fail
     },
     thresholdFailures: [],
     targetUrl: 'info.com/53',
-    label: 'interesting info',
-    repoOwner: 'me',
-    repoName: 'my-repo',
-    githubApiToken: 'h832hfo',
-    makeGitHubRequest: spy
-  }).run();
+    label: 'interesting info'
+  }).run({makeGitHubRequest: spy});
 
-  const {path, githubApiToken, fetchOpts} = firstCallFirstArgument(spy);
-  expect(path).toBe('repos/me/my-repo/statuses/h8g94hg9');
-  expect(githubApiToken).toBe('h832hfo');
+  const [path, fetchOpts] = firstCallArguments(spy);
+  expect(path).toBe('statuses/h8g94hg9');
   expect(fetchOpts).toEqual({
     method: 'POST',
     body: {
@@ -57,7 +49,7 @@ test('postFinalPrStatus posts success pr status to GitHub when there are no fail
   });
 });
 
-test.only('postFinalPrStatus posts failure pr status to GitHub when there are failures', () => {
+test('postFinalPrStatus posts failure pr status to GitHub when there are failures', () => {
   const spy = createSpy().andReturn(ReaderPromise.of());
   postFinalPrStatus({
     sha: 'h8g94hg9',
@@ -67,16 +59,11 @@ test.only('postFinalPrStatus posts failure pr status to GitHub when there are fa
       {message: 'vendor asset is too big'}
     ],
     targetUrl: 'info.com/53',
-    label: 'interesting info',
-    githubApiToken: 'h832hfo',
-    repoOwner: 'me',
-    repoName: 'my-repo',
-    makeGitHubRequest: spy
-  });
+    label: 'interesting info'
+  }).run({makeGitHubRequest: spy});
 
-  const {path, githubApiToken, fetchOpts} = firstCallFirstArgument(spy);
-  expect(path).toBe('repos/me/my-repo/statuses/h8g94hg9');
-  expect(githubApiToken).toBe('h832hfo');
+  const [path, fetchOpts] = firstCallArguments(spy);
+  expect(path).toBe('statuses/h8g94hg9');
   expect(fetchOpts).toEqual({
     method: 'POST',
     body: {
@@ -93,16 +80,11 @@ test('postPendingPrStatus makes request to post pending pr status to GitHub', ()
   postPendingPrStatus({
     sha: 'h8g94hg9',
     targetUrl: 'info.com/53',
-    label: 'interesting info',
-    githubApiToken: 'h832hfo',
-    repoOwner: 'me',
-    repoName: 'my-repo',
-    makeGitHubRequest: spy
-  });
+    label: 'interesting info'
+  }).run({makeGitHubRequest: spy});
 
-  const {path, githubApiToken, fetchOpts} = firstCallFirstArgument(spy);
-  expect(path).toBe('repos/me/my-repo/statuses/h8g94hg9');
-  expect(githubApiToken).toBe('h832hfo');
+  const [path, fetchOpts] = firstCallArguments(spy);
+  expect(path).toBe('statuses/h8g94hg9');
   expect(fetchOpts).toEqual({
     method: 'POST',
     body: {
@@ -121,15 +103,11 @@ test('postErrorPrStatus makes request to post error pr status to GitHub', () => 
     targetUrl: 'info.com/53',
     label: 'interesting info',
     description: 'Error encountered while doing thing...',
-    githubApiToken: 'h832hfo',
-    repoOwner: 'me',
-    repoName: 'my-repo',
     makeGitHubRequest: spy
   });
 
-  const {path, githubApiToken, fetchOpts} = firstCallFirstArgument(spy);
-  expect(path).toBe('repos/me/my-repo/statuses/h8g94hg9');
-  expect(githubApiToken).toBe('h832hfo');
+  const [path, fetchOpts] = firstCallArguments(spy);
+  expect(path).toBe('statuses/h8g94hg9');
   expect(fetchOpts).toEqual({
     method: 'POST',
     body: {
@@ -149,7 +127,7 @@ test('postErrorPrStatus truncates description to 140 characters (using ellipsis)
     makeGitHubRequest: spy
   });
 
-  const {fetchOpts} = firstCallFirstArgument(spy);
+  const [, fetchOpts] = firstCallArguments(spy);
 
   // Sanity check
   expect(message.length).toBeGreaterThan(140);

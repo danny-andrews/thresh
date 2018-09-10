@@ -44,8 +44,7 @@ export default ({
     pullRequestId,
     artifactsDirectory,
     repoOwner,
-    repoName,
-    githubApiToken
+    repoName
   } = opts;
   const failureThresholds = opts.failureThresholds.map(
     threshold => ({
@@ -59,21 +58,13 @@ export default ({
       'Asset Sizes',
       opts.projectName.orSome(null)
     ]),
-    sha: opts.buildSha,
-    githubApiToken,
-    repoOwner,
-    repoName
+    sha: opts.buildSha
   };
 
   const retrieveAssetSizes2 = () =>
     pullRequestId.toEither().cata(
       () => NoOpenPullRequestFoundErr() |> Either.Left |> ReaderPromise.of,
-      prId => getBaseBranch({
-        repoOwner,
-        repoName,
-        pullRequestId: prId,
-        githubApiToken
-      }).chain(
+      prId => getBaseBranch(prId).chain(
         baseBranch => artifactStore.getAssetStats({
           pullRequestId: prId,
           baseBranch,

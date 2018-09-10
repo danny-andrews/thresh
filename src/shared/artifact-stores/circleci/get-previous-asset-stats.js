@@ -16,20 +16,21 @@ export default ({
 }) => {
   const repoProjectPath = [repoOwner, repoName].join('/');
 
-  const getRecentBuilds = branch =>
-    makeCircleRequest({
-      path: `project/github/${repoProjectPath}/tree/${branch}`,
-      circleApiToken
-    });
+  const getRecentBuilds = branch => makeCircleRequest({
+    path: `project/github/${repoProjectPath}/tree/${branch}`,
+    circleApiToken
+  });
 
-  const getBuildArtifacts = buildNumber =>
-    makeCircleRequest({
-      path: `project/github/${repoProjectPath}/${buildNumber}/artifacts`,
-      circleApiToken
-    });
+  const getBuildArtifacts = buildNumber => makeCircleRequest({
+    path: `project/github/${repoProjectPath}/${buildNumber}/artifacts`,
+    circleApiToken
+  });
 
-  const getAssetSizeArtifact = assetSizeArtifactUrl =>
-    makeCircleRequest({url: assetSizeArtifactUrl, raw: true, circleApiToken});
+  const getAssetSizeArtifact = assetSizeArtifactUrl => makeCircleRequest({
+    url: assetSizeArtifactUrl,
+    raw: true,
+    circleApiToken
+  });
 
   return getRecentBuilds(baseBranch).chain(recentBuilds => {
     if(recentBuilds.length === 0) {

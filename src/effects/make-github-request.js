@@ -41,25 +41,23 @@ const mapError = ({url, context}) =>
     ])
   )();
 
-export default ({path, githubApiToken, fetchOpts = {}}) => {
-  const body = serializer(fetchOpts.body);
-  const url = `${HOSTNAME}/${path}`;
+export default ({githubApiToken, repoOwner, repoName}) =>
+  (path, {body, headers, method, ...rest} = {}) => {
+    const url = `${HOSTNAME}/repos/${repoOwner}/${repoName}/${path}`;
 
-  const headers = {
-    Accept: 'application/vnd.github.v3+json',
-    Authorization: `token ${githubApiToken}`,
-    ...(fetchOpts.method === 'POST'
-      ? {'Content-Type': 'application/json'}
-      : {}
-    ),
-    ...fetchOpts.headers
+    return request(url, {
+      headers: {
+        Accept: 'application/vnd.github.v3+json',
+        Authorization: `token ${githubApiToken}`,
+        ...(method === 'POST' ? {'Content-Type': 'application/json'} : {}),
+        ...headers
+      },
+      body: serializer(body),
+      method,
+      ...rest
+    })
+      .map(deserializer)
+      .mapErr(
+        ({context, constructor}) => mapError({url, context})(constructor)
+      );
   };
-
-  return request(url, {
-    headers,
-    body,
-    ...R.omit(['headers', 'body'], fetchOpts)
-  })
-    .map(deserializer)
-    .mapErr(({context, constructor}) => mapError({url, context})(constructor));
-};

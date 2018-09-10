@@ -3,8 +3,7 @@ import ncurry from 'ncurry';
 
 import {truncate} from '../shared';
 import formatAssetDiff from '../core/format-asset-diff';
-
-import makeGitHubRequestImpl from './make-github-request';
+import ReaderPromise from '../shared/reader-promise';
 
 const MAX_DESCRIPTION_LENGTH = 140;
 
@@ -19,42 +18,21 @@ const StatusStates = {
 };
 
 const postPrStatus = ncurry(
-  [
-    'sha',
-    'state',
-    'targetUrl',
-    'label',
-    'description',
-    'githubApiToken',
-    'repoOwner',
-    'repoName'
-  ],
-  ({
-    sha,
-    state,
-    targetUrl,
-    label,
-    description,
-    githubApiToken,
-    repoOwner,
-    repoName,
-    makeGitHubRequest
-  }) => (makeGitHubRequest || makeGitHubRequestImpl)({
-    path: `repos/${repoOwner}/${repoName}/statuses/${sha}`,
-    githubApiToken,
-    fetchOpts: {
-      method: 'POST',
-      body: {
-        state,
-        targetUrl,
-        context: label,
-        description: truncate(
-          {maxSize: MAX_DESCRIPTION_LENGTH},
-          description
-        )
+  ['sha', 'state', 'targetUrl', 'label', 'description'],
+  ({sha, state, targetUrl, label, description}) => ReaderPromise.fromReaderFn(
+    config => config.makeGitHubRequest(
+      `statuses/${sha}`,
+      {
+        method: 'POST',
+        body: {
+          state,
+          targetUrl,
+          context: label,
+          description: truncate({maxSize: MAX_DESCRIPTION_LENGTH}, description)
+        }
       }
-    }
-  })
+    ).run(config)
+  )
 );
 
 export const postPendingPrStatus = postPrStatus({

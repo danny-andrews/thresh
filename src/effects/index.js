@@ -11,4 +11,5 @@ export {default as writeAssetStats} from './write-asset-stats';
 export {default as saveStats} from './save-stats';
 export {default as getAssetFileStats} from './get-asset-file-stats';
 export {default as getBaseBranch} from './get-base-branch';
+export {default as MakeGitHubRequest} from './make-github-request';
 export * from './base';
