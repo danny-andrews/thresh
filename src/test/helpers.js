@@ -26,3 +26,5 @@ export const FakeRequest = (handlers = []) => (...args) => {
 };
 
 export const firstCallFirstArgument = R.path(['calls', 0, 'arguments', 0]);
+
+export const firstCallArguments = R.path(['calls', 0, 'arguments']);

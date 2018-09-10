@@ -1,7 +1,9 @@
-import makeGitHubRequest from './make-github-request';
+import R from 'ramda';
 
-export default ({repoOwner, repoName, pullRequestId, githubApiToken}) =>
-  makeGitHubRequest({
-    path: `repos/${repoOwner}/${repoName}/pulls/${pullRequestId}`,
-    githubApiToken
-  }).map(prData => prData.base.ref);
+import ReaderPromise from '../shared/reader-promise';
+
+export default pullRequestId => ReaderPromise.fromReaderFn(
+  config => config.makeGitHubRequest(`pulls/${pullRequestId}`)
+    .map(R.path(['base', 'ref']))
+    .run(config)
+);

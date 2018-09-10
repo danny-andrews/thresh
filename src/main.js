@@ -14,10 +14,11 @@ import {
   writeAssetStats,
   writeAssetDiffs,
   getAssetFileStats,
-  getBaseBranch
+  getBaseBranch,
+  MakeGitHubRequest
 } from './effects';
 
-export default options => thresh({
+export default ({githubApiToken, ...options}) => thresh({
   postFinalPrStatus,
   postPendingPrStatus,
   postErrorPrStatus,
@@ -38,5 +39,10 @@ export default options => thresh({
   mkdir,
   getFileStats,
   logMessage: console.log,
-  logError: console.error
+  logError: console.error,
+  makeGitHubRequest: MakeGitHubRequest({
+    githubApiToken,
+    repoOwner: options.repoOwner,
+    repoName: options.repoName
+  })
 });

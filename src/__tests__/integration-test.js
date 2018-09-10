@@ -1,6 +1,7 @@
 import test from 'ava';
 import {Maybe} from 'monet';
 
+import ReaderPromise from '../shared/reader-promise';
 import {
   postFinalPrStatus,
   postPendingPrStatus,
@@ -28,9 +29,7 @@ const subject = thresh({
   postFinalPrStatus,
   postPendingPrStatus,
   postErrorPrStatus,
-  artifactStore: circleciArtifactStore({
-    circleApiToken: 'fdj8ehf'
-  }),
+  artifactStore: circleciArtifactStore({circleApiToken: 'fdj8ehf'}),
   makeArtifactDirectory,
   readManifest,
   getAssetFileStats,
@@ -71,17 +70,17 @@ test('stupid basic integration test (FIXME: need to actually make assertions)', 
     repoOwner: 'me',
     repoName: 'my-repo',
     pullRequestId: Maybe.of('f820yf3h'),
-    artifactsDirectory: 'lfjk3208hohefi4/artifacts',
-    githubApiToken: '8hfey89r'
+    artifactsDirectory: 'lfjk3208hohefi4/artifacts'
   }).run({
     writeFile: () => Promise.resolve(),
     readFile: () => Promise.resolve('{}'),
     resolve: () => Promise.resolve(),
-    request: fakeRequest,
     db: () => Promise.resolve(),
     mkdir: () => Promise.resolve(),
     getFileStats: () => Promise.resolve({}),
     logMessage: () => {},
-    logError: () => {}
+    logError: () => {},
+    request: fakeRequest,
+    makeGitHubRequest: () => ReaderPromise.of({base: {}})
   });
 });

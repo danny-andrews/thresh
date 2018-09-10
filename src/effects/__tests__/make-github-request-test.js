@@ -8,23 +8,30 @@ import {
   InvalidResponseError
 } from '../../shared';
 
-const subject = (opts = {}) => {
-  const {
-    githubApiToken = 'fjidq8y32',
-    path = 'owner/repo',
-    request,
-    ...rest
-  } = opts;
+const subject = ({
+  githubApiToken = 'fjidq8y32',
+  repoOwner = 'owner',
+  repoName = 'repo',
+  path = 'my-stuff',
+  fetchOpts,
+  request
+} = {}) => makeGithubRequest({
+  githubApiToken,
+  repoOwner,
+  repoName
+})(path, fetchOpts).run({request});
 
-  return makeGithubRequest({githubApiToken, path, ...rest}).run({request});
-};
-
-test('sends request to https://api.github.com + path', () => {
+test('sends request to correct path', () => {
   const spy = createSpy().andReturn(Promise.resolve());
-  subject({path: 'me/my-repo', request: spy});
+  subject({
+    repoOwner: 'me',
+    repoName: 'my-repo',
+    path: 'my-path',
+    request: spy
+  });
 
   const [actual] = spy.calls[0].arguments;
-  expect(actual).toBe('https://api.github.com/me/my-repo');
+  expect(actual).toBe('https://api.github.com/repos/me/my-repo/my-path');
 });
 
 test('sets Accept header to application/vnd.github.v3+json', () => {
