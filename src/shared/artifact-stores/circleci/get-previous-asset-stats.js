@@ -2,35 +2,25 @@ import {Either} from 'monet';
 
 import ReaderPromise from '../../reader-promise';
 
-import makeCircleRequest from './make-circle-request';
 import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr} from './errors';
 
 const CircleCiBuildStatuses = {SUCCESS: 'success'};
 
-export default ({
-  assetSizesFilepath,
-  circleApiToken,
-  repoOwner,
-  repoName,
-  baseBranch
-}) => {
-  const repoProjectPath = [repoOwner, repoName].join('/');
+export default ({assetSizesFilepath, baseBranch}) => {
+  const getRecentBuilds = branch => ReaderPromise.fromReaderFn(
+    config => config.makeCircleRequest({path: `tree/${branch}`}).run(config)
+  );
 
-  const getRecentBuilds = branch => makeCircleRequest({
-    path: `project/github/${repoProjectPath}/tree/${branch}`,
-    circleApiToken
-  });
+  const getBuildArtifacts = buildNumber => ReaderPromise.fromReaderFn(
+    config => config.makeCircleRequest({path: `${buildNumber}/artifacts`})
+      .run(config)
+  );
 
-  const getBuildArtifacts = buildNumber => makeCircleRequest({
-    path: `project/github/${repoProjectPath}/${buildNumber}/artifacts`,
-    circleApiToken
-  });
-
-  const getAssetSizeArtifact = assetSizeArtifactUrl => makeCircleRequest({
-    url: assetSizeArtifactUrl,
-    raw: true,
-    circleApiToken
-  });
+  const getAssetSizeArtifact = assetSizeArtifactUrl =>
+    ReaderPromise.fromReaderFn(
+      config => config.makeCircleRequest({url: assetSizeArtifactUrl, raw: true})
+        .run(config)
+    );
 
   return getRecentBuilds(baseBranch).chain(recentBuilds => {
     if(recentBuilds.length === 0) {
