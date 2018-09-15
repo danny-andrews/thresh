@@ -68,7 +68,7 @@ export default ({
         baseBranch => artifactStore.getAssetStats({
           baseBranch,
           assetSizesFilepath: ASSET_STATS_FILENAME
-        })
+        }) |> ReaderPromise.fromPromise
       )
     );
 
