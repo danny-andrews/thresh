@@ -29,7 +29,7 @@ const subject = thresh({
   postPendingPrStatus,
   postErrorPrStatus,
   artifactStore: {
-    getAssetStats: () => ReaderPromise.of(
+    getAssetStats: () => Promise.resolve(
       Either.Right({})
     )
   },
