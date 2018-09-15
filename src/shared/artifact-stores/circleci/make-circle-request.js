@@ -1,5 +1,6 @@
 import {camelizeKeys} from 'humps';
 import R from 'ramda';
+import {sprintf} from 'sprintf-js';
 
 import ReaderPromise from '../../reader-promise';
 import {NoResponseError, Non200ResponseError, InvalidResponseError, switchCaseF}
@@ -20,17 +21,28 @@ const mapError = ({url, context}) => switchCaseF(
   ])
 )();
 
-export default ({path, url, fetchOpts = {}, raw = false, circleApiToken}) => {
-  const finalUrl = `${url || [API_ROOT, path].join('/')}`
-    + `?circle-token=${circleApiToken}`;
-
-  return request(finalUrl, {
-    headers: {Accept: 'application/json', ...fetchOpts.headers},
-    ...R.omit('headers', fetchOpts)
-  }).map(raw ? R.identity : circleDeserializer)
-    .chainErr(
-      ({constructor, context}) => ReaderPromise.fromError(
-        mapError({url: finalUrl, context})(constructor)
-      )
+export default ({circleApiToken, repoOwner, repoName}) =>
+  ({path, url, fetchOpts = {}, raw = false}) => {
+    const finalUrl = sprintf(
+      '%s?circle-token=%s',
+      url || [
+        API_ROOT,
+        'project',
+        'github',
+        repoOwner,
+        repoName,
+        path
+      ].join('/'),
+      circleApiToken
     );
-};
+
+    return request(finalUrl, {
+      headers: {Accept: 'application/json', ...fetchOpts.headers},
+      ...R.omit('headers', fetchOpts)
+    }).map(raw ? R.identity : circleDeserializer)
+      .chainErr(
+        ({constructor, context}) => ReaderPromise.fromError(
+          mapError({url: finalUrl, context})(constructor)
+        )
+      );
+  };

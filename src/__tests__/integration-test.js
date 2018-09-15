@@ -1,5 +1,5 @@
 import test from 'ava';
-import {Maybe} from 'monet';
+import {Maybe, Either} from 'monet';
 
 import ReaderPromise from '../shared/reader-promise';
 import {
@@ -15,7 +15,6 @@ import {
   getBaseBranch
 } from '../effects';
 import thresh from '../thresh';
-import circleciArtifactStore from '../shared/artifact-stores/circleci';
 import {FakeRequest} from '../test/helpers';
 import {
   GetBaseBranchHandler,
@@ -29,7 +28,11 @@ const subject = thresh({
   postFinalPrStatus,
   postPendingPrStatus,
   postErrorPrStatus,
-  artifactStore: circleciArtifactStore({circleApiToken: 'fdj8ehf'}),
+  artifactStore: {
+    getAssetStats: () => Promise.resolve(
+      Either.Right({})
+    )
+  },
   makeArtifactDirectory,
   readManifest,
   getAssetFileStats,

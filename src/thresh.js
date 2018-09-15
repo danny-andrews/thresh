@@ -36,29 +36,29 @@ export default ({
   writeAssetDiffs,
   artifactStore,
   getBaseBranch
-}) => opts => {
-  const {
-    manifestFilepath,
-    outputDirectory,
-    projectName,
-    pullRequestId,
-    artifactsDirectory,
-    repoOwner,
-    repoName
-  } = opts;
-  const failureThresholds = opts.failureThresholds.map(
+}) => ({
+  manifestFilepath,
+  outputDirectory,
+  projectName,
+  pullRequestId,
+  artifactsDirectory,
+  buildSha,
+  buildUrl,
+  failureThresholds: failureThresholdsWithoutDefaults
+}) => {
+  const failureThresholds = failureThresholdsWithoutDefaults.map(
     threshold => ({
       strategy: DFAULT_FAILURE_THRESHOLD_STRATEGY,
       ...threshold
     })
   );
   const prStatusParams = {
-    targetUrl: `${opts.buildUrl}#artifacts`,
+    targetUrl: `${buildUrl}#artifacts`,
     label: compactAndJoin(': ', [
       'Asset Sizes',
-      opts.projectName.orSome(null)
+      projectName.orSome(null)
     ]),
-    sha: opts.buildSha
+    sha: buildSha
   };
 
   const retrieveAssetSizes2 = () =>
@@ -66,12 +66,9 @@ export default ({
       () => NoOpenPullRequestFoundErr() |> Either.Left |> ReaderPromise.of,
       prId => getBaseBranch(prId).chain(
         baseBranch => artifactStore.getAssetStats({
-          pullRequestId: prId,
           baseBranch,
-          assetSizesFilepath: ASSET_STATS_FILENAME,
-          repoOwner,
-          repoName
-        })
+          assetSizesFilepath: ASSET_STATS_FILENAME
+        }) |> ReaderPromise.fromPromise
       )
     );
 

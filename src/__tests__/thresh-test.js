@@ -27,7 +27,9 @@ const subject = ({
   postPendingPrStatus = ReaderPromise.of,
   postErrorPrStatus = ReaderPromise.of,
   artifactStore = {
-    getAssetStats: () => Either.Right(defaultAssetSize) |> ReaderPromise.of
+    getAssetStats: () => Promise.resolve(
+      Either.Right(defaultAssetSize)
+    )
   },
   makeArtifactDirectory = () => ReaderPromise.of(),
   readManifest = () => ReaderPromise.of({'app.js': 'app.js'}),
@@ -85,7 +87,9 @@ test('happy path (makes artifact directory, writes asset stats to file, and writ
 
   return subject({
     artifactStore: {
-      getAssetStats: () => Either.Right(originalAssetSizes) |> ReaderPromise.of
+      getAssetStats: () => Promise.resolve(
+        Either.Right(originalAssetSizes)
+      )
     },
     failureThresholds: [{targets: 'app.js', maxSize: 50}],
     outputDirectory: 'dist',
@@ -243,7 +247,9 @@ test('saves stats to local db when project name is given', () => {
   return subject({
     projectName: Maybe.of('my-proj'),
     artifactStore: {
-      getAssetStats: () => Either.Right(originalAssetSizes) |> ReaderPromise.of
+      getAssetStats: () => Promise.resolve(
+        Either.Right(originalAssetSizes)
+      )
     },
     getAssetFileStats: () => ReaderPromise.of([{
       filename: 'app.js',
@@ -280,12 +286,14 @@ test('writes message to the console when no previous stat found for given filepa
       path: 'dist/vendor.js'
     }]),
     artifactStore: {
-      getAssetStats: () => Either.Right({
-        'app.js': {
-          size: 100,
-          path: 'dist/app.js'
-        }
-      }) |> ReaderPromise.of
+      getAssetStats: () => Promise.resolve(
+        Either.Right({
+          'app.js': {
+            size: 100,
+            path: 'dist/app.js'
+          }
+        })
+      )
     }
   }).then(() => {
     expect(logMessageSpy)

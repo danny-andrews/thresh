@@ -18,7 +18,12 @@ import {
   MakeGitHubRequest
 } from './effects';
 
-export default ({githubApiToken, ...options}) => thresh({
+export default ({
+  githubApiToken,
+  repoOwner,
+  repoName,
+  ...options
+}) => thresh({
   postFinalPrStatus,
   postPendingPrStatus,
   postErrorPrStatus,
@@ -42,7 +47,7 @@ export default ({githubApiToken, ...options}) => thresh({
   logError: console.error,
   makeGitHubRequest: MakeGitHubRequest({
     githubApiToken,
-    repoOwner: options.repoOwner,
-    repoName: options.repoName
+    repoOwner,
+    repoName
   })
 });

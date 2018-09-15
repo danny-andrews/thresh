@@ -1,16 +1,16 @@
-import getPreviousAssetStats from './get-previous-asset-stats';
+import {request} from '../..';
 
-export default ({circleApiToken}) => ({
-  getAssetStats: ({
-    assetSizesFilepath,
-    baseBranch,
-    repoOwner,
-    repoName
-  }) => getPreviousAssetStats({
-    circleApiToken,
-    assetSizesFilepath,
-    baseBranch,
-    repoOwner,
-    repoName
-  })
+import getPreviousAssetStats from './get-previous-asset-stats';
+import MakeCircleRequest from './make-circle-request';
+
+export default ({circleApiToken, repoOwner, repoName}) => ({
+  getAssetStats: ({assetSizesFilepath, baseBranch}) =>
+    getPreviousAssetStats({assetSizesFilepath, baseBranch}).run({
+      makeCircleRequest: MakeCircleRequest({
+        circleApiToken,
+        repoOwner,
+        repoName
+      }),
+      request
+    })
 });
