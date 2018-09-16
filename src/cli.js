@@ -20,6 +20,7 @@ import {CliOptionInvalidJsonErr, MissingCliOptionErr} from './core/errors';
 import CircleciAdapter from './shared/ci-adapters/circleci';
 import CircleciArtifactStore from './shared/artifact-stores/circleci';
 import {MakeGitHubRequest} from './effects';
+import ReaderPromise from './shared/reader-promise';
 
 const {
   buildSha,
@@ -43,7 +44,7 @@ const optionDefinitions = [
 
 const cliOptions = commandLineArgs(optionDefinitions);
 
-readFile(cliOptions['config-path'])
+export const thingy = () => readFile(cliOptions['config-path'])
   .then(parseTOML)
   .then(config => config.right())
   .then(({
@@ -90,38 +91,43 @@ readFile(cliOptions['config-path'])
       projectName,
       outputDirectory,
       failureThresholds
-    }) => main({
-      manifestFilepath,
-      projectName: Maybe.fromNull(projectName),
-      outputDirectory,
-      pullRequestId,
-      failureThresholds,
-      buildSha,
-      buildUrl,
-      artifactsDirectory
-    }).run({
-      writeFile,
-      readFile,
-      resolve: path.resolve,
-      request,
-      db: Database('my.db'),
-      mkdir,
-      getFileStats,
-      logMessage: console.log, // eslint-disable-line no-console
-      logError: console.error, // eslint-disable-line no-console
-      makeGitHubRequest: MakeGitHubRequest({
-        githubApiToken: process.env.GITHUB_API_TOKEN,
-        repoOwner,
-        repoName
-      }),
-      artifactStore: CircleciArtifactStore({
-        circleApiToken: process.env.CIRCLE_API_TOKEN,
-        repoOwner,
-        repoName
+    }) => ReaderPromise.fromReaderFn(
+      config => main({
+        manifestFilepath,
+        projectName: Maybe.fromNull(projectName),
+        outputDirectory,
+        pullRequestId,
+        failureThresholds,
+        buildSha,
+        buildUrl,
+        artifactsDirectory
+      }).run({
+        makeGitHubRequest: MakeGitHubRequest({
+          githubApiToken: process.env.GITHUB_API_TOKEN,
+          repoOwner,
+          repoName
+        }),
+        artifactStore: CircleciArtifactStore({
+          circleApiToken: process.env.CIRCLE_API_TOKEN,
+          repoOwner,
+          repoName
+        }),
+        ...config
       })
-    })
-  )
-  .catch(err => {
-    console.error(err); // eslint-disable-line no-console
-    process.exit(1); // eslint-disable-line no-process-exit
-  });
+    )
+  );
+
+thingy().then(program => program.run({
+  writeFile,
+  readFile,
+  resolve: path.resolve,
+  request,
+  db: Database('my.db'),
+  mkdir,
+  getFileStats,
+  logMessage: console.log, // eslint-disable-line no-console
+  logError: console.error // eslint-disable-line no-console
+})).catch(err => {
+  console.error(err); // eslint-disable-line no-console
+  process.exit(1); // eslint-disable-line no-process-exit
+});
