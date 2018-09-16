@@ -17,8 +17,8 @@ import {
   request
 } from './shared';
 import {CliOptionInvalidJsonErr, MissingCliOptionErr} from './core/errors';
-import circleciAdapter from './shared/ci-adapters/circleci';
-import circleciArtifactStore from './shared/artifact-stores/circleci';
+import CircleciAdapter from './shared/ci-adapters/circleci';
+import CircleciArtifactStore from './shared/artifact-stores/circleci';
 import {MakeGitHubRequest} from './effects';
 
 const {
@@ -28,7 +28,7 @@ const {
   repoOwner,
   repoName,
   pullRequestId
-} = circleciAdapter().getEnvVars();
+} = CircleciAdapter().getEnvVars();
 
 const optionDefinitions = [
   {name: 'manifest-path'},
@@ -114,7 +114,7 @@ readFile(cliOptions['config-path'])
         repoOwner,
         repoName
       }),
-      artifactStore: circleciArtifactStore({
+      artifactStore: CircleciArtifactStore({
         circleApiToken: process.env.CIRCLE_API_TOKEN,
         repoOwner,
         repoName

@@ -32,3 +32,11 @@ export const logMessage = (...args) => ReaderPromise.fromReaderFn(
 export const logError = (...args) => ReaderPromise.fromReaderFn(
   ({logError}) => Promise.resolve(logError(...args))
 );
+
+export const readEnvVar = name => ReaderPromise.fromReaderFn(
+  ({env}) => env[name]
+);
+
+export const writeEnvVar = (name, value) => ReaderPromise.fromReaderFn(
+  ({env}) => { env[name] = value; }
+);
