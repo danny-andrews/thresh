@@ -3,12 +3,23 @@ import R from 'ramda';
 import assert from 'assert';
 import commandLineArgs from 'command-line-args';
 import {Maybe} from 'monet';
+import path from 'path';
 
 import main from './main';
-import {parseJSON, parseTOML, readFile} from './shared';
+import {
+  parseJSON,
+  parseTOML,
+  readFile,
+  mkdir,
+  writeFile,
+  getFileStats,
+  Database,
+  request
+} from './shared';
 import {CliOptionInvalidJsonErr, MissingCliOptionErr} from './core/errors';
 import circleciAdapter from './shared/ci-adapters/circleci';
 import circleciArtifactStore from './shared/artifact-stores/circleci';
+import {MakeGitHubRequest} from './effects';
 
 const {
   buildSha,
@@ -18,14 +29,6 @@ const {
   repoName,
   pullRequestId
 } = circleciAdapter().getEnvVars();
-
-const githubApiToken = process.env.GITHUB_API_TOKEN;
-
-const artifactStore = circleciArtifactStore({
-  circleApiToken: process.env.CIRCLE_API_TOKEN,
-  repoOwner,
-  repoName
-});
 
 const optionDefinitions = [
   {name: 'manifest-path'},
@@ -95,11 +98,27 @@ readFile(cliOptions['config-path'])
       failureThresholds,
       buildSha,
       buildUrl,
-      repoOwner,
-      repoName,
-      artifactsDirectory,
-      artifactStore,
-      githubApiToken
+      artifactsDirectory
+    }).run({
+      writeFile,
+      readFile,
+      resolve: path.resolve,
+      request,
+      db: Database('my.db'),
+      mkdir,
+      getFileStats,
+      logMessage: console.log, // eslint-disable-line no-console
+      logError: console.error, // eslint-disable-line no-console
+      makeGitHubRequest: MakeGitHubRequest({
+        githubApiToken: process.env.GITHUB_API_TOKEN,
+        repoOwner,
+        repoName
+      }),
+      artifactStore: circleciArtifactStore({
+        circleApiToken: process.env.CIRCLE_API_TOKEN,
+        repoOwner,
+        repoName
+      })
     })
   )
   .catch(err => {
