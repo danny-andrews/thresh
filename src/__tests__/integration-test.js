@@ -2,18 +2,6 @@ import test from 'ava';
 import {Maybe, Either} from 'monet';
 
 import ReaderPromise from '../shared/reader-promise';
-import {
-  postFinalPrStatus,
-  postPendingPrStatus,
-  postErrorPrStatus,
-  makeArtifactDirectory,
-  readManifest,
-  saveStats,
-  writeAssetStats,
-  writeAssetDiffs,
-  getAssetFileStats,
-  getBaseBranch
-} from '../effects';
 import main from '../main';
 import {FakeRequest} from '../test/helpers';
 import {
@@ -23,20 +11,6 @@ import {
   GetArtifactHandler,
   PostPrStatusHandler
 } from '../shared/artifact-stores/circleci/test/requests';
-
-const subject = (opts = {}) => main({
-  postFinalPrStatus,
-  postPendingPrStatus,
-  postErrorPrStatus,
-  makeArtifactDirectory,
-  readManifest,
-  getAssetFileStats,
-  saveStats,
-  writeAssetStats,
-  writeAssetDiffs,
-  getBaseBranch,
-  ...opts
-});
 
 const fakeRequest = FakeRequest([
   GetBaseBranchHandler({
@@ -58,7 +32,7 @@ const fakeRequest = FakeRequest([
 ]);
 
 test('stupid basic integration test (FIXME: need to actually make assertions)', () => {
-  subject({
+  main({
     statsFilepath: 'dist/stats.js',
     manifestFilepath: 'dist/manifest.json',
     projectName: Maybe.None(),
