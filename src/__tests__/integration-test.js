@@ -14,7 +14,7 @@ import {
   getAssetFileStats,
   getBaseBranch
 } from '../effects';
-import thresh from '../thresh';
+import main from '../main';
 import {FakeRequest} from '../test/helpers';
 import {
   GetBaseBranchHandler,
@@ -24,22 +24,18 @@ import {
   PostPrStatusHandler
 } from '../shared/artifact-stores/circleci/test/requests';
 
-const subject = thresh({
+const subject = (opts = {}) => main({
   postFinalPrStatus,
   postPendingPrStatus,
   postErrorPrStatus,
-  artifactStore: {
-    getAssetStats: () => Promise.resolve(
-      Either.Right({})
-    )
-  },
   makeArtifactDirectory,
   readManifest,
   getAssetFileStats,
   saveStats,
   writeAssetStats,
   writeAssetDiffs,
-  getBaseBranch
+  getBaseBranch,
+  ...opts
 });
 
 const fakeRequest = FakeRequest([
@@ -84,6 +80,11 @@ test('stupid basic integration test (FIXME: need to actually make assertions)', 
     logMessage: () => {},
     logError: () => {},
     request: fakeRequest,
-    makeGitHubRequest: () => ReaderPromise.of({base: {}})
+    makeGitHubRequest: () => ReaderPromise.of({base: {}}),
+    artifactStore: {
+      getAssetStats: () => Promise.resolve(
+        Either.Right({})
+      )
+    }
   });
 });

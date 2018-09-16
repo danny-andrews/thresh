@@ -8,7 +8,7 @@ import {
   InvalidFailureThresholdOptionErr,
   NoPreviousStatsFoundForFilepath
 } from '../core/errors';
-import thresh from '../thresh';
+import main from '../main';
 import ReaderPromise from '../shared/reader-promise';
 import {firstCallFirstArgument} from '../test/helpers';
 
@@ -43,36 +43,34 @@ const subject = ({
   writeAssetStats = ReaderPromise.of,
   writeAssetDiffs = ReaderPromise.of,
   ...rest
-} = {}) =>
-  thresh({
-    postFinalPrStatus,
-    postPendingPrStatus,
-    postErrorPrStatus,
-    artifactStore,
-    makeArtifactDirectory,
-    readManifest,
-    getAssetFileStats,
-    saveStats,
-    writeAssetStats,
-    writeAssetDiffs,
-    getBaseBranch
-  })({
-    statsFilepath: 'dist/stats.js',
-    projectName: Maybe.None(),
-    outputDirectory: '',
-    failureThresholds: [],
-    buildSha: '8fdhihfj',
-    buildUrl: 'http://circle.com/my-build',
-    pullRequestId: Maybe.of('f820yf3h'),
-    artifactsDirectory: 'lfjk3208hohefi4/artifacts',
-    circleApiToken: '93hfdkhf',
-    githubApiToken: '8hfey89r',
-    ...rest
-  }).run({
-    logMessage,
-    logError,
-    getFileStats
-  });
+} = {}) => main({
+  postFinalPrStatus,
+  postPendingPrStatus,
+  postErrorPrStatus,
+  makeArtifactDirectory,
+  readManifest,
+  getAssetFileStats,
+  saveStats,
+  writeAssetStats,
+  writeAssetDiffs,
+  getBaseBranch,
+  statsFilepath: 'dist/stats.js',
+  projectName: Maybe.None(),
+  outputDirectory: '',
+  failureThresholds: [],
+  buildSha: '8fdhihfj',
+  buildUrl: 'http://circle.com/my-build',
+  pullRequestId: Maybe.of('f820yf3h'),
+  artifactsDirectory: 'lfjk3208hohefi4/artifacts',
+  circleApiToken: '93hfdkhf',
+  githubApiToken: '8hfey89r',
+  ...rest
+}).run({
+  logMessage,
+  logError,
+  getFileStats,
+  artifactStore
+});
 
 test('happy path (makes artifact directory, writes asset stats to file, and writes asset diffs to file)', () => {
   const writeAssetDiffsSpy = createSpy().andReturn(ReaderPromise.of());
