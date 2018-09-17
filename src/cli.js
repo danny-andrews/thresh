@@ -3,19 +3,10 @@ import R from 'ramda';
 import assert from 'assert';
 import commandLineArgs from 'command-line-args';
 import {Maybe} from 'monet';
-import path from 'path';
 
 import main from './main';
-import {
-  parseJSON,
-  parseTOML,
-  readFile,
-  mkdir,
-  writeFile,
-  getFileStats,
-  Database,
-  request
-} from './shared';
+import {parseJSON, parseTOML, readFile} from './shared';
+import ReaderPromise from './shared/reader-promise';
 import {CliOptionInvalidJsonErr, MissingCliOptionErr} from './core/errors';
 import circleciAdapter from './shared/ci-adapters/circleci';
 import circleciArtifactStore from './shared/artifact-stores/circleci';
@@ -25,9 +16,9 @@ const {
   buildSha,
   buildUrl,
   artifactsDirectory,
+  pullRequestId,
   repoOwner,
-  repoName,
-  pullRequestId
+  repoName
 } = circleciAdapter().getEnvVars();
 
 const optionDefinitions = [
@@ -43,7 +34,7 @@ const optionDefinitions = [
 
 const cliOptions = commandLineArgs(optionDefinitions);
 
-readFile(cliOptions['config-path'])
+export default () => readFile(cliOptions['config-path'])
   .then(parseTOML)
   .then(config => config.right())
   .then(({
@@ -90,38 +81,28 @@ readFile(cliOptions['config-path'])
       projectName,
       outputDirectory,
       failureThresholds
-    }) => main({
-      manifestFilepath,
-      projectName: Maybe.fromNull(projectName),
-      outputDirectory,
-      pullRequestId,
-      failureThresholds,
-      buildSha,
-      buildUrl,
-      artifactsDirectory
-    }).run({
-      writeFile,
-      readFile,
-      resolve: path.resolve,
-      request,
-      db: Database('my.db'),
-      mkdir,
-      getFileStats,
-      logMessage: console.log, // eslint-disable-line no-console
-      logError: console.error, // eslint-disable-line no-console
-      makeGitHubRequest: MakeGitHubRequest({
-        githubApiToken: process.env.GITHUB_API_TOKEN,
-        repoOwner,
-        repoName
-      }),
-      artifactStore: circleciArtifactStore({
-        circleApiToken: process.env.CIRCLE_API_TOKEN,
-        repoOwner,
-        repoName
+    }) => ReaderPromise.fromReaderFn(
+      config => main({
+        manifestFilepath,
+        projectName: Maybe.fromNull(projectName),
+        outputDirectory,
+        pullRequestId,
+        failureThresholds,
+        buildSha,
+        buildUrl,
+        artifactsDirectory
+      }).run({
+        makeGitHubRequest: MakeGitHubRequest({
+          githubApiToken: process.env.GITHUB_API_TOKEN,
+          repoOwner,
+          repoName
+        }),
+        artifactStore: circleciArtifactStore({
+          circleApiToken: process.env.CIRCLE_API_TOKEN,
+          repoOwner,
+          repoName
+        }),
+        ...config
       })
-    })
-  )
-  .catch(err => {
-    console.error(err); // eslint-disable-line no-console
-    process.exit(1); // eslint-disable-line no-process-exit
-  });
+    )
+  );
