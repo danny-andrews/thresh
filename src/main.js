@@ -13,20 +13,7 @@ import diffAssets from './core/diff-assets';
 import getThresholdFailures from './core/get-threshold-failures';
 import {NoOpenPullRequestFoundErr, NoPreviousStatsFoundForFilepath}
   from './core/errors';
-import {
-  logMessage,
-  logError,
-  postFinalPrStatus as postFinalPrStatusImpl,
-  postPendingPrStatus as postPendingPrStatusImpl,
-  postErrorPrStatus as postErrorPrStatusImpl,
-  makeArtifactDirectory as makeArtifactDirectoryImpl,
-  readManifest as readManifestImpl,
-  saveStats as saveStatsImpl,
-  writeAssetStats as writeAssetStatsImpl,
-  writeAssetDiffs as writeAssetDiffsImpl,
-  getAssetFileStats as getAssetFileStatsImpl,
-  getBaseBranch as getBaseBranchImpl
-} from './effects';
+import * as effects from './effects';
 
 const warningTypes = [
   NoOpenPullRequestFoundErr,
@@ -38,16 +25,16 @@ const isWarningType = err =>
   R.any(Type => err.constructor === Type, warningTypes);
 
 export default ({
-  postFinalPrStatus = postFinalPrStatusImpl,
-  postPendingPrStatus = postPendingPrStatusImpl,
-  postErrorPrStatus = postErrorPrStatusImpl,
-  makeArtifactDirectory = makeArtifactDirectoryImpl,
-  readManifest = readManifestImpl,
-  getAssetFileStats = getAssetFileStatsImpl,
-  saveStats = saveStatsImpl,
-  writeAssetStats = writeAssetStatsImpl,
-  writeAssetDiffs = writeAssetDiffsImpl,
-  getBaseBranch = getBaseBranchImpl,
+  postFinalPrStatus = effects.postFinalPrStatus,
+  postPendingPrStatus = effects.postPendingPrStatus,
+  postErrorPrStatus = effects.postErrorPrStatus,
+  makeArtifactDirectory = effects.makeArtifactDirectory,
+  readManifest = effects.readManifest,
+  getAssetFileStats = effects.getAssetFileStats,
+  saveStats = effects.saveStats,
+  writeAssetStats = effects.writeAssetStats,
+  writeAssetDiffs = effects.writeAssetDiffs,
+  getBaseBranch = effects.getBaseBranch,
   manifestFilepath,
   outputDirectory,
   projectName,
@@ -107,7 +94,7 @@ export default ({
   const validateFailureThresholdSchema2 = (
     validateFailureThresholdSchema(failureThresholds)
       |> ReaderPromise.fromEither
-  ).chainErr(e => logError(e.message));
+  ).chainErr(e => effects.logError(e.message));
 
   return validateFailureThresholdSchema2.chain(
     () => ReaderPromise.parallel([
@@ -189,12 +176,12 @@ export default ({
       )
   ).chainErr(err => {
     if(isWarningType(err)) {
-      return logMessage(err.message).chain(ReaderPromise.of);
+      return effects.logMessage(err.message).chain(ReaderPromise.of);
     }
 
-    return logError(err.message).chain(
+    return effects.logError(err.message).chain(
       () => postErrorPrStatus({...prStatusParams, description: err.message})
-        .chainErr(e => logError(e.message))
+        .chainErr(e => effects.logError(e.message))
     ).chain(() => ReaderPromise.fromError(err));
   });
 };
