@@ -3,6 +3,10 @@ rules:
   no-restricted-syntax:
     - error
     - AwaitExpression
+  no-underscore-dangle:
+    - error
+    - allow:
+      - __
 env:
   node: true
   browser: false

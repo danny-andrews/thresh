@@ -5,7 +5,6 @@ import {compactAndJoin} from './shared';
 import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr}
   from './shared/artifact-stores/circleci/errors';
 import ReaderPromise from './shared/reader-promise';
-import {DFAULT_FAILURE_THRESHOLD_STRATEGY} from './core/schemas';
 import validateFailureThresholdSchema
   from './core/validate-failure-threshold-schema';
 import {ASSET_STATS_FILENAME} from './core/constants';
@@ -15,14 +14,13 @@ import {NoOpenPullRequestFoundErr, NoPreviousStatsFoundForFilepath}
   from './core/errors';
 import * as effects from './effects';
 
-const warningTypes = [
+const warningTypes = new Set([
   NoOpenPullRequestFoundErr,
   NoRecentBuildsFoundErr,
   NoAssetStatsArtifactFoundErr
-];
+]);
 
-const isWarningType = err =>
-  R.any(Type => err.constructor === Type, warningTypes);
+const isWarningType = err => warningTypes.has(err.constructor);
 
 export default ({
   postFinalPrStatus = effects.postFinalPrStatus,
@@ -42,14 +40,8 @@ export default ({
   artifactsDirectory,
   buildSha,
   buildUrl,
-  failureThresholds: failureThresholdsWithoutDefaults
+  failureThresholds
 }) => {
-  const failureThresholds = failureThresholdsWithoutDefaults.map(
-    threshold => ({
-      strategy: DFAULT_FAILURE_THRESHOLD_STRATEGY,
-      ...threshold
-    })
-  );
   const prStatusParams = {
     targetUrl: `${buildUrl}#artifacts`,
     label: compactAndJoin(': ', [

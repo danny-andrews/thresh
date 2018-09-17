@@ -8,6 +8,7 @@ import {parseJSON} from './shared';
 import {CliOptionInvalidJsonErr, MissingCliOptionErr} from './core/errors';
 import CircleciAdapter from './shared/ci-adapters/circleci';
 import {readConfig} from './effects';
+import {DFAULT_FAILURE_THRESHOLD_STRATEGY} from './core/schemas';
 
 const {buildSha, buildUrl, artifactsDirectory, pullRequestId} =
   CircleciAdapter().getEnvVars();
@@ -71,7 +72,9 @@ export default () => readConfig(cliOptions['config-path']).map(
     projectName: Maybe.fromNull(projectName),
     outputDirectory,
     pullRequestId,
-    failureThresholds,
+    failureThresholds: failureThresholds.map(
+      threshold => ({strategy: DFAULT_FAILURE_THRESHOLD_STRATEGY, ...threshold})
+    ),
     buildSha,
     buildUrl,
     artifactsDirectory
