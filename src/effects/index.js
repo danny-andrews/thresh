@@ -6,6 +6,7 @@ export {
 } from './post-pr-status';
 export {default as makeGitHubRequest} from './make-github-request';
 export {default as readManifest} from './read-manifest';
+export {default as readConfig} from './read-config';
 export {default as writeAssetDiffs} from './write-asset-diffs';
 export {default as writeAssetStats} from './write-asset-stats';
 export {default as saveStats} from './save-stats';

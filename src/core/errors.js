@@ -7,6 +7,8 @@ export const InvalidFailureThresholdErr = CreateErrorFactory('Invalid failure th
 
 export const ManifestFileReadErr = CreateErrorFactory('Error reading manifest file: %s!');
 
+export const ConfigFileReadErr = CreateErrorFactory('Error reading config file: %s!');
+
 export const ErrorCreatingArtifactDirectoryErr = CreateErrorFactory('Error creating artifact directory: %s');
 
 export const ErrorWritingAssetSizesArtifactErr = CreateErrorFactory('Error writing asset sizes artifact: %s');
