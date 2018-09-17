@@ -89,7 +89,7 @@ test('happy path (makes artifact directory, writes asset stats to file, and writ
         Either.Right(originalAssetSizes)
       )
     },
-    failureThresholds: [{targets: 'app.js', maxSize: 50}],
+    failureThresholds: [{targets: 'app.js', maxSize: 50, strategy: 'any'}],
     outputDirectory: 'dist',
     makeArtifactDirectory: makeArtifactDirectorySpy,
     getAssetFileStats: () => ReaderPromise.of([{
@@ -146,7 +146,7 @@ test('returns error when non-schema-matching failure threshold is provided', () 
   const logErrorSpy = createSpy();
 
   return subject({
-    failureThresholds: [{targets: '.js'}],
+    failureThresholds: [{targets: '.js', strategy: 'any'}],
     logError: logErrorSpy
   }).catch(() => {
     expect(logErrorSpy).toHaveBeenCalledWith(
@@ -174,7 +174,7 @@ test('handles invalid failure threshold case', () => {
     getFileStats: () => Promise.resolve({size: 32432}),
     logError: logErrorSpy,
     readManifest: () => ReaderPromise.of({'app.js': 'app.js'}),
-    failureThresholds: [{targets: '.css', maxSize: 45}]
+    failureThresholds: [{targets: '.css', maxSize: 45, strategy: 'any'}]
   }).catch(() => {
     expect(logErrorSpy)
       .toHaveBeenCalledWith(InvalidFailureThresholdErr('.css').message);
