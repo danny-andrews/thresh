@@ -51,27 +51,27 @@ const getAssetStats = (pullRequestId, getBaseBranch) =>
 const validateFailureThresholdSchemaWrapped = failureThresholds => (
   validateFailureThresholdSchema(failureThresholds)
       |> ReaderPromise.fromEither
-).chainErr(e => effects.logError(e.message));
+);
 
 export default ({
-  postFinalCommitStatus = effects.postFinalCommitStatus,
-  postPendingCommitStatus = effects.postPendingCommitStatus,
-  postErrorCommitStatus = effects.postErrorCommitStatus,
-  makeArtifactDirectory = effects.makeArtifactDirectory,
-  readManifest = effects.readManifest,
-  getAssetFileStats = effects.getAssetFileStats,
-  saveStats = effects.saveStats,
-  writeAssetStats = effects.writeAssetStats,
-  writeAssetDiffs = effects.writeAssetDiffs,
-  getBaseBranch = effects.getBaseBranch,
-  manifestFilepath,
-  outputDirectory,
-  projectName,
-  pullRequestId,
   artifactsDirectory,
   buildSha,
   buildUrl,
-  failureThresholds
+  failureThresholds,
+  getAssetFileStats = effects.getAssetFileStats,
+  getBaseBranch = effects.getBaseBranch,
+  makeArtifactDirectory = effects.makeArtifactDirectory,
+  manifestFilepath,
+  outputDirectory,
+  postErrorCommitStatus = effects.postErrorCommitStatus,
+  postFinalCommitStatus = effects.postFinalCommitStatus,
+  postPendingCommitStatus = effects.postPendingCommitStatus,
+  projectName,
+  pullRequestId,
+  readManifest = effects.readManifest,
+  saveStats = effects.saveStats,
+  writeAssetDiffs = effects.writeAssetDiffs,
+  writeAssetStats = effects.writeAssetStats
 }) => {
   const prStatusParams = {
     targetUrl: `${buildUrl}#artifacts`,
