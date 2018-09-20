@@ -22,6 +22,37 @@ const warningTypes = new Set([
 
 const isWarningType = err => warningTypes.has(err.constructor);
 
+const assetStatListToMap = assetStats => R.reduce(
+  (acc, {filename, ...rest}) => ({...acc, [filename]: rest}),
+  {},
+  assetStats
+);
+
+const assetStatMapToList = a => R.toPairs(a) |> R.map(
+  ([filename, filepath]) => ({
+    filename,
+    path: filepath
+  })
+);
+
+const getAssetStats = (pullRequestId, getBaseBranch) =>
+  pullRequestId.toEither().cata(
+    () => NoOpenPullRequestFoundErr() |> Either.Left |> ReaderPromise.of,
+    prId => getBaseBranch(prId).chain(
+      baseBranch => ReaderPromise.fromReaderFn(
+        ({artifactStore}) => artifactStore.getAssetStats({
+          baseBranch,
+          assetSizesFilepath: ASSET_STATS_FILENAME
+        })
+      )
+    )
+  );
+
+const validateFailureThresholdSchemaWrapped = failureThresholds => (
+  validateFailureThresholdSchema(failureThresholds)
+      |> ReaderPromise.fromEither
+).chainErr(e => effects.logError(e.message));
+
 export default ({
   postFinalPrStatus = effects.postFinalPrStatus,
   postPendingPrStatus = effects.postPendingPrStatus,
@@ -44,60 +75,26 @@ export default ({
 }) => {
   const prStatusParams = {
     targetUrl: `${buildUrl}#artifacts`,
-    label: compactAndJoin(': ', [
-      'Asset Sizes',
-      projectName.orSome(null)
-    ]),
+    label: compactAndJoin(': ', ['Asset Sizes', projectName.orSome(null)]),
     sha: buildSha
   };
 
-  const retrieveAssetSizes2 = () =>
-    pullRequestId.toEither().cata(
-      () => NoOpenPullRequestFoundErr() |> Either.Left |> ReaderPromise.of,
-      prId => getBaseBranch(prId).chain(
-        baseBranch => ReaderPromise.fromReaderFn(
-          ({artifactStore}) => artifactStore.getAssetStats({
-            baseBranch,
-            assetSizesFilepath: ASSET_STATS_FILENAME
-          })
-        )
-      )
-    );
-
-  const assetStatListToMap = assetStats => R.reduce(
-    (acc, {filename, ...rest}) => ({...acc, [filename]: rest}),
-    {},
-    assetStats
-  );
-
-  const assetStatMapToList = a => R.toPairs(a)
-    |> R.map(
-      ([filename, filepath]) => ({
-        filename,
-        path: filepath
-      })
-    );
-
-  const resolvePath = ({path, ...rest}) => ({
+  const resolvePath = path => [outputDirectory, path].join('/');
+  const decorateAsset = ({path, ...rest}) => ({
     ...rest,
-    path: [outputDirectory, path].join('/')
+    path: resolvePath(path)
   });
 
-  const validateFailureThresholdSchema2 = (
-    validateFailureThresholdSchema(failureThresholds)
-      |> ReaderPromise.fromEither
-  ).chainErr(e => effects.logError(e.message));
-
-  return validateFailureThresholdSchema2.chain(
+  return validateFailureThresholdSchemaWrapped(failureThresholds).chain(
     () => ReaderPromise.parallel([
       postPendingPrStatus(prStatusParams),
       makeArtifactDirectory({rootPath: artifactsDirectory}),
       readManifest(manifestFilepath)
         .map(assetStatMapToList)
-        .map(R.map(resolvePath))
+        .map(R.map(decorateAsset))
         .chain(getAssetFileStats)
         .map(assetStatListToMap),
-      retrieveAssetSizes2()
+      getAssetStats(pullRequestId, getBaseBranch)
     ])
   ).chain(
     ([,, currentAssetStats, previousAssetSizes]) =>
