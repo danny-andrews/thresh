@@ -17,7 +17,7 @@ const StatusStates = {
   ERROR: 'error'
 };
 
-const postPrStatus = ncurry(
+const postCommitStatus = ncurry(
   ['sha', 'state', 'targetUrl', 'label', 'description'],
   ({sha, state, targetUrl, label, description}) => ReaderPromise.fromReaderFn(
     config => config.makeGitHubRequest(
@@ -35,18 +35,20 @@ const postPrStatus = ncurry(
   )
 );
 
-export const postPendingPrStatus = postPrStatus({
+export const postPendingCommitStatus = postCommitStatus({
   state: StatusStates.PENDING,
   description: PENDING_STATUS_TEXT
 });
 
-export const postErrorPrStatus = postPrStatus({state: StatusStates.ERROR});
+export const postErrorCommitStatus = postCommitStatus({
+  state: StatusStates.ERROR
+});
 
-const postSuccessPrStatus = postPrStatus({state: StatusStates.SUCCESS});
+const postSuccessCommitStatus = postCommitStatus({state: StatusStates.SUCCESS});
 
-const postFailurePrStatus = postPrStatus({state: StatusStates.FAILURE});
+const postFailureCommitStatus = postCommitStatus({state: StatusStates.FAILURE});
 
-export const postFinalPrStatus = ({
+export const postFinalCommitStatus = ({
   assetDiffs,
   thresholdFailures,
   ...rest
@@ -64,7 +66,7 @@ export const postFinalPrStatus = ({
 
   return (
     R.isEmpty(thresholdFailures)
-      ? postSuccessPrStatus({description: successDescription})
-      : postFailurePrStatus({description: failureDescription})
+      ? postSuccessCommitStatus({description: successDescription})
+      : postFailureCommitStatus({description: failureDescription})
   )({...rest});
 };

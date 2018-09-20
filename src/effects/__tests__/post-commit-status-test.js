@@ -2,7 +2,8 @@ import test from 'ava';
 import expect, {createSpy} from 'expect';
 
 import ReaderPromise from '../../shared/reader-promise';
-import {postFinalPrStatus, postPendingPrStatus, postErrorPrStatus} from '../post-pr-status';
+import {postFinalCommitStatus, postPendingCommitStatus, postErrorCommitStatus}
+  from '../post-commit-status';
 import {firstCallArguments} from '../../test/helpers';
 
 const subject = ({
@@ -11,13 +12,13 @@ const subject = ({
   label = 'interesting info',
   description = 'blah blah blah',
   makeGitHubRequest = ReaderPromise.of
-}) => postErrorPrStatus({sha, targetUrl, label, description}).run({
+}) => postErrorCommitStatus({sha, targetUrl, label, description}).run({
   makeGitHubRequest
 });
 
-test('postFinalPrStatus posts success pr status to GitHub when there are no failures', () => {
+test('postFinalCommitStatus posts success pr status to GitHub when there are no failures', () => {
   const spy = createSpy().andReturn(ReaderPromise.of());
-  postFinalPrStatus({
+  postFinalCommitStatus({
     sha: 'h8g94hg9',
     assetDiffs: {
       'app.js': {
@@ -49,9 +50,9 @@ test('postFinalPrStatus posts success pr status to GitHub when there are no fail
   });
 });
 
-test('postFinalPrStatus posts failure pr status to GitHub when there are failures', () => {
+test('postFinalCommitStatus posts failure pr status to GitHub when there are failures', () => {
   const spy = createSpy().andReturn(ReaderPromise.of());
-  postFinalPrStatus({
+  postFinalCommitStatus({
     sha: 'h8g94hg9',
     assetDiffs: {},
     thresholdFailures: [
@@ -77,7 +78,7 @@ test('postFinalPrStatus posts failure pr status to GitHub when there are failure
 
 test('postPendingPrStatus makes request to post pending pr status to GitHub', () => {
   const spy = createSpy().andReturn(ReaderPromise.of());
-  postPendingPrStatus({
+  postPendingCommitStatus({
     sha: 'h8g94hg9',
     targetUrl: 'info.com/53',
     label: 'interesting info'

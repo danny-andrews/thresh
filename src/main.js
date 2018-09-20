@@ -54,9 +54,9 @@ const validateFailureThresholdSchemaWrapped = failureThresholds => (
 ).chainErr(e => effects.logError(e.message));
 
 export default ({
-  postFinalPrStatus = effects.postFinalPrStatus,
-  postPendingPrStatus = effects.postPendingPrStatus,
-  postErrorPrStatus = effects.postErrorPrStatus,
+  postFinalCommitStatus = effects.postFinalCommitStatus,
+  postPendingCommitStatus = effects.postPendingCommitStatus,
+  postErrorCommitStatus = effects.postErrorCommitStatus,
   makeArtifactDirectory = effects.makeArtifactDirectory,
   readManifest = effects.readManifest,
   getAssetFileStats = effects.getAssetFileStats,
@@ -87,7 +87,7 @@ export default ({
 
   return validateFailureThresholdSchemaWrapped(failureThresholds).chain(
     () => ReaderPromise.parallel([
-      postPendingPrStatus(prStatusParams),
+      postPendingCommitStatus(prStatusParams),
       makeArtifactDirectory({rootPath: artifactsDirectory}),
       readManifest(manifestFilepath)
         .map(assetStatMapToList)
@@ -154,7 +154,7 @@ export default ({
                 assetDiffs,
                 thresholdFailures: thresholdFailures.right()
               }),
-              postFinalPrStatus({
+              postFinalCommitStatus({
                 ...prStatusParams,
                 assetDiffs,
                 thresholdFailures: thresholdFailures.right()
@@ -163,14 +163,14 @@ export default ({
           });
         }
       )
-  ).chainErr(err => {
-    if(isWarningType(err)) {
-      return effects.logMessage(err.message).chain(ReaderPromise.of);
-    }
-
-    return effects.logError(err.message).chain(
-      () => postErrorPrStatus({...prStatusParams, description: err.message})
-        .chainErr(e => effects.logError(e.message))
-    ).chain(() => ReaderPromise.fromError(err));
-  });
+  ).chainErr(
+    err => postErrorCommitStatus({
+      ...prStatusParams,
+      description: err.message
+    }).chain(
+      () => isWarningType(err)
+        ? effects.logMessage(err.message)
+        : ReaderPromise.fromError(err)
+    )
+  );
 };
