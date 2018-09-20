@@ -4,8 +4,6 @@ import {Maybe, Either} from 'monet';
 
 import {
   NoOpenPullRequestFoundErr,
-  InvalidFailureThresholdErr,
-  InvalidFailureThresholdOptionErr,
   NoPreviousStatsFoundForFilepath
 } from '../core/errors';
 import main from '../main';
@@ -19,57 +17,38 @@ const defaultAssetSize = {
   }
 };
 
-const subject = ({
-  logError = console.error,
-  logMessage = console.log,
-  getFileStats = () => Promise.resolve({size: 452}),
-  postFinalPrStatus = ReaderPromise.of,
-  postPendingPrStatus = ReaderPromise.of,
-  postErrorPrStatus = ReaderPromise.of,
-  artifactStore = {
-    getAssetStats: () => Promise.resolve(
-      Either.Right(defaultAssetSize)
-    )
-  },
-  makeArtifactDirectory = () => ReaderPromise.of(),
-  readManifest = () => ReaderPromise.of({'app.js': 'app.js'}),
-  getAssetFileStats = () => ReaderPromise.of([{
+const subject = (opts = {}) => main({
+  artifactsDirectory: 'lfjk3208hohefi4/artifacts',
+  buildSha: '8fdhihfj',
+  buildUrl: 'http://circle.com/my-build',
+  failureThresholds: [],
+  getAssetFileStats: () => ReaderPromise.of([{
     size: 242,
     filename: 'app.js',
     path: 'dist/app.js'
   }]),
-  getBaseBranch = ReaderPromise.of,
-  saveStats = ReaderPromise.of,
-  writeAssetStats = ReaderPromise.of,
-  writeAssetDiffs = ReaderPromise.of,
-  ...rest
-} = {}) => main({
-  postFinalPrStatus,
-  postPendingPrStatus,
-  postErrorPrStatus,
-  makeArtifactDirectory,
-  readManifest,
-  getAssetFileStats,
-  saveStats,
-  writeAssetStats,
-  writeAssetDiffs,
-  getBaseBranch,
-  statsFilepath: 'dist/stats.js',
+  getBaseBranch: ReaderPromise.of,
+  makeArtifactDirectory: () => ReaderPromise.of(),
+  manifestFilepath: 'dist/manifest.json',
+  outputDirectory: 'dist',
+  postErrorCommitStatus: ReaderPromise.of,
+  postFinalCommitStatus: ReaderPromise.of,
+  postPendingCommitStatus: ReaderPromise.of,
   projectName: Maybe.None(),
-  outputDirectory: '',
-  failureThresholds: [],
-  buildSha: '8fdhihfj',
-  buildUrl: 'http://circle.com/my-build',
   pullRequestId: Maybe.of('f820yf3h'),
-  artifactsDirectory: 'lfjk3208hohefi4/artifacts',
-  circleApiToken: '93hfdkhf',
-  githubApiToken: '8hfey89r',
-  ...rest
+  readManifest: () => ReaderPromise.of({'app.js': 'app.js'}),
+  saveStats: ReaderPromise.of,
+  writeAssetDiffs: ReaderPromise.of,
+  writeAssetStats: ReaderPromise.of,
+  ...opts
 }).run({
-  logMessage,
-  logError,
-  getFileStats,
-  artifactStore
+  artifactStore: {
+    getAssetStats: () => Promise.resolve(
+      Either.Right(defaultAssetSize)
+    )
+  },
+  logMessage: () => {},
+  ...opts
 });
 
 test('happy path (makes artifact directory, writes asset stats to file, and writes asset diffs to file)', () => {
@@ -142,20 +121,13 @@ test('happy path (makes artifact directory, writes asset stats to file, and writ
   });
 });
 
-test('returns error when non-schema-matching failure threshold is provided', () => {
-  const logErrorSpy = createSpy();
-
-  return subject({
-    failureThresholds: [{targets: '.js', strategy: 'any'}],
-    logError: logErrorSpy
-  }).catch(() => {
-    expect(logErrorSpy).toHaveBeenCalledWith(
-      InvalidFailureThresholdOptionErr(
-        "data[0] should have required property 'maxSize'"
-      ).message
-    );
-  });
-});
+test('returns error when non-schema-matching failure threshold is provided', () => subject({
+  failureThresholds: [{targets: '.js', strategy: 'any'}]
+}).catch(err => {
+  expect(err.message).toBe(
+    "failure-thresholds' option is invalid. Problem(s):\ndata[0] should have required property 'maxSize'"
+  );
+}));
 
 test('handles case where no open pull request is found', () => {
   const logMessageSpy = createSpy();
@@ -167,63 +139,38 @@ test('handles case where no open pull request is found', () => {
     });
 });
 
-test('handles invalid failure threshold case', () => {
-  const logErrorSpy = createSpy();
+test('handles invalid failure threshold case', () => subject({
+  getFileStats: () => Promise.resolve({size: 32432}),
+  readManifest: () => ReaderPromise.of({'app.js': 'app.js'}),
+  failureThresholds: [{targets: '.css', maxSize: 45, strategy: 'any'}]
+}).catch(err => {
+  expect(err.message)
+    .toBe('Invalid failure threshold provided. No targets found for target: [.css]');
+}));
 
-  return subject({
-    getFileStats: () => Promise.resolve({size: 32432}),
-    logError: logErrorSpy,
-    readManifest: () => ReaderPromise.of({'app.js': 'app.js'}),
-    failureThresholds: [{targets: '.css', maxSize: 45, strategy: 'any'}]
-  }).catch(() => {
-    expect(logErrorSpy)
-      .toHaveBeenCalledWith(InvalidFailureThresholdErr('.css').message);
-  });
-});
+test('surfaces errors reading stats file', () => subject({
+  readManifest: () => ReaderPromise.fromError({message: 'oh noes'})
+}).catch(err => {
+  expect(err.message).toBe('oh noes');
+}));
 
-test('surfaces errors reading stats file', () => {
-  const logErrorSpy = createSpy();
+test('surfaces errors making artifact directory', () => subject({
+  makeArtifactDirectory: () => ReaderPromise.fromError({message: 'oh noes'})
+}).catch(err => {
+  expect(err.message).toBe('oh noes');
+}));
 
-  return subject({
-    readManifest: () => ReaderPromise.fromError({message: 'oh noes'}),
-    logError: logErrorSpy
-  }).catch(() => {
-    expect(logErrorSpy).toHaveBeenCalledWith('oh noes');
-  });
-});
+test('surfaces errors writing asset sizes', () => subject({
+  writeAssetStats: () => ReaderPromise.fromError({message: 'uh oh'})
+}).catch(err => {
+  expect(err.message).toBe('uh oh');
+}));
 
-test('surfaces errors making artifact directory', () => {
-  const logErrorSpy = createSpy();
-
-  return subject({
-    makeArtifactDirectory: () => ReaderPromise.fromError({message: 'oh noes'}),
-    logError: logErrorSpy
-  }).catch(() => {
-    expect(logErrorSpy).toHaveBeenCalledWith('oh noes');
-  });
-});
-
-test('surfaces errors writing asset sizes', () => {
-  const logErrorSpy = createSpy();
-
-  return subject({
-    writeAssetStats: () => ReaderPromise.fromError({message: 'uh oh'}),
-    logError: logErrorSpy
-  }).catch(() => {
-    expect(logErrorSpy).toHaveBeenCalledWith('uh oh');
-  });
-});
-
-test('surfaces errors writing asset diffs', () => {
-  const logErrorSpy = createSpy();
-
-  return subject({
-    writeAssetDiffs: () => ReaderPromise.fromError({message: 'uh oh'}),
-    logError: logErrorSpy
-  }).catch(() => {
-    expect(logErrorSpy).toHaveBeenCalledWith('uh oh');
-  });
-});
+test('surfaces errors writing asset diffs', () => subject({
+  writeAssetDiffs: () => ReaderPromise.fromError({message: 'uh oh'})
+}).catch(err => {
+  expect(err.message).toBe('uh oh');
+}));
 
 test('saves stats to local db when project name is given', () => {
   const saveStatsSpy = createSpy().andCall(ReaderPromise.of);
