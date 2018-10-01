@@ -109,10 +109,10 @@ export default ({
         })
       ).chain(
         assetStats => {
-          const writeAssetStats2 = writeAssetStats({
-            rootPath: artifactsDirectory,
-            assetStats
-          });
+          const writeAssetStats2 = writeAssetStats(
+            assetStats,
+            artifactsDirectory,
+          );
           if(previousAssetSizes.isLeft()) {
             return writeAssetStats2.chain(
               () => ReaderPromise.fromError(previousAssetSizes.left())

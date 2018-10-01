@@ -9,7 +9,7 @@ const subject = ({
   resolve = (...args) => args.join('/'),
   rootPath = 'root',
   assetStats = {}
-} = {}) => writeAssetStats({rootPath, assetStats})
+} = {}) => writeAssetStats(assetStats, rootPath)
   .run({writeFile, resolve});
 
 test('writes asset stats file', () => {
