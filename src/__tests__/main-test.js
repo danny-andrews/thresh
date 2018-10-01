@@ -89,9 +89,8 @@ test('happy path (makes artifact directory, writes asset stats to file, and writ
       thresholdFailures
     } = firstCallFirstArgument(writeAssetDiffsSpy);
 
-    expect(makeArtifactDirectorySpy).toHaveBeenCalledWith({
-      rootPath: 'lfjk3208hohefi4/artifacts'
-    });
+    expect(makeArtifactDirectorySpy)
+      .toHaveBeenCalledWith('lfjk3208hohefi4/artifacts');
 
     expect(assetStatsRootPath).toEqual('lfjk3208hohefi4/artifacts');
     expect(assetStatsContents).toEqual({
