@@ -69,7 +69,8 @@ export default ({
   readManifest = effects.readManifest,
   saveStats = effects.saveStats,
   writeAssetDiffs = effects.writeAssetDiffs,
-  writeAssetStats = effects.writeAssetStats
+  writeAssetStats = effects.writeAssetStats,
+  logMessage = effects.logMessage
 }) => {
   const prStatusParams = {
     targetUrl: `${buildUrl}#artifacts`,
@@ -105,56 +106,50 @@ export default ({
           ...(previousAssetStats.isRight() ? previousAssetStats.right() : {}),
           [projectName.some()]: currentAssetStats
         })
-      ).chain(
-        assetStats => {
-          if(previousAssetStats.isLeft()) {
-            return writeAssetStats(assetStats, artifactsDirectory)
-              .chain(() => ReaderPromise.fromError(previousAssetStats.left()));
-          }
+      ).map(() => [currentAssetStats, previousAssetStats])
+  ).chain(([currentAssetStats, previousAssetStats]) => {
+    if(previousAssetStats.isLeft()) {
+      return writeAssetStats(currentAssetStats, artifactsDirectory)
+        .chain(() => ReaderPromise.fromError(previousAssetStats.left()));
+    }
 
-          return ReaderPromise.fromReaderFn(config => {
-            const assetDiffs = diffAssets({
-              current: projectName.isSome()
-                ? assetStats[projectName.some()]
-                : assetStats,
-              original: projectName.isSome()
-                ? previousAssetStats.right()[projectName.some()]
-                : previousAssetStats.right(),
-              onMismatchFound: filepath => config.logMessage(
-                NoPreviousStatsFoundForFilepath(filepath).message
-              )
-            });
-
-            return Promise.resolve(assetDiffs);
-          }).chain(assetDiffs => {
-            const thresholdFailures = getThresholdFailures(
-              R.toPairs(assetDiffs)
-                |> R.map(([filepath, {current: size}]) => ({filepath, size})),
-              failureThresholds
-            );
-
-            if(thresholdFailures.isLeft()) {
-              return writeAssetStats(assetStats, artifactsDirectory)
-                .chain(() => ReaderPromise.fromError(thresholdFailures.left()));
-            }
-
-            return ReaderPromise.parallel([
-              writeAssetStats(assetStats, artifactsDirectory),
-              writeAssetDiffs({
-                rootPath: artifactsDirectory,
-                assetDiffs,
-                thresholdFailures: thresholdFailures.right()
-              }),
-              postFinalCommitStatus({
-                ...prStatusParams,
-                assetDiffs,
-                thresholdFailures: thresholdFailures.right()
-              })
-            ]);
-          });
-        }
+    const assetDiffs = diffAssets({
+      current: projectName.isSome()
+        ? currentAssetStats[projectName.some()]
+        : currentAssetStats,
+      original: projectName.isSome()
+        ? previousAssetStats.right()[projectName.some()]
+        : previousAssetStats.right(),
+      onMismatchFound: filepath => logMessage(
+        NoPreviousStatsFoundForFilepath(filepath).message
       )
-  ).chainErr(
+    });
+
+    const thresholdFailures = getThresholdFailures(
+      R.toPairs(assetDiffs)
+        |> R.map(([filepath, {current: size}]) => ({filepath, size})),
+      failureThresholds
+    );
+
+    if(thresholdFailures.isLeft()) {
+      return writeAssetStats(currentAssetStats, artifactsDirectory)
+        .chain(() => ReaderPromise.fromError(thresholdFailures.left()));
+    }
+
+    return ReaderPromise.parallel([
+      writeAssetStats(currentAssetStats, artifactsDirectory),
+      writeAssetDiffs({
+        rootPath: artifactsDirectory,
+        assetDiffs,
+        thresholdFailures: thresholdFailures.right()
+      }),
+      postFinalCommitStatus({
+        ...prStatusParams,
+        assetDiffs,
+        thresholdFailures: thresholdFailures.right()
+      })
+    ]);
+  }).chainErr(
     err => postErrorCommitStatus({
       ...prStatusParams,
       description: err.message
