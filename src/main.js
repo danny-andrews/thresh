@@ -127,12 +127,11 @@ export default ({
 
             return Promise.resolve(assetDiffs);
           }).chain(assetDiffs => {
-            const thresholdFailures = getThresholdFailures({
-              failureThresholds,
-              assetStats: assetDiffs
-                |> R.toPairs
-                |> R.map(([filepath, {current: size}]) => ({filepath, size}))
-            });
+            const thresholdFailures = getThresholdFailures(
+              R.toPairs(assetDiffs)
+                |> R.map(([filepath, {current: size}]) => ({filepath, size})),
+              failureThresholds
+            );
 
             if(thresholdFailures.isLeft()) {
               return writeAssetStats(assetStats, artifactsDirectory)

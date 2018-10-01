@@ -10,7 +10,7 @@ import {
 } from './constants';
 import {InvalidFailureThresholdErr} from './errors';
 
-const uncheckedGetThresholdFailures = ({assetStats, failureThresholds}) => {
+const uncheckedGetThresholdFailures = (assetStats, failureThresholds) => {
   const isFileExtensionTarget = target => target[0] === '.';
   const isAllTarget = target => target === FAILURE_THRESHOLD_TARGET_ALL;
   const assetStatsWithExt = target => assetStats.filter(
