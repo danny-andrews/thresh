@@ -8,7 +8,7 @@ import {
 } from '../core/errors';
 import main from '../main';
 import ReaderPromise from '../shared/reader-promise';
-import {firstCallFirstArgument} from '../test/helpers';
+import {firstCallFirstArgument, firstCallArguments} from '../test/helpers';
 
 const defaultAssetSize = {
   'app.js': {
@@ -80,10 +80,8 @@ test('happy path (makes artifact directory, writes asset stats to file, and writ
     writeAssetDiffs: writeAssetDiffsSpy,
     writeAssetStats: writeAssetStatsSpy
   }).then(() => {
-    const {
-      rootPath: assetStatsRootPath,
-      assetStats: assetStatsContents
-    } = firstCallFirstArgument(writeAssetStatsSpy);
+    const [assetStatsContents, assetStatsRootPath] =
+      firstCallArguments(writeAssetStatsSpy);
 
     const {
       rootPath: assetDiffsRootPath,
