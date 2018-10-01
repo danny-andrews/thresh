@@ -48,10 +48,8 @@ const getAssetStats = (pullRequestId, getBaseBranch) =>
     )
   );
 
-const validateFailureThresholdSchemaWrapped = failureThresholds => (
-  validateFailureThresholdSchema(failureThresholds)
-      |> ReaderPromise.fromEither
-);
+const validateFailureThresholdSchemaWrapped = failureThresholds =>
+  validateFailureThresholdSchema(failureThresholds) |> ReaderPromise.fromEither;
 
 export default ({
   artifactsDirectory,
