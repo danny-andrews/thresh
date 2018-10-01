@@ -87,17 +87,17 @@ export default ({
 
   return validateFailureThresholdSchemaWrapped(failureThresholds).chain(
     () => ReaderPromise.parallel([
-      postPendingCommitStatus(prStatusParams),
-      makeArtifactDirectory({rootPath: artifactsDirectory}),
       readManifest(manifestFilepath)
         .map(assetStatMapToList)
         .map(R.map(decorateAsset))
         .chain(getAssetFileStats)
         .map(assetStatListToMap),
-      getAssetStats(pullRequestId, getBaseBranch)
+      getAssetStats(pullRequestId, getBaseBranch),
+      postPendingCommitStatus(prStatusParams),
+      makeArtifactDirectory({rootPath: artifactsDirectory})
     ])
   ).chain(
-    ([,, currentAssetStats, previousAssetSizes]) =>
+    ([currentAssetStats, previousAssetSizes]) =>
 
       // TODO: Use polymorphism to eliminate unsemantic branching off
       // projectName. Also, use some semantic variable like isMonorepo.
