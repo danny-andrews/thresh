@@ -8,7 +8,7 @@ const subject = ({
   mkdir = () => Promise.resolve(),
   resolve = (...args) => args.join('/'),
   rootPath = 'root'
-} = {}) => makeArtifactDirectory({rootPath}).run({mkdir, resolve});
+} = {}) => makeArtifactDirectory(rootPath).run({mkdir, resolve});
 
 test('makes artifact directory', () => {
   const mkdirSpy = createSpy().andReturn(Promise.resolve());

@@ -92,7 +92,7 @@ export default ({
         .map(assetStatListToMap),
       getAssetStats(pullRequestId, getBaseBranch),
       postPendingCommitStatus(prStatusParams),
-      makeArtifactDirectory({rootPath: artifactsDirectory})
+      makeArtifactDirectory(artifactsDirectory)
     ])
   ).chain(
     ([currentAssetStats, previousAssetSizes]) =>
