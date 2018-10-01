@@ -109,14 +109,9 @@ export default ({
         })
       ).chain(
         assetStats => {
-          const writeAssetStats2 = writeAssetStats(
-            assetStats,
-            artifactsDirectory,
-          );
           if(previousAssetSizes.isLeft()) {
-            return writeAssetStats2.chain(
-              () => ReaderPromise.fromError(previousAssetSizes.left())
-            );
+            return writeAssetStats(assetStats, artifactsDirectory)
+              .chain(() => ReaderPromise.fromError(previousAssetSizes.left()));
           }
 
           return ReaderPromise.fromReaderFn(config => {
@@ -142,13 +137,12 @@ export default ({
             });
 
             if(thresholdFailures.isLeft()) {
-              return writeAssetStats2.chain(
-                () => ReaderPromise.fromError(thresholdFailures.left())
-              );
+              return writeAssetStats(assetStats, artifactsDirectory)
+                .chain(() => ReaderPromise.fromError(thresholdFailures.left()));
             }
 
             return ReaderPromise.parallel([
-              writeAssetStats2,
+              writeAssetStats(assetStats, artifactsDirectory),
               writeAssetDiffs({
                 rootPath: artifactsDirectory,
                 assetDiffs,
