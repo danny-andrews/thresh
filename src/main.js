@@ -95,21 +95,21 @@ export default ({
       makeArtifactDirectory(artifactsDirectory)
     ])
   ).chain(
-    ([currentAssetStats, previousAssetSizes]) =>
+    ([currentAssetStats, previousAssetStats]) =>
 
       // TODO: Use polymorphism to eliminate unsemantic branching off
       // projectName. Also, use some semantic variable like isMonorepo.
       projectName.toEither().cata(
         () => ReaderPromise.of(currentAssetStats),
         () => saveStats({
-          ...(previousAssetSizes.isRight() ? previousAssetSizes.right() : {}),
+          ...(previousAssetStats.isRight() ? previousAssetStats.right() : {}),
           [projectName.some()]: currentAssetStats
         })
       ).chain(
         assetStats => {
-          if(previousAssetSizes.isLeft()) {
+          if(previousAssetStats.isLeft()) {
             return writeAssetStats(assetStats, artifactsDirectory)
-              .chain(() => ReaderPromise.fromError(previousAssetSizes.left()));
+              .chain(() => ReaderPromise.fromError(previousAssetStats.left()));
           }
 
           return ReaderPromise.fromReaderFn(config => {
@@ -118,8 +118,8 @@ export default ({
                 ? assetStats[projectName.some()]
                 : assetStats,
               original: projectName.isSome()
-                ? previousAssetSizes.right()[projectName.some()]
-                : previousAssetSizes.right(),
+                ? previousAssetStats.right()[projectName.some()]
+                : previousAssetStats.right(),
               onMismatchFound: filepath => config.logMessage(
                 NoPreviousStatsFoundForFilepath(filepath).message
               )
