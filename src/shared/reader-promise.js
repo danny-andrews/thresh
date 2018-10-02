@@ -27,7 +27,7 @@ const ReaderPromise = CreateFactory(value => {
     value.chain(
       promise => Reader(
         config => promise.catch(
-          (...args) => fn(...args).run(config)
+          err => fn(err).run(config)
         )
       )
     )
