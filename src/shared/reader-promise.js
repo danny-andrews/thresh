@@ -20,7 +20,11 @@ const ReaderPromise = CreateFactory(value => {
   );
   const mapErr = fn => ReaderPromise(
     value.map(
-      promise => promise.catch(fn)
+      promise => promise.catch(
+        err => Promise.reject(
+          fn(err)
+        )
+      )
     )
   );
   const chainErr = fn => ReaderPromise(

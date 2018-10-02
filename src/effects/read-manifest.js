@@ -1,15 +1,14 @@
-import R from 'ramda';
-
 import {parseJSON} from '../shared';
+import ReaderPromise from '../shared/reader-promise';
 import {ManifestFileReadErr} from '../core/errors';
 
 import {readFile} from './base';
 
 export default manifestFilepath => readFile(manifestFilepath)
-  .map(
+  .mapErr(ManifestFileReadErr)
+  .chain(
     contents => parseJSON(contents).cata(
-      error => error |> ManifestFileReadErr |> Promise.reject,
-      R.identity
+      error => ManifestFileReadErr(error) |> ReaderPromise.fromError,
+      ReaderPromise.of
     )
-  )
-  .mapErr(ManifestFileReadErr);
+  );
