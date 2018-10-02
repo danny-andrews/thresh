@@ -32,14 +32,9 @@ const ReaderPromise = CreateFactory(value => {
       )
     )
   );
+  const run = config => value.run(config);
 
-  return Object.freeze({
-    chain,
-    map,
-    mapErr,
-    chainErr,
-    run: config => value.run(config)
-  });
+  return Object.freeze({chain, map, mapErr, chainErr, run});
 });
 
 ReaderPromise.fromPromise = a => R.always(a) |> Reader |> ReaderPromise;
