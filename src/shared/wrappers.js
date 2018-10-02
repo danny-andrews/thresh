@@ -16,8 +16,7 @@ export const Non200ResponseError = CreateRequestErrorFactory();
 export const NoResponseError = CreateRequestErrorFactory();
 export const InvalidResponseError = CreateRequestErrorFactory();
 
-const rejectWith = Type =>
-  a => Promise.reject(Type(a));
+const rejectWith = Type => a => Promise.reject(Type(a));
 
 export const request = (...args) => fetch(...args).then(
   response => response.json().then(
