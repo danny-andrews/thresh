@@ -1,15 +1,14 @@
-import R from 'ramda';
-
 import {parseTOML} from '../shared';
+import ReaderPromise from '../shared/reader-promise';
 import {ConfigFileReadErr} from '../core/errors';
 
 import {readFile} from './base';
 
 export default configFilepath => readFile(configFilepath)
-  .map(
+  .mapErr(ConfigFileReadErr)
+  .chain(
     contents => parseTOML(contents).cata(
-      error => error |> ConfigFileReadErr |> Promise.reject,
-      R.identity
+      error => ConfigFileReadErr(error) |> ReaderPromise.fromError,
+      ReaderPromise.of
     )
-  )
-  .mapErr(ConfigFileReadErr);
+  );

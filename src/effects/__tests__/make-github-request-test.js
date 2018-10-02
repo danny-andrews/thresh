@@ -113,10 +113,15 @@ test('returns error if response fails', () => {
     )
   );
 
-  return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
-    .catch(actual => {
-      expect(actual.message).toBe('Error making request to GitHub https://api.github.com/owner/repo: oh no');
-    });
+  return subject({
+    request: spy,
+    githubApiToken: 'dfhsa8632r3',
+    repoOwner: 'owner',
+    repoName: 'repo',
+    path: 'my-stuff'
+  }).catch(actual => {
+    expect(actual.message).toBe('Error making request to GitHub https://api.github.com/repos/owner/repo/my-stuff: oh no');
+  });
 });
 
 test('returns error if body parsing fails', () => {
@@ -126,10 +131,15 @@ test('returns error if body parsing fails', () => {
     )
   );
 
-  return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
-    .catch(actual => {
-      expect(actual.message).toBe('Error making request to GitHub https://api.github.com/owner/repo: Cannot parse body');
-    });
+  return subject({
+    request: spy,
+    githubApiToken: 'dfhsa8632r3',
+    repoOwner: 'owner',
+    repoName: 'repo',
+    path: 'my-stuff'
+  }).catch(actual => {
+    expect(actual.message).toBe('Error making request to GitHub https://api.github.com/repos/owner/repo/my-stuff: Cannot parse body');
+  });
 });
 
 test('returns error if non-200 status code received', () => {
@@ -139,10 +149,15 @@ test('returns error if non-200 status code received', () => {
     )
   );
 
-  return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
-    .catch(actual => {
-      expect(actual.message).toBe('Error making request to GitHub https://api.github.com/owner/repo: Internal Server Error');
-    });
+  return subject({
+    request: spy,
+    githubApiToken: 'dfhsa8632r3',
+    repoOwner: 'owner',
+    repoName: 'repo',
+    path: 'my-stuff'
+  }).catch(actual => {
+    expect(actual.message).toBe('Error making request to GitHub https://api.github.com/repos/owner/repo/my-stuff: Internal Server Error');
+  });
 });
 
 test('returns authorization error if UNATHORIZED status received', () => {
@@ -152,10 +167,15 @@ test('returns authorization error if UNATHORIZED status received', () => {
     )
   );
 
-  return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
-    .catch(actual => {
-      expect(actual.message).toBe('Authorization failed for request to GitHub https://api.github.com/owner/repo. Did you provide a correct GitHub Api Token? Original response: Unathorized');
-    });
+  return subject({
+    request: spy,
+    githubApiToken: 'dfhsa8632r3',
+    repoOwner: 'owner',
+    repoName: 'repo',
+    path: 'my-stuff'
+  }).catch(actual => {
+    expect(actual.message).toBe('Authorization failed for request to GitHub https://api.github.com/repos/owner/repo/my-stuff. Did you provide a correct GitHub Api Token? Original response: Unathorized');
+  });
 });
 
 test('returns authorization error if FORBIDDEN status received', () => {
@@ -165,8 +185,13 @@ test('returns authorization error if FORBIDDEN status received', () => {
     )
   );
 
-  return subject({request: spy, githubApiToken: 'dfhsa8632r3'})
-    .catch(actual => {
-      expect(actual.message).toBe('Authorization failed for request to GitHub https://api.github.com/owner/repo. Did you provide a correct GitHub Api Token? Original response: Forbidden');
-    });
+  return subject({
+    request: spy,
+    githubApiToken: 'dfhsa8632r3',
+    repoOwner: 'owner',
+    repoName: 'repo',
+    path: 'my-stuff'
+  }).catch(actual => {
+    expect(actual.message).toBe('Authorization failed for request to GitHub https://api.github.com/repos/owner/repo/my-stuff. Did you provide a correct GitHub Api Token? Original response: Forbidden');
+  });
 });

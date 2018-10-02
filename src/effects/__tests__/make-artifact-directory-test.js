@@ -21,8 +21,9 @@ test('makes artifact directory', () => {
   });
 });
 
-test('returns ErrorCreatingArtifactDirectoryErr when an error is encountered creating directory', () => {
-  subject({mkdir: () => Promise.reject(Error('oh no'))}).catch(err => {
-    expect(err).toEqual(ErrorCreatingArtifactDirectoryErr());
-  });
-});
+test('returns ErrorCreatingArtifactDirectoryErr when an error is encountered creating directory', () => subject({
+  mkdir: () => Promise.reject(Error('oh no'))
+}).catch(({message, constructor}) => {
+  expect(message).toEqual('Error creating artifact directory: Error: oh no');
+  expect(constructor).toEqual(ErrorCreatingArtifactDirectoryErr);
+}));

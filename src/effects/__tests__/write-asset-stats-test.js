@@ -9,8 +9,7 @@ const subject = ({
   resolve = (...args) => args.join('/'),
   rootPath = 'root',
   assetStats = {}
-} = {}) => writeAssetStats(assetStats, rootPath)
-  .run({writeFile, resolve});
+} = {}) => writeAssetStats(assetStats, rootPath).run({writeFile, resolve});
 
 test('writes asset stats file', () => {
   const writeFileSpy = createSpy().andReturn(Promise.resolve());
@@ -37,8 +36,9 @@ test('writes asset stats file', () => {
   });
 });
 
-test('returns error when an error is encountered writing asset stats file', () => {
-  subject({writeFile: () => Promise.reject(Error('oh no'))}).catch(err => {
-    expect(err).toEqual(ErrorWritingAssetSizesArtifactErr('oh no'));
-  });
-});
+test('returns error when an error is encountered writing asset stats file', () => subject({
+  writeFile: () => Promise.reject(Error('oh no'))
+}).catch(({message, constructor}) => {
+  expect(constructor).toBe(ErrorWritingAssetSizesArtifactErr);
+  expect(message).toBe('Error writing asset sizes artifact: Error: oh no');
+}));
