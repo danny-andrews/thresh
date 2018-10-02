@@ -19,13 +19,13 @@ test('returns parsed contents of stats file', () => subject({
 test('returns ManifestFileReadErr when an error is encountered reading stats file', () => subject({
   readFile: () => PromiseError('oh no')
 }).catch(({message, constructor}) => {
-  expect(message).toEqual(ManifestFileReadErr('Error: oh no').message);
+  expect(message).toEqual('Error reading manifest file: Error: oh no!');
   expect(constructor).toEqual(ManifestFileReadErr);
 }));
 
 test('returns ManifestFileReadErr when an error is encountered parsing stats file contents', () => subject({
   writeFile: () => Promise.resolve('no valid JSON')
 }).catch(({message, constructor}) => {
-  expect(message).toEqual(ManifestFileReadErr('SyntaxError: Unexpected token u in JSON at position 0').message);
+  expect(message).toEqual('Error reading manifest file: SyntaxError: Unexpected token u in JSON at position 0!');
   expect(constructor).toEqual(ManifestFileReadErr);
 }));

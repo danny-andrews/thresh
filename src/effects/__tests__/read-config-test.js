@@ -19,7 +19,7 @@ test('returns parsed contents of config', () => subject({
 test('returns ConfigFileReadErr when an error is encountered reading stats file', () => subject({
   readFile: () => PromiseError('oh no')
 }).catch(({message, constructor}) => {
-  expect(message).toEqual(ConfigFileReadErr('Error: oh no').message);
+  expect(message).toEqual('Error reading config file: Error: oh no!');
   expect(constructor).toEqual(ConfigFileReadErr);
 }));
 
