@@ -12,7 +12,19 @@ import diffAssets from './core/diff-assets';
 import getThresholdFailures from './core/get-threshold-failures';
 import {NoOpenPullRequestFoundErr, NoPreviousStatsFoundForFilepath}
   from './core/errors';
-import * as effects from './effects';
+import {
+  getAssetStats,
+  getBaseBranch,
+  makeArtifactDirectory,
+  postErrorCommitStatus,
+  postFinalCommitStatus,
+  postPendingCommitStatus,
+  readManifest,
+  saveStats,
+  writeAssetDiffs,
+  writeAssetStats,
+  logMessage
+} from './effects';
 
 const warningTypes = new Set([
   NoOpenPullRequestFoundErr,
@@ -35,7 +47,7 @@ const assetStatMapToList = a => R.toPairs(a) |> R.map(
   })
 );
 
-const getAssetStats = (pullRequestId, getBaseBranch) =>
+const getPreviousAssetStats = pullRequestId =>
   pullRequestId.toEither().cata(
     () => NoOpenPullRequestFoundErr() |> Either.Left |> ReaderPromise.of,
     prId => getBaseBranch(prId).chain(
@@ -59,18 +71,7 @@ export default ({
   manifestFilepath,
   outputDirectory,
   projectName,
-  pullRequestId,
-  getAssetFileStats = effects.getAssetFileStats,
-  getBaseBranch = effects.getBaseBranch,
-  makeArtifactDirectory = effects.makeArtifactDirectory,
-  postErrorCommitStatus = effects.postErrorCommitStatus,
-  postFinalCommitStatus = effects.postFinalCommitStatus,
-  postPendingCommitStatus = effects.postPendingCommitStatus,
-  readManifest = effects.readManifest,
-  saveStats = effects.saveStats,
-  writeAssetDiffs = effects.writeAssetDiffs,
-  writeAssetStats = effects.writeAssetStats,
-  logMessage = effects.logMessage
+  pullRequestId
 }) => {
   const prStatusParams = {
     targetUrl: `${buildUrl}#artifacts`,
@@ -89,9 +90,9 @@ export default ({
       readManifest(manifestFilepath)
         .map(assetStatMapToList)
         .map(R.map(decorateAsset))
-        .chain(getAssetFileStats)
+        .chain(getAssetStats)
         .map(assetStatListToMap),
-      getAssetStats(pullRequestId, getBaseBranch),
+      getPreviousAssetStats(pullRequestId),
       postPendingCommitStatus(prStatusParams),
       makeArtifactDirectory(artifactsDirectory)
     ])
@@ -155,7 +156,7 @@ export default ({
       description: err.message
     }).chain(
       () => isWarningType(err)
-        ? effects.logMessage(err.message)
+        ? logMessage(err.message)
         : ReaderPromise.fromError(err)
     )
   );

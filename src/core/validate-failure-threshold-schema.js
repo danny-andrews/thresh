@@ -13,9 +13,12 @@ const validateSchema = (schema, object) => {
     : Either.Left(validator);
 };
 
-export default failureThresholds =>
-  validateSchema(failureThresholdListSchema, failureThresholds).bimap(
-    validator => validator.errorsText(validator.errors, {separator: '\n'})
-      |> InvalidFailureThresholdOptionErr,
-    R.identity
-  );
+export default failureThresholds => validateSchema(
+  failureThresholdListSchema,
+  failureThresholds
+).bimap(
+  validator => InvalidFailureThresholdOptionErr(
+    validator.errorsText(validator.errors, {separator: '\n'})
+  ),
+  R.identity
+);

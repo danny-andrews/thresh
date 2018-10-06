@@ -1,7 +1,7 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
 
-import getPreviousAssetStats from '../get-previous-asset-stats';
+import getPreviousAssetStats from '../get-asset-stats';
 import {FakeRequest} from '../../../../test/helpers';
 import {PrResource, BuildResource, ArtifactResource}
   from '../test/factories';

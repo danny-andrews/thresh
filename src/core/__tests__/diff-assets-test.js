@@ -3,10 +3,7 @@ import expect, {createSpy} from 'expect';
 
 import subject from '../diff-assets';
 
-const assetFac = (opts = {}) => ({
-  size: 24,
-  ...opts
-});
+const assetFac = ({size = 24} = {}) => ({size});
 
 const FLOAT_PERCISION = 0.000001;
 
