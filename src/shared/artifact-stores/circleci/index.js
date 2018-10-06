@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 import {request} from '../..';
 
-import getAssetStats from './get-previous-asset-stats';
+import getAssetStats from './get-asset-stats';
 import MakeCircleRequest from './make-circle-request';
 
 export default ({repoOwner, repoName}) => ({
