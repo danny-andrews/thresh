@@ -1,4 +1,4 @@
-import ReaderPromise from '../shared/reader-promise';
+import ReaderPromise from '../packages/reader-promise';
 
 import {getFileStats} from './base';
 

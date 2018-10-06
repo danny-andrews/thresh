@@ -1,5 +1,5 @@
 import {parseTOML} from '../shared';
-import ReaderPromise from '../shared/reader-promise';
+import ReaderPromise from '../packages/reader-promise';
 import {ConfigFileReadErr} from '../core/errors';
 
 import {readFile} from './base';

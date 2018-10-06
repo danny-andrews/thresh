@@ -1,4 +1,4 @@
-import ReaderPromise from '../shared/reader-promise';
+import ReaderPromise from '../packages/reader-promise';
 
 const STATS_DB_KEY = 'asset-stats';
 

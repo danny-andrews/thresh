@@ -1,7 +1,7 @@
 import test from 'ava';
 import {Maybe, Either} from 'monet';
 
-import ReaderPromise from '../shared/reader-promise';
+import ReaderPromise from '../packages/reader-promise';
 import main from '../main';
 import {FakeRequest} from '../test/helpers';
 import {

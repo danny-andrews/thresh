@@ -1,5 +1,5 @@
 /* eslint-disable no-shadow */
-import ReaderPromise from '../shared/reader-promise';
+import ReaderPromise from '../packages/reader-promise';
 
 export const mkdir = (...args) => ReaderPromise.fromReaderFn(
   ({mkdir}) => mkdir(...args)

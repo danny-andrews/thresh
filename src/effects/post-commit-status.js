@@ -3,7 +3,7 @@ import ncurry from 'ncurry';
 
 import {truncate} from '../shared';
 import formatAssetDiff from '../core/format-asset-diff';
-import ReaderPromise from '../shared/reader-promise';
+import ReaderPromise from '../packages/reader-promise';
 
 const MAX_DESCRIPTION_LENGTH = 140;
 
