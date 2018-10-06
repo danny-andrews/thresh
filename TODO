@@ -1,4 +1,6 @@
-Move config out of package.json
+Remove unit tests of effectful-code.
+
+Move standalone packages int `packages` directory.
 
 Check for the existence of the running asset value in file database. If it
 exists, we don't need to make separate request for the previous asset stats
@@ -11,11 +13,5 @@ Use named parameters for error message sprintf.
 Stats should passed around as a list, not an object. Currently, we have to do a
 bunch of conversions back and forth.
 
-Move ReaderPromise into seperate repo.
-
 Give ReaderPromise an unwrap method, and use that instead of hijacking the
 underlying Reader's run method.
-
-Add terminology:
-Asset: object representation of the asset
-Asset-file: the physical file on the file-system

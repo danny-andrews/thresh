@@ -1,12 +1,12 @@
 import test from 'ava';
 import expect from 'expect';
 
-import getAssetFileStats from '../get-asset-file-stats';
+import getAssetStats from '../get-asset-stats';
 
 const subject = ({
   getFileStats = () => Promise.resolve({size: 200}),
   stats = [{path: 'my-stats.json'}]
-} = {}) => getAssetFileStats(stats).run({getFileStats});
+} = {}) => getAssetStats(stats).run({getFileStats});
 
 test('returns stat with file size', () => subject({
   getFileStats: () => Promise.resolve({size: 400}),
