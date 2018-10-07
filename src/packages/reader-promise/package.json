@@ -1,0 +1,5 @@
+{
+  "name": "@danny.andrews/reader-promise",
+  "version": "0.0.0",
+  "main": "lib/packages/reader-promise/index.js"
+}

@@ -680,6 +680,12 @@
     eslint-config-eslint "^4.0.0"
     eslint-plugin-import "^2.14.0"
 
+"@danny.andrews/reader-promise@file:src/packages/reader-promise":
+  version "0.0.0"
+
+"@danny.andrews/utils@file:src/packages/utils":
+  version "0.0.0"
+
 abbrev@1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"

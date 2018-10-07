@@ -1,0 +1,5 @@
+{
+  "name": "@danny.andrews/utils",
+  "version": "0.0.0",
+  "main": "lib/packages/utils/index.js"
+}

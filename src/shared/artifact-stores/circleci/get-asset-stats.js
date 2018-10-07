@@ -1,6 +1,5 @@
 import {Either} from 'monet';
-
-import ReaderPromise from '../../../packages/reader-promise';
+import ReaderPromise from 'reader-promise';
 
 import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr} from './errors';
 
