@@ -1,6 +1,6 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
-import ReaderPromise from 'reader-promise';
+import ReaderPromise from '@danny.andrews/reader-promise';
 
 import {postFinalCommitStatus, postPendingCommitStatus, postErrorCommitStatus}
   from '../post-commit-status';

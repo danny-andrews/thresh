@@ -13,4 +13,3 @@ export {default as saveStats} from './save-stats';
 export {default as getAssetStats} from './get-asset-stats';
 export {default as getBaseBranch} from './get-base-branch';
 export {default as MakeGitHubRequest} from './make-github-request';
-export * from './base';

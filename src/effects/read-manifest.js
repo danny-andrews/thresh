@@ -1,9 +1,8 @@
-import ReaderPromise from 'reader-promise';
+import ReaderPromise from '@danny.andrews/reader-promise';
+import {readFile} from '@danny.andrews/effects';
+import {parseJSON} from '@danny.andrews/utils';
 
-import {parseJSON} from '../shared';
 import {ManifestFileReadErr} from '../core/errors';
-
-import {readFile} from './base';
 
 export default manifestFilepath => readFile(manifestFilepath)
   .mapErr(ManifestFileReadErr)

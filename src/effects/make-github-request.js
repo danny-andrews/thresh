@@ -1,15 +1,14 @@
 import {camelizeKeys, decamelizeKeys} from 'humps';
 import R from 'ramda';
+import {switchCaseF, NoResponseError, Non200ResponseError, InvalidResponseError}
+  from '@danny.andrews/utils';
+import {request} from '@danny.andrews/effects';
 
 import {
   GitHubFetchErr,
   GitHubAuthorizationErr,
   GitHubInvalidResponseErr
 } from '../core/errors';
-import {NoResponseError, Non200ResponseError, InvalidResponseError, switchCaseF}
-  from '../shared';
-
-import {request} from './base';
 
 /* eslint-disable no-magic-numbers */
 const Statuses = {

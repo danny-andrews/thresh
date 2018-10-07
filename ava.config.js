@@ -1,5 +1,5 @@
 export default {
-  files: ['src/**/__tests__/**/*.js', '!**/shared/**'],
-  require: ['@babel/register'],
+  files: ['src/**/__tests__/**/*.js', '!**/packages/**'],
+  require: ['./src/test/require'],
   failWithoutAssertions: false
 };

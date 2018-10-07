@@ -1,12 +1,9 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
+import {NoResponseError, Non200ResponseError, InvalidResponseError}
+  from '@danny.andrews/utils';
 
 import makeGithubRequest from '../make-github-request';
-import {
-  NoResponseError,
-  Non200ResponseError,
-  InvalidResponseError
-} from '../../shared';
 
 const subject = ({
   githubApiToken = 'fjidq8y32',

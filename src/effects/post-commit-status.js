@@ -1,6 +1,6 @@
 import R from 'ramda';
 import ncurry from 'ncurry';
-import ReaderPromise from 'reader-promise';
+import ReaderPromise from '@danny.andrews/reader-promise';
 
 import {truncate} from '../shared';
 import formatAssetDiff from '../core/format-asset-diff';

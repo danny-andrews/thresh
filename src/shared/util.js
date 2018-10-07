@@ -1,6 +1,4 @@
 import R from 'ramda';
-import {sprintf} from 'sprintf-js';
-import {CreateFactory} from 'utils';
 
 import {JSON_OUTPUT_SPACING} from '../core/constants';
 
@@ -17,12 +15,3 @@ export const truncate = R.curry(({maxSize, contSuffix = '...'}, string) => (
 
 export const serializeForFile = val =>
   JSON.stringify(val, null, JSON_OUTPUT_SPACING);
-
-export const CreateRequestErrorFactory = () =>
-  CreateFactory(context => ({context}));
-
-export const CreateErrorFactory = messageTemplate => CreateFactory(
-  (...args) => ({
-    message: sprintf(messageTemplate, ...args)
-  })
-);

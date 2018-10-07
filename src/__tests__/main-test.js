@@ -1,16 +1,16 @@
 import test from 'ava';
 import {Maybe, Either} from 'monet';
-import ReaderPromise from 'reader-promise';
-
-import main from '../main';
-import {FakeRequest} from '../test/helpers';
+import ReaderPromise from '@danny.andrews/reader-promise';
 import {
   GetBaseBranchHandler,
   GetRecentBuildsHandler,
   GetArtifactsHandler,
   GetArtifactHandler,
   PostPrStatusHandler
-} from '../shared/artifact-stores/circleci/test/requests';
+} from '@danny.andrews/thresh-artifact-store-circleci/test/requests';
+
+import main from '../main';
+import {FakeRequest} from '../test/helpers';
 
 const fakeRequest = FakeRequest([
   GetBaseBranchHandler({

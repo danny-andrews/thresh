@@ -1,4 +1,4 @@
-import {CreateErrorFactory} from '../shared';
+import {CreateErrorFactory} from '@danny.andrews/utils';
 
 /* eslint-disable max-len */
 export const InvalidFailureThresholdOptionErr = CreateErrorFactory("failure-thresholds' option is invalid. Problem(s):\n%s");

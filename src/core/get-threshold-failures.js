@@ -1,8 +1,7 @@
 import R from 'ramda';
 import {sprintf} from 'sprintf-js';
 import filesize from 'filesize';
-
-import {unthrow} from '../shared';
+import {unthrow} from '@danny.andrews/utils';
 
 import {
   FAILURE_THRESHOLD_TARGET_ALL,
