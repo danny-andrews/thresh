@@ -1,6 +1,5 @@
-import ReaderPromise from '../shared/reader-promise';
-
-import {getFileStats} from './base';
+import ReaderPromise from '@danny.andrews/reader-promise';
+import {getFileStats} from '@danny.andrews/effects';
 
 export default stats => ReaderPromise.parallel(
   stats.map(

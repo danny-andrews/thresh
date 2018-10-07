@@ -1,8 +1,8 @@
-import {parseTOML} from '../shared';
-import ReaderPromise from '../shared/reader-promise';
-import {ConfigFileReadErr} from '../core/errors';
+import ReaderPromise from '@danny.andrews/reader-promise';
+import {readFile} from '@danny.andrews/effects';
+import {parseTOML} from '@danny.andrews/utils';
 
-import {readFile} from './base';
+import {ConfigFileReadErr} from '../core/errors';
 
 export default configFilepath => readFile(configFilepath)
   .mapErr(ConfigFileReadErr)

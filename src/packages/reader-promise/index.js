@@ -1,7 +1,6 @@
 import {Reader} from 'monet';
 import R from 'ramda';
-
-import {CreateFactory} from './util';
+import {CreateFactory} from '@danny.andrews/utils';
 
 const ReaderPromise = CreateFactory(value => {
   const map = fn => ReaderPromise(

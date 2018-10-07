@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-import {request} from '../..';
+import {request} from '@danny.andrews/utils';
 
 import getAssetStats from './get-asset-stats';
 import MakeCircleRequest from './make-circle-request';
@@ -15,3 +15,5 @@ export default ({repoOwner, repoName}) => ({
       request
     })
 });
+
+export * from './errors';

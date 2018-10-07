@@ -33,6 +33,11 @@
     "test:coverage": "nyc yarn test"
   },
   "dependencies": {
+    "@danny.andrews/effects": "file:src/packages/effects",
+    "@danny.andrews/reader-promise": "file:src/packages/reader-promise",
+    "@danny.andrews/thresh-artifact-store-circleci": "file:src/packages/thresh-artifact-store-circleci",
+    "@danny.andrews/thresh-ci-adapter-circleci": "file:src/packages/thresh-ci-adapter-circleci",
+    "@danny.andrews/utils": "file:src/packages/utils",
     "ajv": "^5.2.2",
     "command-line-args": "^4.0.6",
     "filesize": "^3.5.10",

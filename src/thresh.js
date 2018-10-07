@@ -1,11 +1,13 @@
 /* eslint-disable no-process-env */
 import path from 'path';
+import {readFile, mkdir, writeFile, getFileStats, request}
+  from '@danny.andrews/utils';
+import CircleciAdapter from '@danny.andrews/thresh-ci-adapter-circleci';
+import CircleciArtifactStore
+  from '@danny.andrews/thresh-artifact-store-circleci';
 
 import cli from './cli';
-import {readFile, mkdir, writeFile, getFileStats, Database, request}
-  from './shared';
-import CircleciAdapter from './shared/ci-adapters/circleci';
-import CircleciArtifactStore from './shared/artifact-stores/circleci';
+import {Database} from './shared';
 import {MakeGitHubRequest} from './effects';
 
 const {repoOwner, repoName} = CircleciAdapter().getEnvVars();
