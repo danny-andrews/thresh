@@ -1,0 +1,45 @@
+{
+  "name": "thresh",
+  "version": "0.2.5",
+  "description": "A CircleCI integration script for tracking file size changes across deploys.",
+  "keywords": [
+    "assets",
+    "circleci",
+    "github",
+    "gulp",
+    "rollup",
+    "size"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danny-andrews/thresh.git"
+  },
+  "license": "MIT",
+  "author": "Danny Andrews",
+  "files": [
+    "lib/",
+    "thresh"
+  ],
+  "main": "index.js",
+  "bin": {
+    "thresh": "./thresh"
+  },
+  "scripts": {
+    "build": "rm -rf lib && babel src --out-dir lib",
+    "test": "ava"
+  },
+  "dependencies": {
+    "ajv": "^5.2.2",
+    "command-line-args": "^4.0.6",
+    "filesize": "^3.5.10",
+    "flat-file-db": "^1.0.0",
+    "humps": "^2.0.1",
+    "mkdirp": "^0.5.1",
+    "monet": "^0.8.10",
+    "ncurry": "^1.0.0",
+    "node-fetch": "^1.7.1",
+    "ramda": "^0.24.1",
+    "sprintf-js": "^1.1.1",
+    "toml": "^2.3.3"
+  }
+}
