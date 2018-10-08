@@ -2,15 +2,14 @@ import {camelizeKeys} from 'humps';
 import R from 'ramda';
 import {sprintf} from 'sprintf-js';
 import ReaderPromise from '@danny.andrews/reader-promise';
-import {
-  NoResponseError,
-  Non200ResponseError,
-  InvalidResponseError,
-  switchCaseF,
-  request
-} from '@danny.andrews/fp-utils';
+import {NoResponseError, Non200ResponseError, InvalidResponseError, switchCaseF}
+  from '@danny.andrews/fp-utils';
 
 import {CircleCiFetchErr, CircleCiInvalidResponseErr} from './errors';
+
+export const request = (...args) => ReaderPromise.fromReaderFn(
+  ({request}) => request(...args) // eslint-disable-line no-shadow
+);
 
 const circleDeserializer = payload => camelizeKeys(payload);
 
