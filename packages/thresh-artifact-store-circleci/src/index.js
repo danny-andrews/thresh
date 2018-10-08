@@ -15,3 +15,5 @@ export default ({repoOwner, repoName}) => ({
       request
     })
 });
+
+export * from './errors';

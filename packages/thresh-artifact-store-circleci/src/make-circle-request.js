@@ -5,9 +5,11 @@ import ReaderPromise from '@danny.andrews/reader-promise';
 import {NoResponseError, Non200ResponseError, InvalidResponseError, switchCaseF}
   from '@danny.andrews/fp-utils';
 
-import {request} from '../../../effects/base';
-
 import {CircleCiFetchErr, CircleCiInvalidResponseErr} from './errors';
+
+export const request = (...args) => ReaderPromise.fromReaderFn(
+  ({request}) => request(...args) // eslint-disable-line no-shadow
+);
 
 const circleDeserializer = payload => camelizeKeys(payload);
 

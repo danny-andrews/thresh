@@ -3,10 +3,11 @@ import path from 'path';
 import {readFile, mkdir, writeFile, getFileStats, request}
   from '@danny.andrews/fp-utils';
 import CircleciAdapter from '@danny.andrews/thresh-ci-adapter-circleci';
+import CircleciArtifactStore
+  from '@danny.andrews/thresh-artifact-store-circleci';
 
 import cli from './cli';
 import {Database} from './shared';
-import CircleciArtifactStore from './shared/artifact-stores/circleci';
 import {MakeGitHubRequest} from './effects';
 
 const {repoOwner, repoName} = CircleciAdapter().getEnvVars();
