@@ -1,0 +1,25 @@
+{
+  "name": "@danny.andrews/fp-utils",
+  "version": "0.0.0",
+  "description": "A collection of functional programming utilities.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danny-andrews/thresh.git"
+  },
+  "license": "MIT",
+  "author": "Danny Andrews",
+  "files": [
+    "lib/"
+  ],
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "rm -rf lib && babel src --out-dir lib"
+  },
+  "dependencies": {
+    "mkdirp": "^0.5.1",
+    "monet": "^0.8.10",
+    "ramda": "^0.24.1",
+    "sprintf-js": "^1.1.1",
+    "toml": "^2.3.3"
+  }
+}

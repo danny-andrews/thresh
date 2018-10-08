@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-import {request} from '../..';
+import {request} from '@danny.andrews/fp-utils';
 
 import getAssetStats from './get-asset-stats';
 import MakeCircleRequest from './make-circle-request';

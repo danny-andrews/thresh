@@ -2,9 +2,9 @@ import R from 'ramda';
 import assert from 'assert';
 import commandLineArgs from 'command-line-args';
 import {Maybe} from 'monet';
+import {parseJSON} from '@danny.andrews/fp-utils';
 
 import main from './main';
-import {parseJSON} from './shared';
 import {CliOptionInvalidJsonErr, MissingCliOptionErr} from './core/errors';
 import CircleciAdapter from './shared/ci-adapters/circleci';
 import {readConfig} from './effects';

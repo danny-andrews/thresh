@@ -1,9 +1,9 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
+import {NoResponseError, Non200ResponseError, InvalidResponseError}
+  from '@danny.andrews/fp-utils';
 
 import makeCircleRequest from '../make-circle-request';
-import {NoResponseError, Non200ResponseError, InvalidResponseError}
-  from '../../..';
 
 const subject = (opts = {}) => {
   const {
