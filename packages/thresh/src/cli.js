@@ -3,10 +3,10 @@ import assert from 'assert';
 import commandLineArgs from 'command-line-args';
 import {Maybe} from 'monet';
 import {parseJSON} from '@danny.andrews/fp-utils';
+import CircleciAdapter from '@danny.andrews/thresh-ci-adapter-circleci';
 
 import main from './main';
 import {CliOptionInvalidJsonErr, MissingCliOptionErr} from './core/errors';
-import CircleciAdapter from './shared/ci-adapters/circleci';
 import {readConfig} from './effects';
 import {DFAULT_FAILURE_THRESHOLD_STRATEGY} from './core/schemas';
 

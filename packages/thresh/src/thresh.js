@@ -2,10 +2,10 @@
 import path from 'path';
 import {readFile, mkdir, writeFile, getFileStats, request}
   from '@danny.andrews/fp-utils';
+import CircleciAdapter from '@danny.andrews/thresh-ci-adapter-circleci';
 
 import cli from './cli';
 import {Database} from './shared';
-import CircleciAdapter from './shared/ci-adapters/circleci';
 import CircleciArtifactStore from './shared/artifact-stores/circleci';
 import {MakeGitHubRequest} from './effects';
 

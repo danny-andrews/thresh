@@ -1,0 +1,27 @@
+{
+  "name": "@danny.andrews/thresh-ci-adapter-circleci",
+  "version": "0.0.0",
+  "description": "CircleCI CI adapter for use with thresh.",
+  "keywords": [
+    "thresh",
+    "thresh-adapter",
+    "circleci"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danny-andrews/thresh.git"
+  },
+  "license": "MIT",
+  "author": "Danny Andrews",
+  "files": [
+    "lib/"
+  ],
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "rm -rf lib && babel src --out-dir lib"
+  },
+  "dependencies": {
+    "monet": "^0.8.10",
+    "ramda": "^0.24.1"
+  }
+}
