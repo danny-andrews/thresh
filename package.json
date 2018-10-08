@@ -9,7 +9,7 @@
     "ci": "yarn lint && yarn test:coverage && yarn stats",
     "lint": "eslint .",
     "stats": "echo 'LOC IN PROJECT...' && find packages/*/src -name '*.js' -not -path '**/__tests__/*' | xargs wc -l",
-    "test": "ava",
+    "test": "ava --verbose",
     "test:coverage": "nyc yarn test"
   },
   "devDependencies": {

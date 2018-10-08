@@ -1,7 +1,11 @@
 import {Reader} from 'monet';
 import R from 'ramda';
 
-import {CreateFactory} from './util';
+const CreateFactory = f => {
+  const constructor = (...args) => ({...f(...args), constructor});
+
+  return constructor;
+};
 
 const ReaderPromise = CreateFactory(value => {
   const map = fn => ReaderPromise(
