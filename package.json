@@ -5,6 +5,7 @@
     "packages/*"
   ],
   "scripts": {
+    "bootstrap": "lerna bootstrap",
     "build": "lerna run build",
     "ci": "yarn lint && yarn test:coverage && yarn stats",
     "lint": "eslint .",
