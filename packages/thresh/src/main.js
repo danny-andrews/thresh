@@ -1,10 +1,10 @@
 import R from 'ramda';
 import {Either} from 'monet';
 import ReaderPromise from '@danny.andrews/reader-promise';
+import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr}
+  from '@danny.andrews/thresh-artifact-store-circleci';
 
 import {compactAndJoin} from './shared';
-import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr}
-  from './shared/artifact-stores/circleci/errors';
 import validateFailureThresholdSchema
   from './core/validate-failure-threshold-schema';
 import {ASSET_STATS_FILENAME} from './core/constants';

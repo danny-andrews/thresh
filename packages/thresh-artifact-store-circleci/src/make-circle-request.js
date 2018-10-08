@@ -2,10 +2,13 @@ import {camelizeKeys} from 'humps';
 import R from 'ramda';
 import {sprintf} from 'sprintf-js';
 import ReaderPromise from '@danny.andrews/reader-promise';
-import {NoResponseError, Non200ResponseError, InvalidResponseError, switchCaseF}
-  from '@danny.andrews/fp-utils';
-
-import {request} from '../../../effects/base';
+import {
+  NoResponseError,
+  Non200ResponseError,
+  InvalidResponseError,
+  switchCaseF,
+  request
+} from '@danny.andrews/fp-utils';
 
 import {CircleCiFetchErr, CircleCiInvalidResponseErr} from './errors';
 
