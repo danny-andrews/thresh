@@ -1,0 +1,28 @@
+{
+  "name": "@danny.andrews/reader-promise",
+  "version": "0.0.0",
+  "description": "A monad transformer for working with Promises contained in a Reader monad.",
+  "keywords": [
+    "monad",
+    "monad-transformer",
+    "reader",
+    "promise"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danny-andrews/thresh.git"
+  },
+  "license": "MIT",
+  "author": "Danny Andrews",
+  "files": [
+    "lib/"
+  ],
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "rm -rf lib && babel src --out-dir lib"
+  },
+  "dependencies": {
+    "monet": "^0.8.10",
+    "ramda": "^0.24.1"
+  }
+}

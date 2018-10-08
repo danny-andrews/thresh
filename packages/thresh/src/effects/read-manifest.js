@@ -1,5 +1,6 @@
+import ReaderPromise from '@danny.andrews/reader-promise';
+
 import {parseJSON} from '../shared';
-import ReaderPromise from '../shared/reader-promise';
 import {ManifestFileReadErr} from '../core/errors';
 
 import {readFile} from './base';

@@ -1,8 +1,8 @@
 import {camelizeKeys} from 'humps';
 import R from 'ramda';
 import {sprintf} from 'sprintf-js';
+import ReaderPromise from '@danny.andrews/reader-promise';
 
-import ReaderPromise from '../../reader-promise';
 import {NoResponseError, Non200ResponseError, InvalidResponseError, switchCaseF}
   from '../..';
 import {request} from '../../../effects/base';

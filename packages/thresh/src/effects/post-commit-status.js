@@ -1,9 +1,9 @@
 import R from 'ramda';
 import ncurry from 'ncurry';
+import ReaderPromise from '@danny.andrews/reader-promise';
 
 import {truncate} from '../shared';
 import formatAssetDiff from '../core/format-asset-diff';
-import ReaderPromise from '../shared/reader-promise';
 
 const MAX_DESCRIPTION_LENGTH = 140;
 
