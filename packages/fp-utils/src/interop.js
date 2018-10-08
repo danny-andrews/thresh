@@ -1,16 +1,25 @@
-import FlatFileDb from 'flat-file-db';
-import fetch from 'node-fetch';
+import mkdirp from 'mkdirp';
+import {promisify} from 'util';
+import fs from 'fs';
 import toml from 'toml';
+import fetch from 'node-fetch';
 
-import {CreateRequestErrorFactory, unthrow} from './util';
+import {unthrow, CreateFactory} from './util';
 
-export const Database = (...args) => {
-  const flatFileDb = FlatFileDb(...args);
+export const readFile = promisify(fs.readFile);
 
-  return new Promise(
-    resolve => flatFileDb.on('open', () => resolve(flatFileDb))
-  );
-};
+export const writeFile = promisify(fs.writeFile);
+
+export const getFileStats = promisify(fs.stat);
+
+export const mkdir = promisify(mkdirp);
+
+export const parseJSON = unthrow(JSON.parse);
+
+export const parseTOML = unthrow(toml.parse);
+
+const CreateRequestErrorFactory = () =>
+  CreateFactory(context => ({context}));
 
 export const Non200ResponseError = CreateRequestErrorFactory();
 export const NoResponseError = CreateRequestErrorFactory();
@@ -25,5 +34,3 @@ export const request = (...args) => fetch(...args).then(
       : rejectWith(Non200ResponseError)({...response, data})
   ).catch(rejectWith(InvalidResponseError))
 ).catch(rejectWith(NoResponseError));
-
-export const parseTOML = unthrow(toml.parse);

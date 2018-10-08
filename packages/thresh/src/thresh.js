@@ -1,9 +1,10 @@
 /* eslint-disable no-process-env */
 import path from 'path';
+import {readFile, mkdir, writeFile, getFileStats, request}
+  from '@danny.andrews/fp-utils';
 
 import cli from './cli';
-import {readFile, mkdir, writeFile, getFileStats, Database, request}
-  from './shared';
+import {Database} from './shared';
 import CircleciAdapter from './shared/ci-adapters/circleci';
 import CircleciArtifactStore from './shared/artifact-stores/circleci';
 import {MakeGitHubRequest} from './effects';

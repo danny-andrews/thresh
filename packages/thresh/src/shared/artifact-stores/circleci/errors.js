@@ -1,4 +1,4 @@
-import {CreateErrorFactory} from '../..';
+import {CreateErrorFactory} from '@danny.andrews/fp-utils';
 
 /* eslint-disable max-len */
 export const NoRecentBuildsFoundErr = CreateErrorFactory('No recent builds found for the base branch: %s!');

@@ -1,13 +1,13 @@
 import {camelizeKeys, decamelizeKeys} from 'humps';
 import R from 'ramda';
+import {NoResponseError, Non200ResponseError, InvalidResponseError, switchCaseF}
+  from '@danny.andrews/fp-utils';
 
 import {
   GitHubFetchErr,
   GitHubAuthorizationErr,
   GitHubInvalidResponseErr
 } from '../core/errors';
-import {NoResponseError, Non200ResponseError, InvalidResponseError, switchCaseF}
-  from '../shared';
 
 import {request} from './base';
 
