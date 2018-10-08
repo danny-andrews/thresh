@@ -8,9 +8,8 @@ jobs:
     steps:
       - checkout
       - run: yarn install
-      - run: yarn bootstrap
-      - run: yarn ci
       - run: yarn build
+      - run: yarn ci
       - run: ./thresh
       - store_artifacts:
           path: ./example/dist/artifacts
