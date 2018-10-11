@@ -1,7 +1,13 @@
-/packages/*/node_modules/
+# Built files
 /packages/*/lib/
+
+# Node modules
+/packages/*/node_modules/
 /node_modules/
+
+# Test coverage
 /.nyc_output/
 /coverage/
-/.ideas
+
+# Log files
 /yarn-error.log
