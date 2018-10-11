@@ -1,13 +1,5 @@
 extends: '@danny.andrews/eslint-config'
 rules:
-  # Move to my config
-  no-restricted-syntax:
-    - error
-    - AwaitExpression
-  max-params:
-    - error
-    - 3
-
   no-underscore-dangle:
     - error
     - allow:
