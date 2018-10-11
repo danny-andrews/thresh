@@ -1,0 +1,2 @@
+Give ReaderPromise an unwrap method, and use that instead of hijacking the
+underlying Reader's run method.

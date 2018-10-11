@@ -1,16 +1,18 @@
 {
   "include": [
-    "src"
+    "./packages/*/src/"
   ],
   "exclude": [
-    "src/test",
-    "src/**/__tests__/**/*.js",
-    "src/core/errors.js",
-    "src/shared"
+    "**/src/test/",
+    "**/__tests__/"
   ],
   "reporter": [
     "html",
     "text"
   ],
-  "check-coverage": true
+  "check-coverage": true,
+  "per-file": false,
+  "lines": 90,
+  "statements": 90,
+  "branches": 70
 }
