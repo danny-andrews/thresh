@@ -62,10 +62,7 @@ const validateFailureThresholdSchemaWrapped = failureThresholds =>
   validateFailureThresholdSchema(failureThresholds) |> ReaderPromise.fromEither;
 
 const MonoRepoActions = projectName => ({
-  transformStats: ([currentAssetStats, previousAssetStats]) => [
-    currentAssetStats[projectName],
-    previousAssetStats.map(R.prop(projectName))
-  ],
+  transformStats: R.prop(projectName),
   saveRunningStats: (currentAssetStats, previousAssetStats) => saveStats({
     ...(previousAssetStats.cata(() => ({}), R.identity)),
     [projectName]: currentAssetStats
@@ -83,7 +80,7 @@ const diffAssets2 = (current, original) => diffAssets(
   {
     onMismatchFound: filepath => NoPreviousStatsFoundForFilepath(filepath)
       |> R.prop('message')
-      |> logMessage(NoPreviousStatsFoundForFilepath(filepath).message)
+      |> logMessage
   }
 );
 
@@ -122,41 +119,43 @@ export default ({
       postPending(),
       makeArtifactDirectory(artifactsDirectory)
     ])
-  ).map(transformStats)
-    .chain(
-      ([currentAssetStats, previousAssetStats]) => ReaderPromise.parallel([
-        writeAssetStats(currentAssetStats, artifactsDirectory),
-        saveRunningStats(currentAssetStats, previousAssetStats)
-      ]).map(() => [currentAssetStats, previousAssetStats])
-    ).chain(
-      ([currentAssetStats, previousAssetStats]) => previousAssetStats.cata(
-        ReaderPromise.fromError,
-        value => {
-          const assetDiffs = diffAssets2(currentAssetStats, value);
+  ).map(([currentAssetStats, previousAssetStats]) => [
+    transformStats(currentAssetStats),
+    previousAssetStats.map(transformStats)
+  ]).chain(
+    ([currentAssetStats, previousAssetStats]) => ReaderPromise.parallel([
+      writeAssetStats(currentAssetStats, artifactsDirectory),
+      saveRunningStats(currentAssetStats, previousAssetStats)
+    ]).map(() => [currentAssetStats, previousAssetStats])
+  ).chain(
+    ([currentAssetStats, previousAssetStats]) => previousAssetStats.cata(
+      ReaderPromise.fromError,
+      value => {
+        const assetDiffs = diffAssets2(currentAssetStats, value);
 
-          return getThresholdFailures(
-            R.toPairs(assetDiffs)
-              |> R.map(([filepath, {current: size}]) => ({filepath, size})),
-            failureThresholds
-          ).cata(
-            ReaderPromise.fromError,
-            thresholdFailures => ReaderPromise.parallel([
-              writeAssetDiffs({
-                rootPath: artifactsDirectory,
-                assetDiffs,
-                thresholdFailures
-              }),
-              postFinal(assetDiffs, thresholdFailures)
-            ])
-          );
-        }
-      )
-    ).chainErr(
-      err => ReaderPromise.parallel([
-        postError(err.message),
-        isWarningType(err)
-          ? logMessage(err.message)
-          : ReaderPromise.fromError(err)
-      ])
-    );
+        return getThresholdFailures(
+          R.toPairs(assetDiffs)
+            |> R.map(([filepath, {current: size}]) => ({filepath, size})),
+          failureThresholds
+        ).cata(
+          ReaderPromise.fromError,
+          thresholdFailures => ReaderPromise.parallel([
+            writeAssetDiffs({
+              rootPath: artifactsDirectory,
+              assetDiffs,
+              thresholdFailures
+            }),
+            postFinal(assetDiffs, thresholdFailures)
+          ])
+        );
+      }
+    )
+  ).chainErr(
+    err => ReaderPromise.parallel([
+      postError(err.message),
+      isWarningType(err)
+        ? logMessage(err.message)
+        : ReaderPromise.fromError(err)
+    ])
+  );
 };
