@@ -2,25 +2,19 @@ import test from 'ava';
 import expect, {createSpy} from 'expect';
 import ReaderPromise from '@danny.andrews/reader-promise';
 
-import {postFinalCommitStatus, postPendingCommitStatus, postErrorCommitStatus}
-  from '../post-commit-status';
+import CommitStatusPoster from '../commit-status-poster';
 import {firstCallArguments} from '../../test/helpers';
 
-const subject = ({
-  sha = 'h8g94hg9',
-  targetUrl = 'info.com/53',
-  label = 'interesting info',
-  description = 'blah blah blah',
-  makeGitHubRequest = ReaderPromise.of
-}) => postErrorCommitStatus({sha, targetUrl, label, description}).run({
-  makeGitHubRequest
-});
-
-test('postFinalCommitStatus posts success pr status to GitHub when there are no failures', () => {
+test('postFinal posts success pr status to GitHub when there are no failures', () => {
   const spy = createSpy().andReturn(ReaderPromise.of());
-  postFinalCommitStatus({
+  const {postFinal} = CommitStatusPoster({
     sha: 'h8g94hg9',
-    assetDiffs: {
+    targetUrl: 'info.com/53',
+    label: 'interesting info'
+  });
+
+  postFinal(
+    {
       'app.js': {
         difference: -734729,
         current: 5364634,
@@ -32,10 +26,8 @@ test('postFinalCommitStatus posts success pr status to GitHub when there are no 
         percentChange: 24
       }
     },
-    thresholdFailures: [],
-    targetUrl: 'info.com/53',
-    label: 'interesting info'
-  }).run({makeGitHubRequest: spy});
+    []
+  ).run({makeGitHubRequest: spy});
 
   const [path, fetchOpts] = firstCallArguments(spy);
   expect(path).toBe('statuses/h8g94hg9');
@@ -50,18 +42,21 @@ test('postFinalCommitStatus posts success pr status to GitHub when there are no 
   });
 });
 
-test('postFinalCommitStatus posts failure pr status to GitHub when there are failures', () => {
+test('postFinal posts failure pr status to GitHub when there are failures', () => {
   const spy = createSpy().andReturn(ReaderPromise.of());
-  postFinalCommitStatus({
+  const {postFinal} = CommitStatusPoster({
     sha: 'h8g94hg9',
-    assetDiffs: {},
-    thresholdFailures: [
-      {message: 'file2.js is too big'},
-      {message: 'vendor asset is too big'}
-    ],
     targetUrl: 'info.com/53',
     label: 'interesting info'
-  }).run({makeGitHubRequest: spy});
+  });
+
+  postFinal(
+    {},
+    [
+      {message: 'file2.js is too big'},
+      {message: 'vendor asset is too big'}
+    ]
+  ).run({makeGitHubRequest: spy});
 
   const [path, fetchOpts] = firstCallArguments(spy);
   expect(path).toBe('statuses/h8g94hg9');
@@ -76,13 +71,14 @@ test('postFinalCommitStatus posts failure pr status to GitHub when there are fai
   });
 });
 
-test('postPendingPrStatus makes request to post pending pr status to GitHub', () => {
+test('postPending makes request to post pending pr status to GitHub', () => {
   const spy = createSpy().andReturn(ReaderPromise.of());
-  postPendingCommitStatus({
+  const {postPending} = CommitStatusPoster({
     sha: 'h8g94hg9',
     targetUrl: 'info.com/53',
     label: 'interesting info'
-  }).run({makeGitHubRequest: spy});
+  });
+  postPending().run({makeGitHubRequest: spy});
 
   const [path, fetchOpts] = firstCallArguments(spy);
   expect(path).toBe('statuses/h8g94hg9');
@@ -97,15 +93,15 @@ test('postPendingPrStatus makes request to post pending pr status to GitHub', ()
   });
 });
 
-test('postErrorPrStatus makes request to post error pr status to GitHub', () => {
+test('postError makes request to post error pr status to GitHub', () => {
   const spy = createSpy().andReturn(ReaderPromise.of());
-  subject({
+  const {postError} = CommitStatusPoster({
     sha: 'h8g94hg9',
     targetUrl: 'info.com/53',
-    label: 'interesting info',
-    description: 'Error encountered while doing thing...',
-    makeGitHubRequest: spy
+    label: 'interesting info'
   });
+
+  postError('Error encountered while doing thing...').run({makeGitHubRequest: spy});
 
   const [path, fetchOpts] = firstCallArguments(spy);
   expect(path).toBe('statuses/h8g94hg9');
@@ -121,12 +117,10 @@ test('postErrorPrStatus makes request to post error pr status to GitHub', () => 
 });
 
 test('postErrorPrStatus truncates description to 140 characters (using ellipsis)', () => {
+  const {postError} = CommitStatusPoster({});
   const message = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.";
   const spy = createSpy().andReturn(ReaderPromise.of());
-  subject({
-    description: message,
-    makeGitHubRequest: spy
-  });
+  postError(message).run({makeGitHubRequest: spy});
 
   const [, fetchOpts] = firstCallArguments(spy);
 

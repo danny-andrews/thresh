@@ -16,9 +16,7 @@ import {
   getAssetFilestats,
   getBaseBranch,
   makeArtifactDirectory,
-  postErrorCommitStatus,
-  postFinalCommitStatus,
-  postPendingCommitStatus,
+  CommitStatusPoster,
   readManifest,
   saveStats,
   writeAssetDiffs,
@@ -73,16 +71,15 @@ export default ({
   projectName,
   pullRequestId
 }) => {
-  const prStatusParams = {
-    targetUrl: `${buildUrl}#artifacts`,
-    label: compactAndJoin(': ', ['Asset Sizes', projectName.orSome(null)]),
-    sha: buildSha
-  };
-
   const resolvePath = path => [outputDirectory, path].join('/');
   const decorateAsset = ({path, ...rest}) => ({
     ...rest,
     path: resolvePath(path)
+  });
+  const {postPending, postError, postFinal} = CommitStatusPoster({
+    targetUrl: `${buildUrl}#artifacts`,
+    label: compactAndJoin(': ', ['Asset Sizes', projectName.orSome(null)]),
+    sha: buildSha
   });
 
   return validateFailureThresholdSchemaWrapped(failureThresholds).chain(
@@ -93,7 +90,7 @@ export default ({
         .chain(getAssetFilestats)
         .map(assetStatListToMap),
       getPreviousAssetStats(pullRequestId),
-      postPendingCommitStatus(prStatusParams),
+      postPending(),
       makeArtifactDirectory(artifactsDirectory)
     ])
   ).chain(
@@ -144,17 +141,13 @@ export default ({
         assetDiffs,
         thresholdFailures: thresholdFailures.right()
       }),
-      postFinalCommitStatus({
-        ...prStatusParams,
+      postFinal(
         assetDiffs,
-        thresholdFailures: thresholdFailures.right()
-      })
+        thresholdFailures.right()
+      )
     ]);
   }).chainErr(
-    err => postErrorCommitStatus({
-      ...prStatusParams,
-      description: err.message
-    }).chain(
+    err => postError(err.message).chain(
       () => isWarningType(err)
         ? logMessage(err.message)
         : ReaderPromise.fromError(err)

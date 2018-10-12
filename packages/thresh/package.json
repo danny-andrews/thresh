@@ -28,15 +28,14 @@
     "build": "rm -rf lib && babel src --out-dir lib"
   },
   "dependencies": {
-    "@danny.andrews/reader-promise": "0.0.0",
     "@danny.andrews/fp-utils": "0.0.0",
+    "@danny.andrews/reader-promise": "0.0.0",
     "ajv": "^5.2.2",
     "command-line-args": "^4.0.6",
     "filesize": "^3.5.10",
     "flat-file-db": "^1.0.0",
     "humps": "^2.0.1",
     "monet": "^0.8.10",
-    "ncurry": "^1.0.0",
     "node-fetch": "^1.7.1",
     "ramda": "^0.24.1",
     "sprintf-js": "^1.1.1"

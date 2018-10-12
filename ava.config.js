@@ -4,5 +4,6 @@ export default {
     '!packages/thresh-artifact-store-circleci/**'
   ],
   require: ['@babel/register'],
-  failWithoutAssertions: false
+  failWithoutAssertions: false,
+  verbose: true
 };
