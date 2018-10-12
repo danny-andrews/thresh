@@ -1,9 +1,5 @@
 export {default as makeArtifactDirectory} from './make-artifact-directory';
-export {
-  postFinalCommitStatus,
-  postPendingCommitStatus,
-  postErrorCommitStatus
-} from './post-commit-status';
+export {default as CommitStatusPoster} from './commit-status-poster';
 export {default as makeGitHubRequest} from './make-github-request';
 export {default as readManifest} from './read-manifest';
 export {default as readConfig} from './read-config';
