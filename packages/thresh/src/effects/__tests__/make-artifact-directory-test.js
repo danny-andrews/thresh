@@ -2,7 +2,7 @@ import test from 'ava';
 import expect, {createSpy} from 'expect';
 
 import makeArtifactDirectory from '../make-artifact-directory';
-import {ErrorCreatingArtifactDirectoryErr} from '../../core/errors';
+import {ArtifactDirectoryCreationErr} from '../../core/errors';
 
 const subject = ({
   mkdir = () => Promise.resolve(),
@@ -21,9 +21,9 @@ test('makes artifact directory', () => {
   });
 });
 
-test('returns ErrorCreatingArtifactDirectoryErr when an error is encountered creating directory', () => subject({
-  mkdir: () => Promise.reject(Error('oh no'))
+test('returns ArtifactDirectoryCreationErr when an error is encountered creating directory', () => subject({
+  mkdir: () => Promise.reject(Error())
 }).catch(({message, constructor}) => {
-  expect(message).toEqual('Error creating artifact directory: Error: oh no');
-  expect(constructor).toEqual(ErrorCreatingArtifactDirectoryErr);
+  expect(message).toEqual('Error creating artifact directory');
+  expect(constructor).toEqual(ArtifactDirectoryCreationErr);
 }));

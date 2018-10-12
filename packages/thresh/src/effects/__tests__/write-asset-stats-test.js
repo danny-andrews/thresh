@@ -2,7 +2,7 @@ import test from 'ava';
 import expect, {createSpy} from 'expect';
 
 import writeAssetStats from '../write-asset-stats';
-import {ErrorWritingAssetSizesArtifactErr} from '../../core/errors';
+import {AssetStatsWriteErr} from '../../core/errors';
 
 const subject = ({
   writeFile = () => Promise.resolve(),
@@ -37,8 +37,8 @@ test('writes asset stats file', () => {
 });
 
 test('returns error when an error is encountered writing asset stats file', () => subject({
-  writeFile: () => Promise.reject(Error('oh no'))
+  writeFile: () => Promise.reject(Error())
 }).catch(({message, constructor}) => {
-  expect(constructor).toBe(ErrorWritingAssetSizesArtifactErr);
-  expect(message).toBe('Error writing asset sizes artifact: Error: oh no');
+  expect(constructor).toBe(AssetStatsWriteErr);
+  expect(message).toBe('Error writing asset stats artifact');
 }));

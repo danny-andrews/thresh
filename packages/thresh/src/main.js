@@ -13,7 +13,7 @@ import getThresholdFailures from './core/get-threshold-failures';
 import {NoOpenPullRequestFoundErr, NoPreviousStatsFoundForFilepath}
   from './core/errors';
 import {
-  getAssetStats,
+  getAssetFilestats,
   getBaseBranch,
   makeArtifactDirectory,
   postErrorCommitStatus,
@@ -90,7 +90,7 @@ export default ({
       readManifest(manifestFilepath)
         .map(assetStatMapToList)
         .map(R.map(decorateAsset))
-        .chain(getAssetStats)
+        .chain(getAssetFilestats)
         .map(assetStatListToMap),
       getPreviousAssetStats(pullRequestId),
       postPendingCommitStatus(prStatusParams),

@@ -2,7 +2,7 @@ import test from 'ava';
 import expect, {createSpy} from 'expect';
 
 import writeAssetDiffs from '../write-asset-diffs';
-import {ErrorWritingAssetDiffsArtifactErr} from '../../core/errors';
+import {AssetDiffsWriteErr} from '../../core/errors';
 
 const subject = ({
   writeFile = () => Promise.resolve(),
@@ -45,8 +45,8 @@ test('writes asset stats file', () => {
 });
 
 test('returns error when an error is encountered writing asset diffs file', () => subject({
-  writeFile: () => Promise.reject(Error('oh no'))
+  writeFile: () => Promise.reject(Error())
 }).catch(({message, constructor}) => {
-  expect(message).toEqual('Error writing asset diffs artifact: Error: oh no!');
-  expect(constructor).toEqual(ErrorWritingAssetDiffsArtifactErr);
+  expect(message).toEqual('Error writing asset diffs artifact');
+  expect(constructor).toEqual(AssetDiffsWriteErr);
 }));
