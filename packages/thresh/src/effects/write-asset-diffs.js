@@ -1,5 +1,5 @@
 import {serializeForFile} from '../shared';
-import {ErrorWritingAssetDiffsArtifactErr} from '../core/errors';
+import {AssetDiffsWriteErr} from '../core/errors';
 import {ASSET_DIFFS_FILENAME, OUTPUT_FILEPATH} from '../core/constants';
 
 import {resolve, writeFile} from './base';
@@ -16,4 +16,4 @@ export default ({rootPath, assetDiffs, thresholdFailures}) => resolve(
       failures: thresholdFailures
     })
   )
-).mapErr(ErrorWritingAssetDiffsArtifactErr);
+).mapErr(AssetDiffsWriteErr);

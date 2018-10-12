@@ -3,7 +3,7 @@ import expect from 'expect';
 
 import readConfig from '../read-config';
 import {PromiseError} from '../../test/helpers';
-import {ConfigFileReadErr} from '../../core/errors';
+import {ConfigFileReadErr, ConfigFileParseErr} from '../../core/errors';
 
 const subject = ({
   readFile = () => Promise.resolve(),
@@ -17,15 +17,15 @@ test('returns parsed contents of config', () => subject({
 }));
 
 test('returns ConfigFileReadErr when an error is encountered reading stats file', () => subject({
-  readFile: () => PromiseError('oh no')
+  readFile: () => PromiseError()
 }).catch(({message, constructor}) => {
-  expect(message).toEqual('Error reading config file: Error: oh no!');
+  expect(message).toEqual('Error reading config file');
   expect(constructor).toEqual(ConfigFileReadErr);
 }));
 
-test('returns ConfigFileReadErr when an error is encountered parsing stats file contents', () => subject({
+test('returns ConfigFileParseErr when an error is encountered parsing stats file contents', () => subject({
   writeFile: () => Promise.resolve(';')
 }).catch(({message, constructor}) => {
-  expect(message).toEqual("Error reading config file: TypeError: Cannot read property 'toString' of undefined!");
-  expect(constructor).toEqual(ConfigFileReadErr);
+  expect(message).toEqual('Error parsing config file');
+  expect(constructor).toEqual(ConfigFileParseErr);
 }));
