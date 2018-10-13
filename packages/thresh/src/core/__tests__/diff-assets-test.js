@@ -8,25 +8,22 @@ const assetFac = ({size = 24} = {}) => ({size});
 const FLOAT_PERCISION = 0.000001;
 
 test('empty objects', () => {
-  const actual = subject({
-    current: {},
-    original: {}
-  });
+  const actual = subject({}, {});
 
   expect(actual).toEqual({});
 });
 
 test('calculates stats properly', () => {
-  const actual = subject({
-    current: {
+  const actual = subject(
+    {
       'asset1.js': assetFac({size: 5}),
       'asset2.js': assetFac({size: 80})
     },
-    original: {
+    {
       'asset1.js': assetFac({size: 4}),
       'asset2.js': assetFac({size: 100})
     }
-  });
+  );
 
   expect(actual).toMatch({
     'asset1.js': {
@@ -47,15 +44,15 @@ test('calculates stats properly', () => {
 });
 
 test('calculates diff correctly even when mismatch found', () => {
-  const actual = subject({
-    current: {
+  const actual = subject(
+    {
       'asset1.js': assetFac({size: 6}),
       'asset2.js': assetFac({size: 424})
     },
-    original: {
+    {
       'asset1.js': assetFac({size: 16})
     }
-  });
+  );
 
   expect(actual).toMatch({
     'asset1.js': {
@@ -70,11 +67,11 @@ test('calculates diff correctly even when mismatch found', () => {
 
 test('calls onMismatchFound for every mismatch found', () => {
   const spy = createSpy();
-  subject({
-    current: {'new-asset.js': assetFac(), 'new-asset.css': assetFac()},
-    original: {},
-    onMismatchFound: spy
-  });
+  subject(
+    {'new-asset.js': assetFac(), 'new-asset.css': assetFac()},
+    {},
+    {onMismatchFound: spy}
+  );
 
   expect(spy.calls.length).toBe(2);
   expect(spy).toHaveBeenCalledWith('new-asset.js');
