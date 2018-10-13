@@ -101,7 +101,7 @@ export default ({
   });
   const {postPending, postError, postFinal} = CommitStatusPoster({
     targetUrl: `${buildUrl}#artifacts`,
-    label: compactAndJoin(': ', ['Asset Sizes', projectName.orSome('null')]),
+    label: compactAndJoin(': ', ['Asset Sizes', projectName.orSome(null)]),
     sha: buildSha
   });
 
