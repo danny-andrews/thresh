@@ -4,7 +4,6 @@ import ReaderPromise from '@danny.andrews/reader-promise';
 import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr}
   from '@danny.andrews/thresh-artifact-store-circleci';
 
-import {compactAndJoin} from './shared';
 import validateFailureThresholdSchema
   from './core/validate-failure-threshold-schema';
 import {ASSET_STATS_FILENAME} from './core/constants';
@@ -50,10 +49,10 @@ const getPreviousAssetStats = pullRequestId =>
     () => NoOpenPullRequestFoundErr() |> Either.Left |> ReaderPromise.of,
     prId => getBaseBranch(prId).chain(
       baseBranch => ReaderPromise.fromReaderFn(
-        ({artifactStore}) => artifactStore.getAssetStats({
+        ({artifactStore}) => artifactStore.getAssetStats(
           baseBranch,
-          assetSizesFilepath: ASSET_STATS_FILENAME
-        })
+          ASSET_STATS_FILENAME
+        )
       )
     )
   );
@@ -61,17 +60,21 @@ const getPreviousAssetStats = pullRequestId =>
 const validateFailureThresholdSchemaWrapped = failureThresholds =>
   validateFailureThresholdSchema(failureThresholds) |> ReaderPromise.fromEither;
 
+const COMMIT_STATUS_BASE_LABEL = 'Asset Sizes';
+
 const MonoRepoActions = projectName => ({
   transformStats: R.prop(projectName),
   saveRunningStats: (currentAssetStats, previousAssetStats) => saveStats({
     ...(previousAssetStats.cata(() => ({}), R.identity)),
     [projectName]: currentAssetStats
-  })
+  }),
+  getCommitStatusLabel: () => `${COMMIT_STATUS_BASE_LABEL}: ${projectName}`
 });
 
 const SingleRepoActions = () => ({
   transformStats: R.identity,
-  saveRunningStats: ReaderPromise.of
+  saveRunningStats: ReaderPromise.of,
+  getCommitStatusLabel: () => COMMIT_STATUS_BASE_LABEL
 });
 
 const diffAssets2 = (current, original) => diffAssets(
@@ -99,14 +102,16 @@ export default ({
     ...rest,
     path: resolvePath(path)
   });
+  const {
+    transformStats,
+    saveRunningStats,
+    getCommitStatusLabel
+  } = projectName.toEither().cata(SingleRepoActions, MonoRepoActions);
   const {postPending, postError, postFinal} = CommitStatusPoster({
     targetUrl: `${buildUrl}#artifacts`,
-    label: compactAndJoin(': ', ['Asset Sizes', projectName.orSome(null)]),
+    label: getCommitStatusLabel(),
     sha: buildSha
   });
-
-  const {transformStats, saveRunningStats} = projectName.toEither()
-    .cata(SingleRepoActions, MonoRepoActions);
 
   return validateFailureThresholdSchemaWrapped(failureThresholds).chain(
     () => ReaderPromise.parallel([

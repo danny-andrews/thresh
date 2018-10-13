@@ -5,7 +5,7 @@ import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr} from './errors';
 
 const CircleCiBuildStatuses = {SUCCESS: 'success'};
 
-export default ({assetSizesFilepath, baseBranch}) => {
+export default (assetSizesFilepath, baseBranch) => {
   const getRecentBuilds = branch => ReaderPromise.fromReaderFn(
     config => config.makeCircleRequest({path: `tree/${branch}`}).run(config)
   );
