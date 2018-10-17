@@ -12,7 +12,7 @@
   ],
   "check-coverage": true,
   "per-file": false,
-  "lines": 95,
-  "statements": 95,
-  "branches": 95
+  "lines": 70,
+  "statements": 70,
+  "branches": 70
 }

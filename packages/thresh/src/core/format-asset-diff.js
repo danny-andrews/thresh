@@ -1,10 +1,16 @@
 import filesize from 'filesize';
 import {sprintf} from 'sprintf-js';
 
-export default ({filename, difference, current, percentChange}) => {
+export const formatAsset = (filename, size) => sprintf(
+  '%s: %s',
+  filename,
+  filesize(size, {spacer: ''})
+);
+
+export const formatDiff = (difference, percentChange) => {
   const {value, symbol} = filesize(difference, {output: 'object'});
 
-  const statsDiff = difference === 0
+  return difference === 0
     ? 'No Change'
     : sprintf(
       '%+i%s, %+.2f%%',
@@ -12,11 +18,10 @@ export default ({filename, difference, current, percentChange}) => {
       symbol,
       percentChange
     );
-
-  return sprintf(
-    '%s: %s (%s)',
-    filename,
-    filesize(current, {spacer: ''}),
-    statsDiff
-  );
 };
+
+export default ({filename, difference, current, percentChange}) => sprintf(
+  '%s (%s)',
+  formatAsset(filename, current),
+  formatDiff(difference, percentChange)
+);

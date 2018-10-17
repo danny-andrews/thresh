@@ -8,6 +8,7 @@ import validateFailureThresholdSchema
   from './core/validate-failure-threshold-schema';
 import {ASSET_STATS_FILENAME} from './core/constants';
 import diffAssets from './core/diff-assets';
+import formatAssetDiff, {formatAsset} from './core/format-asset-diff';
 import getThresholdFailures from './core/get-threshold-failures';
 import {NoOpenPullRequestFoundErr, NoPreviousStatsFoundForFilepath}
   from './core/errors';
@@ -24,7 +25,6 @@ import {
 } from './effects';
 
 const WARNING_TYPES = new Set([
-  NoOpenPullRequestFoundErr,
   NoRecentBuildsFoundErr,
   NoAssetStatsArtifactFoundErr
 ]);
@@ -56,6 +56,9 @@ const getPreviousAssetStats = pullRequestId =>
       )
     )
   );
+
+const noPrFoundStatusMessage = statsString =>
+  `${statsString} (no open PR to calculate diffs from)`;
 
 const validateFailureThresholdSchemaWrapped = failureThresholds =>
   validateFailureThresholdSchema(failureThresholds) |> ReaderPromise.fromEither;
@@ -111,11 +114,31 @@ export default ({
     saveRunningStats,
     getCommitStatusLabel
   } = projectName.toEither().cata(SingleRepoActions, MonoRepoActions);
-  const {postPending, postError, postFinal} = CommitStatusPoster({
-    targetUrl: `${buildUrl}#artifacts`,
-    label: getCommitStatusLabel(),
-    sha: buildSha
-  });
+  const {postPending, postError, postFailure, postSuccess} =
+    CommitStatusPoster({
+      targetUrl: `${buildUrl}#artifacts`,
+      label: getCommitStatusLabel(),
+      sha: buildSha
+    });
+  const postFinal = (assetDiffs, thresholdFailures) => {
+    const formatMessages = R.join(' \n');
+    const successDescription = assetDiffs
+      |> R.toPairs
+      |> R.map(
+        ([filename, {difference, current, percentChange}]) =>
+          formatAssetDiff({filename, difference, current, percentChange})
+      )
+      |> formatMessages;
+    const failureDescription = thresholdFailures
+      |> R.map(R.prop('message'))
+      |> formatMessages;
+
+    return (
+      R.isEmpty(thresholdFailures)
+        ? postSuccess(successDescription)
+        : postFailure(failureDescription)
+    );
+  };
 
   return validateFailureThresholdSchemaWrapped(failureThresholds).chain(
     () => ReaderPromise.parallel([
@@ -138,7 +161,13 @@ export default ({
     ]).map(() => [currentAssetStats, previousAssetStats])
   ).chain(
     ([currentAssetStats, previousAssetStats]) => previousAssetStats.cata(
-      ReaderPromise.fromError,
+      error => (
+        R.toPairs(currentAssetStats)
+        |> R.map(([filename, {size}]) => formatAsset(filename, size))
+        |> R.join(' \n')
+        |> noPrFoundStatusMessage
+        |> postSuccess
+      ).chain(() => logMessage(error.message)),
       value => diffAssets2(currentAssetStats, value)
     )
   ).chain(
