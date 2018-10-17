@@ -5,7 +5,7 @@ import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr} from './errors';
 
 const CircleCiBuildStatuses = {SUCCESS: 'success'};
 
-export default (assetSizesFilepath, baseBranch) => {
+export default (baseBranch, assetStatsFilepath) => {
   const getRecentBuilds = branch => ReaderPromise.fromReaderFn(
     config => config.makeCircleRequest({path: `tree/${branch}`}).run(config)
   );
@@ -35,7 +35,7 @@ export default (assetSizesFilepath, baseBranch) => {
       : firstItem.previousSuccessfulBuild.buildNum;
 
     return getBuildArtifacts(buildNumber).chain(buildArtifacts => {
-      const artifactPathRegExp = new RegExp(`${assetSizesFilepath}$`);
+      const artifactPathRegExp = new RegExp(`${assetStatsFilepath}$`);
       const assetSizeArtifact = buildArtifacts
         .find(artifact => artifact.path.match(artifactPathRegExp));
       if(!assetSizeArtifact) {

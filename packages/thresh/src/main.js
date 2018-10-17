@@ -77,14 +77,18 @@ const SingleRepoActions = () => ({
   getCommitStatusLabel: () => COMMIT_STATUS_BASE_LABEL
 });
 
-const diffAssets2 = (current, original) => diffAssets(
-  current,
-  original,
-  {
-    onMismatchFound: filepath => NoPreviousStatsFoundForFilepath(filepath)
-      |> R.prop('message')
-      |> logMessage
-  }
+const diffAssets2 = (current, original) => ReaderPromise.fromReaderFn(
+  config => Promise.resolve(
+    diffAssets(
+      current,
+      original,
+      {
+        onMismatchFound: filepath => NoPreviousStatsFoundForFilepath(filepath)
+          |> R.prop('message')
+          |> config.logMessage
+      }
+    )
+  )
 );
 
 export default ({
@@ -135,25 +139,23 @@ export default ({
   ).chain(
     ([currentAssetStats, previousAssetStats]) => previousAssetStats.cata(
       ReaderPromise.fromError,
-      value => {
-        const assetDiffs = diffAssets2(currentAssetStats, value);
-
-        return getThresholdFailures(
-          R.toPairs(assetDiffs)
-            |> R.map(([filepath, {current: size}]) => ({filepath, size})),
-          failureThresholds
-        ).cata(
-          ReaderPromise.fromError,
-          thresholdFailures => ReaderPromise.parallel([
-            writeAssetDiffs({
-              rootPath: artifactsDirectory,
-              assetDiffs,
-              thresholdFailures
-            }),
-            postFinal(assetDiffs, thresholdFailures)
-          ])
-        );
-      }
+      value => diffAssets2(currentAssetStats, value)
+    )
+  ).chain(
+    assetDiffs => getThresholdFailures(
+      R.toPairs(assetDiffs)
+        |> R.map(([filepath, {current: size}]) => ({filepath, size})),
+      failureThresholds
+    ).cata(
+      ReaderPromise.fromError,
+      thresholdFailures => ReaderPromise.parallel([
+        writeAssetDiffs({
+          rootPath: artifactsDirectory,
+          assetDiffs,
+          thresholdFailures
+        }),
+        postFinal(assetDiffs, thresholdFailures)
+      ])
     )
   ).chainErr(
     err => ReaderPromise.parallel([
