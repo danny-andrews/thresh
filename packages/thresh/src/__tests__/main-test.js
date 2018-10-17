@@ -1,77 +1,365 @@
 import test from 'ava';
+import expect, {createSpy} from 'expect';
 import {Maybe, Either} from 'monet';
 import ReaderPromise from '@danny.andrews/reader-promise';
-import {
-  GetBaseBranchHandler,
-  GetRecentBuildsHandler,
-  GetArtifactsHandler,
-  GetArtifactHandler,
-  PostPrStatusHandler
-} from '@danny.andrews/thresh-artifact-store-circleci/lib/test/requests';
+import {NoAssetStatsArtifactFoundErr, NoRecentBuildsFoundErr}
+  from '@danny.andrews/thresh-artifact-store-circleci';
 
+import {firstCallFirstArgument} from '../test/helpers';
 import main from '../main';
-import {FakeRequest} from '../test/helpers';
 
-const fakeRequest = FakeRequest([
-  GetBaseBranchHandler({
-    base: {ref: 'd39h'}
-  }),
-  GetRecentBuildsHandler([{
-    buildNum: '92',
-    status: 'success'
-  }]),
-  GetArtifactsHandler([{
-    path: '8932hfdlsajlf/project-name/asset-stats.json',
-    url: 'http://circle-artifacts/my-url/84jhdfhads.json'
-  }]),
-  GetArtifactHandler({
-    response: '{}',
-    matcher: new RegExp('my-url/84jhdfhads')
-  }),
-  PostPrStatusHandler()
-]);
+const subject = ({
+  artifactsDirectory = 'd34g2d/artifacts',
+  buildSha = 'f83jfhg2',
+  buildUrl = 'http://circle.com/build/45',
+  failureThresholds = [],
+  manifestFilepath = 'manifest.json',
+  outputDirectory = 'dist',
+  projectName = Maybe.None(),
+  pullRequestId = Maybe.of('33'),
 
-test('stupid basic integration test (FIXME: need to actually make assertions)', () => {
-  main({
-    statsFilepath: 'dist/stats.js',
-    manifestFilepath: 'dist/manifest.json',
-    projectName: Maybe.None(),
-    outputDirectory: '',
-    failureThresholds: [],
-    buildSha: '8fdhihfj',
-    buildUrl: 'http://circle.com/my-build',
-    repoOwner: 'me',
-    repoName: 'my-repo',
-    pullRequestId: Maybe.of('f820yf3h'),
-    artifactsDirectory: 'lfjk3208hohefi4/artifacts'
-  }).run({
-    writeFile: () => Promise.resolve(),
-    readFile: () => Promise.resolve('{}'),
-    resolve: () => Promise.resolve(),
-    db: () => Promise.resolve(),
-    mkdir: () => Promise.resolve(),
-    getFileStats: () => Promise.resolve({}),
-    logMessage: () => {},
-    logError: () => {},
-    request: fakeRequest,
-    makeGitHubRequest: () => ReaderPromise.of({base: {}}),
-    artifactStore: {
-      getAssetStats: () => Promise.resolve(
-        Either.Right({})
+  // Dependencies
+  writeFile = () => Promise.resolve(),
+  readFile = () => Promise.resolve('{}'),
+  resolve = (...args) => [...args].join('/'),
+  db = () => Promise.resolve(),
+  mkdir = () => Promise.resolve(),
+  getFileStats = () => Promise.resolve({}),
+  logMessage = () => {},
+  makeGitHubRequest = () => ReaderPromise.of({base: {}}),
+  artifactStore = {
+    getAssetStats: () => Promise.resolve(
+      Either.Right({})
+    )
+  }
+} = {}) => main({
+  artifactsDirectory,
+  buildSha,
+  buildUrl,
+  failureThresholds,
+  manifestFilepath,
+  outputDirectory,
+  projectName,
+  pullRequestId
+}).run({
+  artifactStore,
+  db,
+  getFileStats,
+  logMessage,
+  makeGitHubRequest,
+  mkdir,
+  readFile,
+  resolve,
+  writeFile
+});
+
+const warnOnMissingHandlers = false;
+
+const fakeGitHubRequest = handlers => (path, ...rest) => {
+  if(handlers.has(path)) {
+    return handlers.get(path)(path, ...rest);
+  }
+
+  if(warnOnMissingHandlers) {
+    console.log(`No handler found for GitHub request to: ${path}`);
+  }
+
+  return ReaderPromise.of();
+};
+
+const fakeGetAssetStats = handlers => (branch, ...rest) => {
+  if(handlers.has(branch)) {
+    return handlers.get(branch)(branch, ...rest);
+  }
+
+  if(warnOnMissingHandlers) {
+    console.log(
+      `No handler found for call to 'getAssetStats' for branch: ${branch}`
+    );
+  }
+
+  return ReaderPromise.of();
+};
+
+test('posts pending commit status, writes asset stats to file, writes asset diffs to file, and posts success commit status', () => {
+  const writeFileSpy = createSpy();
+  const buildSha = 'dkg93hdk';
+  const pr = '99';
+  const baseBranch = 'master';
+  const artifactsDirectory = 'djeh9h/artifacts';
+  const originalSize = 500;
+  const currentSize = 400;
+  const assetName = 'app.js';
+  const assetPath = 'app.3u3232.js';
+  const manifestFilepath = 'manifest.json';
+  const outputDirectory = 'dist';
+  const postCommitStatusSpy = createSpy();
+  const gitHubRequestHandlers = new Map([
+    [
+      `statuses/${buildSha}`,
+      (...args) => {
+        postCommitStatusSpy(...args);
+
+        return ReaderPromise.of();
+      }
+    ],
+    [
+      `pulls/${pr}`,
+      () => ReaderPromise.of({
+        base: {
+          ref: baseBranch
+        }
+      })
+    ]
+  ]);
+  const getAssetStatsRequestHandlers = new Map([
+    [
+      baseBranch,
+      () => Promise.resolve(
+        Either.Right({
+          [assetName]: {
+            size: originalSize
+          }
+        })
       )
-    }
+    ]
+  ]);
+
+  return subject({
+    artifactsDirectory,
+    buildSha,
+    buildUrl: 'http://circle.com/build/78',
+    manifestFilepath,
+    outputDirectory,
+    pullRequestId: Maybe.of(pr),
+
+    // Dependencies
+    makeGitHubRequest: fakeGitHubRequest(gitHubRequestHandlers),
+    artifactStore: {
+      getAssetStats: fakeGetAssetStats(getAssetStatsRequestHandlers)
+    },
+    getFileStats: () => Promise.resolve({size: currentSize}),
+    readFile: path => path === manifestFilepath
+      ? Promise.resolve(JSON.stringify({[assetName]: assetPath}))
+      : Promise.reject(Error()),
+    writeFile: writeFileSpy
+  }).then(() => {
+    const [assetStatsFilepath, assetStats] = writeFileSpy.calls[0].arguments;
+    expect(assetStatsFilepath)
+      .toBe('djeh9h/artifacts/thresh/asset-stats.json');
+    expect(JSON.parse(assetStats)).toEqual({
+      'app.js': {
+        size: 400,
+        path: 'dist/app.3u3232.js'
+      }
+    });
+
+    const [assetDiffsFilepath, assetDiffs] = writeFileSpy.calls[1].arguments;
+    expect(assetDiffsFilepath)
+      .toBe('djeh9h/artifacts/thresh/asset-diffs.json');
+    expect(JSON.parse(assetDiffs)).toEqual({
+      diffs: {
+        'app.js': {
+          original: 500,
+          current: 400,
+          difference: -100,
+          percentChange: -20
+        }
+      },
+      failures: []
+    });
+    const [, pendingStatusArguments] = postCommitStatusSpy.calls[0].arguments;
+    expect(pendingStatusArguments.method).toBe('POST');
+    expect(pendingStatusArguments.body).toEqual({
+      state: 'pending',
+      targetUrl: 'http://circle.com/build/78#artifacts',
+      context: 'Asset Sizes',
+      description: 'Calculating asset diffs and threshold failures (if any)...'
+    });
+
+    const [, successStatusArguments] = postCommitStatusSpy.calls[1].arguments;
+    expect(successStatusArguments.method).toBe('POST');
+    expect(successStatusArguments.body).toEqual({
+      state: 'success',
+      targetUrl: 'http://circle.com/build/78#artifacts',
+      context: 'Asset Sizes',
+      description: 'app.js: 400B (-100B, -20.00%)'
+    });
   });
 });
 
-test.todo('happy path (makes artifact directory, writes asset stats to file, and writes asset diffs to file)');
-test.todo('handles case where no open pull request is found');
-test.todo('returns error when non-schema-matching failure threshold is provided');
-test.todo('handles invalid failure threshold case');
-test.todo('surfaces errors reading stats file');
-test.todo('surfaces errors making artifact directory');
-test.todo('surfaces errors writing asset sizes');
-test.todo('surfaces errors writing asset diffs');
-test.todo('saves stats to local db when project name is given');
-test.todo('writes message to the console when no previous stat found for given filepath');
-test.todo('handles case where previous build has no stats for current project');
-test.todo('posts error PR status when error is encountered');
+test('writes message to the console when no previous stat found for given filepath', () => {
+  const baseBranch = 'develop';
+  const assetName = 'vendor.js';
+  const assetPath = 'vendor.fdjsayr.js';
+  const mismatchedAssetName = 'app.js';
+  const logMessageSpy = createSpy();
+  const pr = '235';
+  const gitHubRequestHandlers = new Map([
+    [
+      `pulls/${pr}`,
+      () => ReaderPromise.of({
+        base: {
+          ref: baseBranch
+        }
+      })
+    ]
+  ]);
+  const getAssetStatsRequestHandlers = new Map([
+    [
+      baseBranch,
+      () => Promise.resolve(
+        Either.Right({
+          [mismatchedAssetName]: {
+            size: 300
+          }
+        })
+      )
+    ]
+  ]);
+
+  return subject({
+    pullRequestId: Maybe.of(pr),
+    readFile: () => Promise.resolve(JSON.stringify({[assetName]: assetPath})),
+    makeGitHubRequest: fakeGitHubRequest(gitHubRequestHandlers),
+    artifactStore: {
+      getAssetStats: fakeGetAssetStats(getAssetStatsRequestHandlers)
+    },
+    logMessage: logMessageSpy
+  }).then(() => {
+    const actual = firstCallFirstArgument(logMessageSpy);
+    expect(actual).toBe('No previous stats found for vendor.js. Did you rename that file recently?');
+  });
+});
+
+test('posts error commit status and logs message when previous build has no stats', () => {
+  const pr = '653';
+  const baseBranch = 'master';
+  const buildSha = 'lnbs3hdk';
+  const buildNumber = '78';
+  const logMessageSpy = createSpy();
+  const postCommitStatusSpy = createSpy();
+  const gitHubRequestHandlers = new Map([
+    [
+      `statuses/${buildSha}`,
+      (...args) => {
+        postCommitStatusSpy(...args);
+
+        return ReaderPromise.of();
+      }
+    ],
+    [
+      `pulls/${pr}`,
+      () => ReaderPromise.of({
+        base: {
+          ref: baseBranch
+        }
+      })
+    ]
+  ]);
+  const getAssetStatsRequestHandlers = new Map([
+    [
+      baseBranch,
+      () => Promise.resolve(
+        Either.Left(
+          NoAssetStatsArtifactFoundErr(baseBranch, buildNumber)
+        )
+      )
+    ]
+  ]);
+
+  return subject({
+    buildSha,
+    pullRequestId: Maybe.of(pr),
+    buildUrl: `http://circle.com/build/${buildNumber}`,
+
+    // Dependencies
+    makeGitHubRequest: fakeGitHubRequest(gitHubRequestHandlers),
+    artifactStore: {
+      getAssetStats: fakeGetAssetStats(getAssetStatsRequestHandlers)
+    },
+    logMessage: logMessageSpy
+  }).then(() => {
+    const expectedMessage = 'No asset stats artifact found for latest build of: `master`. Build number: `78`.';
+    const [, errorStatusArguments] = postCommitStatusSpy.calls[1].arguments;
+    expect(errorStatusArguments.method).toBe('POST');
+    expect(errorStatusArguments.body).toEqual({
+      state: 'error',
+      targetUrl: 'http://circle.com/build/78#artifacts',
+      context: 'Asset Sizes',
+      description: expectedMessage
+    });
+
+    const actualMessage = firstCallFirstArgument(logMessageSpy);
+    expect(actualMessage).toBe(expectedMessage);
+  });
+});
+
+test('posts error commit status and logs message when no previous builds are found', () => {
+  const pr = '3';
+  const baseBranch = 'develop';
+  const buildSha = 'ng832hfd';
+  const buildNumber = '139';
+  const logMessageSpy = createSpy();
+  const postCommitStatusSpy = createSpy();
+  const gitHubRequestHandlers = new Map([
+    [
+      `statuses/${buildSha}`,
+      (...args) => {
+        postCommitStatusSpy(...args);
+
+        return ReaderPromise.of();
+      }
+    ],
+    [
+      `pulls/${pr}`,
+      () => ReaderPromise.of({
+        base: {
+          ref: baseBranch
+        }
+      })
+    ]
+  ]);
+  const getAssetStatsRequestHandlers = new Map([
+    [
+      baseBranch,
+      () => Promise.resolve(
+        Either.Left(
+          NoRecentBuildsFoundErr(baseBranch)
+        )
+      )
+    ]
+  ]);
+
+  return subject({
+    buildSha,
+    pullRequestId: Maybe.of(pr),
+    buildUrl: `http://circle.com/build/${buildNumber}`,
+
+    // Dependencies
+    makeGitHubRequest: fakeGitHubRequest(gitHubRequestHandlers),
+    artifactStore: {
+      getAssetStats: fakeGetAssetStats(getAssetStatsRequestHandlers)
+    },
+    logMessage: logMessageSpy
+  }).then(() => {
+    const expectedMessage = 'No recent builds found for the base branch: `develop`.';
+    const [, errorStatusArguments] = postCommitStatusSpy.calls[1].arguments;
+    expect(errorStatusArguments.method).toBe('POST');
+    expect(errorStatusArguments.body).toEqual({
+      state: 'error',
+      targetUrl: 'http://circle.com/build/139#artifacts',
+      context: 'Asset Sizes',
+      description: expectedMessage
+    });
+
+    const actualMessage = firstCallFirstArgument(logMessageSpy);
+    expect(actualMessage).toBe(expectedMessage);
+  });
+});
+
+test.todo('writes asset stats and posts success commit status with asset stats (and a note explaining that diffs could not be calculated) when open pull request is not found');
+
+test.todo('posts failure commit when failure thresholds are not met');
+
+test.todo('saves running stats in database and appends projectName to commit status label when projectName is given (monorepo usecase)');
