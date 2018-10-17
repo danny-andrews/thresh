@@ -1,8 +1,6 @@
 import R from 'ramda';
 import {Either} from 'monet';
 import ReaderPromise from '@danny.andrews/reader-promise';
-import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr}
-  from '@danny.andrews/thresh-artifact-store-circleci';
 
 import validateFailureThresholdSchema
   from './core/validate-failure-threshold-schema';
@@ -23,13 +21,6 @@ import {
   writeAssetStats,
   logMessage
 } from './effects';
-
-const WARNING_TYPES = new Set([
-  NoRecentBuildsFoundErr,
-  NoAssetStatsArtifactFoundErr
-]);
-
-const isWarningType = err => WARNING_TYPES.has(err.constructor);
 
 const assetStatListToMap = assetStats => R.reduce(
   (acc, {filename, ...rest}) => ({...acc, [filename]: rest}),
@@ -162,12 +153,17 @@ export default ({
   ).chain(
     ([currentAssetStats, previousAssetStats]) => previousAssetStats.cata(
       error => (
-        R.toPairs(currentAssetStats)
-        |> R.map(([filename, {size}]) => formatAsset(filename, size))
-        |> R.join(' \n')
-        |> noPrFoundStatusMessage
-        |> postSuccess
-      ).chain(() => logMessage(error.message)),
+        error.constructor === NoOpenPullRequestFoundErr
+          ? R.toPairs(currentAssetStats)
+            |> R.map(([filename, {size}]) => formatAsset(filename, size))
+            |> R.join(' \n')
+            |> noPrFoundStatusMessage
+            |> postSuccess
+          : ReaderPromise.of(error)
+      ).chain(
+        () => logMessage(error.message)
+          .chain(() => ReaderPromise.fromError(error))
+      ),
       value => diffAssets2(currentAssetStats, value)
     )
   ).chain(
@@ -186,12 +182,5 @@ export default ({
         postFinal(assetDiffs, thresholdFailures)
       ])
     )
-  ).chainErr(
-    err => ReaderPromise.parallel([
-      postError(err.message),
-      isWarningType(err)
-        ? logMessage(err.message)
-        : ReaderPromise.fromError(err)
-    ])
-  );
+  ).chainErr(error => postError(error.message));
 };

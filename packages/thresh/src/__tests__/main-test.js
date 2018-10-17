@@ -5,6 +5,7 @@ import ReaderPromise from '@danny.andrews/reader-promise';
 import {NoAssetStatsArtifactFoundErr, NoRecentBuildsFoundErr}
   from '@danny.andrews/thresh-artifact-store-circleci';
 
+import {DFAULT_FAILURE_THRESHOLD_STRATEGY} from '../core/schemas';
 import {firstCallFirstArgument} from '../test/helpers';
 import main from '../main';
 
@@ -358,7 +359,7 @@ test('posts error commit status and logs message when no previous builds are fou
   });
 });
 
-test.only('writes asset stats and posts success commit status with asset stats (and a note explaining that diffs could not be calculated) when open pull request is not found', () => {
+test('writes asset stats and posts success commit status with asset stats (and a note explaining that diffs could not be calculated) when open pull request is not found', () => {
   const writeFileSpy = createSpy();
   const buildSha = 'ljghay3h';
   const artifactsDirectory = '83jgs3/artifacts';
@@ -414,6 +415,146 @@ test.only('writes asset stats and posts success commit status with asset stats (
   });
 });
 
-test.todo('posts failure commit when failure thresholds are not met');
+test('posts success commit status when failure thresholds are not met', () => {
+  const writeFileSpy = createSpy();
+  const buildSha = 'fjdk29uw';
+  const pr = '200';
+  const baseBranch = 'master';
+  const assetSize = 400;
+  const assetName = 'build.js';
+  const assetPath = 'build.3u3232.js';
+  const buildNumber = '21';
+  const postCommitStatusSpy = createSpy();
+  const gitHubRequestHandlers = new Map([
+    [
+      `statuses/${buildSha}`,
+      (...args) => {
+        postCommitStatusSpy(...args);
+
+        return ReaderPromise.of();
+      }
+    ],
+    [
+      `pulls/${pr}`,
+      () => ReaderPromise.of({
+        base: {
+          ref: baseBranch
+        }
+      })
+    ]
+  ]);
+  const getAssetStatsRequestHandlers = new Map([
+    [
+      baseBranch,
+      () => Promise.resolve(
+        Either.Right({
+          [assetName]: {
+            size: 200
+          }
+        })
+      )
+    ]
+  ]);
+
+  return subject({
+    buildSha,
+    buildUrl: `http://circle.com/build/${buildNumber}`,
+    pullRequestId: Maybe.of(pr),
+    failureThresholds: [{
+      maxSize: 300,
+      targets: '.js',
+      strategy: DFAULT_FAILURE_THRESHOLD_STRATEGY
+    }],
+
+    // Dependencies
+    makeGitHubRequest: fakeGitHubRequest(gitHubRequestHandlers),
+    artifactStore: {
+      getAssetStats: fakeGetAssetStats(getAssetStatsRequestHandlers)
+    },
+    getFileStats: () => Promise.resolve({size: assetSize}),
+    readFile: () => Promise.resolve(JSON.stringify({[assetName]: assetPath})),
+    writeFile: writeFileSpy
+  }).then(() => {
+    const [, failureStatusArguments] = postCommitStatusSpy.calls[1].arguments;
+    expect(failureStatusArguments.method).toBe('POST');
+    expect(failureStatusArguments.body).toEqual({
+      state: 'failure',
+      targetUrl: 'http://circle.com/build/21#artifacts',
+      context: 'Asset Sizes',
+      description: '"build.js" (400B) must be less than or equal to 300B!'
+    });
+  });
+});
+
+test('posts success commit status when failure thresholds are met', () => {
+  const writeFileSpy = createSpy();
+  const buildSha = 'algh83he';
+  const pr = '200';
+  const baseBranch = 'master';
+  const assetSize = 267;
+  const assetName = 'app.js';
+  const assetPath = 'app.dj39hf.js';
+  const buildNumber = '29';
+  const postCommitStatusSpy = createSpy();
+  const gitHubRequestHandlers = new Map([
+    [
+      `statuses/${buildSha}`,
+      (...args) => {
+        postCommitStatusSpy(...args);
+
+        return ReaderPromise.of();
+      }
+    ],
+    [
+      `pulls/${pr}`,
+      () => ReaderPromise.of({
+        base: {
+          ref: baseBranch
+        }
+      })
+    ]
+  ]);
+  const getAssetStatsRequestHandlers = new Map([
+    [
+      baseBranch,
+      () => Promise.resolve(
+        Either.Right({
+          [assetName]: {
+            size: 400
+          }
+        })
+      )
+    ]
+  ]);
+
+  return subject({
+    buildSha,
+    buildUrl: `http://circle.com/build/${buildNumber}`,
+    pullRequestId: Maybe.of(pr),
+    failureThresholds: [{
+      maxSize: 550,
+      targets: '.js',
+      strategy: DFAULT_FAILURE_THRESHOLD_STRATEGY
+    }],
+
+    // Dependencies
+    makeGitHubRequest: fakeGitHubRequest(gitHubRequestHandlers),
+    artifactStore: {
+      getAssetStats: fakeGetAssetStats(getAssetStatsRequestHandlers)
+    },
+    getFileStats: () => Promise.resolve({size: assetSize}),
+    readFile: () => Promise.resolve(JSON.stringify({[assetName]: assetPath})),
+    writeFile: writeFileSpy
+  }).then(() => {
+    const [, successStatusArguments] = postCommitStatusSpy.calls[1].arguments;
+    expect(successStatusArguments.method).toBe('POST');
+    expect(successStatusArguments.body).toEqual({
+      state: 'success',
+      targetUrl: 'http://circle.com/build/29#artifacts',
+      context: 'Asset Sizes',
+      description: 'app.js: 267B (-133B, -33.25%)'
+    });
+  });
+});
 
 test.todo('saves running stats in database and appends projectName to commit status label when projectName is given (monorepo usecase)');
