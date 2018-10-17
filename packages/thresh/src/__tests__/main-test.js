@@ -358,7 +358,61 @@ test('posts error commit status and logs message when no previous builds are fou
   });
 });
 
-test.todo('writes asset stats and posts success commit status with asset stats (and a note explaining that diffs could not be calculated) when open pull request is not found');
+test.only('writes asset stats and posts success commit status with asset stats (and a note explaining that diffs could not be calculated) when open pull request is not found', () => {
+  const writeFileSpy = createSpy();
+  const buildSha = 'ljghay3h';
+  const artifactsDirectory = '83jgs3/artifacts';
+  const assetSize = 258;
+  const assetName = 'main.js';
+  const assetPath = 'main.38552hd3.js';
+  const manifestFilepath = 'manifest.json';
+  const outputDirectory = 'build';
+  const postCommitStatusSpy = createSpy();
+  const gitHubRequestHandlers = new Map([
+    [
+      `statuses/${buildSha}`,
+      (...args) => {
+        postCommitStatusSpy(...args);
+
+        return ReaderPromise.of();
+      }
+    ]
+  ]);
+
+  return subject({
+    artifactsDirectory,
+    buildSha,
+    buildUrl: 'http://circle.com/build/29',
+    manifestFilepath,
+    outputDirectory,
+    pullRequestId: Maybe.None(),
+
+    // Dependencies
+    makeGitHubRequest: fakeGitHubRequest(gitHubRequestHandlers),
+    getFileStats: () => Promise.resolve({size: assetSize}),
+    readFile: () => Promise.resolve(JSON.stringify({[assetName]: assetPath})),
+    writeFile: writeFileSpy
+  }).then(() => {
+    const [assetStatsFilepath, assetStats] = writeFileSpy.calls[0].arguments;
+    expect(assetStatsFilepath)
+      .toBe('83jgs3/artifacts/thresh/asset-stats.json');
+    expect(JSON.parse(assetStats)).toEqual({
+      'main.js': {
+        size: 258,
+        path: 'build/main.38552hd3.js'
+      }
+    });
+
+    const [, successStatusArguments] = postCommitStatusSpy.calls[1].arguments;
+    expect(successStatusArguments.method).toBe('POST');
+    expect(successStatusArguments.body).toEqual({
+      state: 'success',
+      targetUrl: 'http://circle.com/build/29#artifacts',
+      context: 'Asset Sizes',
+      description: 'main.js: 258B (no open PR to calculate diffs from)'
+    });
+  });
+});
 
 test.todo('posts failure commit when failure thresholds are not met');
 

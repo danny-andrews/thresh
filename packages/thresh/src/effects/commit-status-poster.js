@@ -2,7 +2,6 @@ import R from 'ramda';
 import ReaderPromise from '@danny.andrews/reader-promise';
 
 import {truncate} from '../shared';
-import formatAssetDiff from '../core/format-asset-diff';
 
 const MAX_DESCRIPTION_LENGTH = 140;
 
@@ -44,24 +43,5 @@ export default ({sha, targetUrl, label}) => {
     PENDING_STATUS_TEXT
   );
 
-  const postFinal = (assetDiffs, thresholdFailures) => {
-    const formatMessages = R.join(' \n');
-    const successDescription = assetDiffs
-      |> R.toPairs
-      |> R.map(
-        ([filename, assetDiff]) => formatAssetDiff({filename, ...assetDiff})
-      )
-      |> formatMessages;
-    const failureDescription = thresholdFailures
-      |> R.map(R.prop('message'))
-      |> formatMessages;
-
-    return (
-      R.isEmpty(thresholdFailures)
-        ? postSuccess(successDescription)
-        : postFailure(failureDescription)
-    );
-  };
-
-  return {postError, postPending, postSuccess, postFailure, postFinal};
+  return {postError, postPending, postSuccess, postFailure};
 };
