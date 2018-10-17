@@ -2,6 +2,8 @@ import test from 'ava';
 import expect, {createSpy} from 'expect';
 import {Maybe, Either} from 'monet';
 import ReaderPromise from '@danny.andrews/reader-promise';
+import {NoAssetStatsArtifactFoundErr, NoRecentBuildsFoundErr}
+  from '@danny.andrews/thresh-artifact-store-circleci';
 
 import {firstCallFirstArgument} from '../test/helpers';
 import main from '../main';
@@ -9,7 +11,7 @@ import main from '../main';
 const subject = ({
   artifactsDirectory = 'd34g2d/artifacts',
   buildSha = 'f83jfhg2',
-  buildUrl = 'http://circle.com/build',
+  buildUrl = 'http://circle.com/build/45',
   failureThresholds = [],
   manifestFilepath = 'manifest.json',
   outputDirectory = 'dist',
@@ -24,7 +26,6 @@ const subject = ({
   mkdir = () => Promise.resolve(),
   getFileStats = () => Promise.resolve({}),
   logMessage = () => {},
-  logError = () => {},
   makeGitHubRequest = () => ReaderPromise.of({base: {}}),
   artifactStore = {
     getAssetStats: () => Promise.resolve(
@@ -45,7 +46,6 @@ const subject = ({
   db,
   getFileStats,
   logMessage,
-  logError,
   makeGitHubRequest,
   mkdir,
   readFile,
@@ -81,7 +81,7 @@ const fakeGetAssetStats = handlers => (branch, ...rest) => {
   return ReaderPromise.of();
 };
 
-test('happy path (posts pending commit status, writes asset stats to file, writes asset diffs to file, and posts success commit status)', () => {
+test('posts pending commit status, writes asset stats to file, writes asset diffs to file, and posts success commit status', () => {
   const writeFileSpy = createSpy();
   const buildSha = 'dkg93hdk';
   const pr = '99';
@@ -128,6 +128,7 @@ test('happy path (posts pending commit status, writes asset stats to file, write
   return subject({
     artifactsDirectory,
     buildSha,
+    buildUrl: 'http://circle.com/build/78',
     manifestFilepath,
     outputDirectory,
     pullRequestId: Maybe.of(pr),
@@ -171,7 +172,7 @@ test('happy path (posts pending commit status, writes asset stats to file, write
     expect(pendingStatusArguments.method).toBe('POST');
     expect(pendingStatusArguments.body).toEqual({
       state: 'pending',
-      targetUrl: 'http://circle.com/build#artifacts',
+      targetUrl: 'http://circle.com/build/78#artifacts',
       context: 'Asset Sizes',
       description: 'Calculating asset diffs and threshold failures (if any)...'
     });
@@ -180,47 +181,14 @@ test('happy path (posts pending commit status, writes asset stats to file, write
     expect(successStatusArguments.method).toBe('POST');
     expect(successStatusArguments.body).toEqual({
       state: 'success',
-      targetUrl: 'http://circle.com/build#artifacts',
+      targetUrl: 'http://circle.com/build/78#artifacts',
       context: 'Asset Sizes',
       description: 'app.js: 400B (-100B, -20.00%)'
     });
   });
 });
 
-test('returns error and posts error status when non-schema-matching failure threshold is provided', () => {
-  const postCommitStatusSpy = createSpy();
-  const buildSha = 'hkgh037h';
-  const gitHubRequestHandlers = new Map([
-    [
-      `statuses/${buildSha}`,
-      (...args) => {
-        postCommitStatusSpy(...args);
-
-        return ReaderPromise.of();
-      }
-    ]
-  ]);
-
-  return subject({
-    failureThresholds: [{maxSize: 'not a number'}],
-    buildSha,
-
-    // Dependencies
-    makeGitHubRequest: fakeGitHubRequest(gitHubRequestHandlers)
-  }).catch(error => {
-    expect(error.message).toBe("'failure-thresholds' option is invalid. Problem(s): data[0].maxSize should be number");
-    const [, failureStatusArguments] = postCommitStatusSpy.calls[0].arguments;
-    expect(failureStatusArguments.method).toBe('POST');
-    expect(failureStatusArguments.body).toEqual({
-      state: 'error',
-      targetUrl: 'http://circle.com/build#artifacts',
-      context: 'Asset Sizes',
-      description: "'failure-thresholds' option is invalid. Problem(s): data[0].maxSize should be number"
-    });
-  });
-});
-
-test.only('writes message to the console when no previous stat found for given filepath', () => {
+test('writes message to the console when no previous stat found for given filepath', () => {
   const baseBranch = 'develop';
   const assetName = 'vendor.js';
   const assetPath = 'vendor.fdjsayr.js';
@@ -264,29 +232,134 @@ test.only('writes message to the console when no previous stat found for given f
   });
 });
 
-test.todo('writes asset stats and posts success PR status with asset stats (and a note explaining that diffs could not be calculated) when open pull request is not found');
+test('posts error commit status and logs message when previous build has no stats', () => {
+  const pr = '653';
+  const baseBranch = 'master';
+  const buildSha = 'lnbs3hdk';
+  const buildNumber = '78';
+  const logMessageSpy = createSpy();
+  const postCommitStatusSpy = createSpy();
+  const gitHubRequestHandlers = new Map([
+    [
+      `statuses/${buildSha}`,
+      (...args) => {
+        postCommitStatusSpy(...args);
+
+        return ReaderPromise.of();
+      }
+    ],
+    [
+      `pulls/${pr}`,
+      () => ReaderPromise.of({
+        base: {
+          ref: baseBranch
+        }
+      })
+    ]
+  ]);
+  const getAssetStatsRequestHandlers = new Map([
+    [
+      baseBranch,
+      () => Promise.resolve(
+        Either.Left(
+          NoAssetStatsArtifactFoundErr(baseBranch, buildNumber)
+        )
+      )
+    ]
+  ]);
+
+  return subject({
+    buildSha,
+    pullRequestId: Maybe.of(pr),
+    buildUrl: `http://circle.com/build/${buildNumber}`,
+
+    // Dependencies
+    makeGitHubRequest: fakeGitHubRequest(gitHubRequestHandlers),
+    artifactStore: {
+      getAssetStats: fakeGetAssetStats(getAssetStatsRequestHandlers)
+    },
+    logMessage: logMessageSpy
+  }).then(() => {
+    const expectedMessage = 'No asset stats artifact found for latest build of: `master`. Build number: `78`.';
+    const [, errorStatusArguments] = postCommitStatusSpy.calls[1].arguments;
+    expect(errorStatusArguments.method).toBe('POST');
+    expect(errorStatusArguments.body).toEqual({
+      state: 'error',
+      targetUrl: 'http://circle.com/build/78#artifacts',
+      context: 'Asset Sizes',
+      description: expectedMessage
+    });
+
+    const actualMessage = firstCallFirstArgument(logMessageSpy);
+    expect(actualMessage).toBe(expectedMessage);
+  });
+});
+
+test('posts error commit status and logs message when no previous builds are found', () => {
+  const pr = '3';
+  const baseBranch = 'develop';
+  const buildSha = 'ng832hfd';
+  const buildNumber = '139';
+  const logMessageSpy = createSpy();
+  const postCommitStatusSpy = createSpy();
+  const gitHubRequestHandlers = new Map([
+    [
+      `statuses/${buildSha}`,
+      (...args) => {
+        postCommitStatusSpy(...args);
+
+        return ReaderPromise.of();
+      }
+    ],
+    [
+      `pulls/${pr}`,
+      () => ReaderPromise.of({
+        base: {
+          ref: baseBranch
+        }
+      })
+    ]
+  ]);
+  const getAssetStatsRequestHandlers = new Map([
+    [
+      baseBranch,
+      () => Promise.resolve(
+        Either.Left(
+          NoRecentBuildsFoundErr(baseBranch)
+        )
+      )
+    ]
+  ]);
+
+  return subject({
+    buildSha,
+    pullRequestId: Maybe.of(pr),
+    buildUrl: `http://circle.com/build/${buildNumber}`,
+
+    // Dependencies
+    makeGitHubRequest: fakeGitHubRequest(gitHubRequestHandlers),
+    artifactStore: {
+      getAssetStats: fakeGetAssetStats(getAssetStatsRequestHandlers)
+    },
+    logMessage: logMessageSpy
+  }).then(() => {
+    const expectedMessage = 'No recent builds found for the base branch: `develop`.';
+    const [, errorStatusArguments] = postCommitStatusSpy.calls[1].arguments;
+    expect(errorStatusArguments.method).toBe('POST');
+    expect(errorStatusArguments.body).toEqual({
+      state: 'error',
+      targetUrl: 'http://circle.com/build/139#artifacts',
+      context: 'Asset Sizes',
+      description: expectedMessage
+    });
+
+    const actualMessage = firstCallFirstArgument(logMessageSpy);
+    expect(actualMessage).toBe(expectedMessage);
+  });
+});
+
+test.todo('writes asset stats and posts success commit status with asset stats (and a note explaining that diffs could not be calculated) when open pull request is not found');
+
+test.todo('posts failure commit when failure thresholds are not met');
 
 test.todo('saves running stats in database and appends projectName to commit status label when projectName is given (monorepo usecase)');
-
-test.todo('handles case where previous build has no stats for current project');
-
-test.todo('posts error PR status when error is encountered');
-
-test.todo('posts failure PR when failure thresholds are not met');
-
-test.todo('posts success PR when failure thresholds are met');
-
-// Error-handling checks
-test.todo('surfaces errors reading manifest');
-
-test.todo('surfaces errors reading file stats');
-
-test.todo('surfaces errors getting previous file stats');
-
-test.todo('surfaces errors posting pending status');
-
-test.todo('surfaces errors making artifact directory');
-
-test.todo('surfaces errors writing asset stats');
-
-test.todo('surfaces errors writing asset diffs');

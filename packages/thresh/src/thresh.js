@@ -21,7 +21,6 @@ cli().run({
   mkdir,
   getFileStats,
   logMessage: console.log, // eslint-disable-line no-console
-  logError: console.error, // eslint-disable-line no-console
   makeGitHubRequest: MakeGitHubRequest({
     githubApiToken: process.env.GITHUB_API_TOKEN,
     repoOwner,
