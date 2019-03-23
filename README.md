@@ -75,6 +75,15 @@ A CircleCI integration for tracking file size changes across deploys.
 
 - Posts that diff as a status to PR associated with the build (if any) to give you insight into how the patch affects asset sizes.
 
+## Comparison to Other Offerings
+| | [bundlesize](https://github.com/siddharthkp/bundlesize) | [buildsize](https://buildsize.org/) | [thresh](https://github.com/danny-andrews/thresh) |
+| --- | :---: | :---: | :---: |
+| Handles Fingerprinting? | Y | Y | Y |
+| Posts PR Status Filesize Diffs? | Y | Y | Y |
+| Relies on 3rd-party service? | Y | Y | N |
+| CIs Supported | Travis CI, CircleCI, Wercker, and Drone | Circle CI | Circle CI, easy to add more |
+| Configuration | Expose GitHub access token to environment | None | Expose GitHub/CircleCI access token to environment |
+
 ## CLI Options
 
 ### --config-path
