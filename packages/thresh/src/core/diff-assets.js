@@ -4,7 +4,7 @@ export default (
   current,
   original,
   options = {onMismatchFound: R.identity}
-) => current |> R.toPairs |> R.reduce((acc, [filepath, fileStats]) => {
+) => R.toPairs(current) |> R.reduce((acc, [filepath, fileStats]) => {
   const originalStat = original[filepath];
   if(!originalStat) {
     options.onMismatchFound(filepath);
