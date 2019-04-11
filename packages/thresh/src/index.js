@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import path from 'path';
-import {readFile, mkdir, writeFile, getFileStats, request}
+import {readFile, mkdir, writeFile, getFileStats, request, resolveGlob}
   from '@danny.andrews/fp-utils';
 import CircleciAdapter from '@danny.andrews/thresh-ci-adapter-circleci';
 import CircleciArtifactStore
@@ -20,6 +20,7 @@ cli().run({
   db: Database('my.db'),
   mkdir,
   getFileStats,
+  resolveGlob,
   logMessage: console.log, // eslint-disable-line no-console
   makeGitHubRequest: MakeGitHubRequest({
     githubApiToken: process.env.GITHUB_API_TOKEN,

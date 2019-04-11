@@ -1,12 +1,12 @@
 export {default as makeArtifactDirectory} from './make-artifact-directory';
 export {default as CommitStatusPoster} from './commit-status-poster';
 export {default as makeGitHubRequest} from './make-github-request';
-export {default as readManifest} from './read-manifest';
+export {default as resolveGlobs} from './resolve-globs';
 export {default as readConfig} from './read-config';
 export {default as writeAssetDiffs} from './write-asset-diffs';
 export {default as writeAssetStats} from './write-asset-stats';
 export {default as saveStats} from './save-stats';
-export {default as getAssetFilestats} from './get-asset-filestats';
+export {default as getFileSizes} from './get-file-sizes';
 export {default as getBaseBranch} from './get-base-branch';
 export {default as MakeGitHubRequest} from './make-github-request';
 export * from './base';

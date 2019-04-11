@@ -1,5 +1,6 @@
 import {Either} from 'monet';
 import ReaderPromise from '@danny.andrews/reader-promise';
+import R from 'ramda';
 
 import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr} from './errors';
 
@@ -31,7 +32,13 @@ export default (baseBranch, assetStatsFilepath) => {
     const [firstItem] = recentBuilds;
     const buildNumber = firstItem.status === CircleCiBuildStatuses.SUCCESS
       ? firstItem.buildNum
-      : firstItem.previousSuccessfulBuild.buildNum;
+      : R.path(['previousSuccessfulBuild', 'buildNum'], firstItem);
+
+    if(!buildNumber) {
+      return NoRecentBuildsFoundErr(baseBranch)
+        |> Either.Left
+        |> ReaderPromise.of;
+    }
 
     return getBuildArtifacts(buildNumber).chain(buildArtifacts => {
       const artifactPathRegExp = new RegExp(`${assetStatsFilepath}$`);

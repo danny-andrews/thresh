@@ -3,6 +3,7 @@ import {promisify} from 'util';
 import fs from 'fs';
 import toml from 'toml';
 import fetch from 'node-fetch';
+import glob from 'glob';
 
 import {unthrow, CreateFactory} from './util';
 
@@ -17,6 +18,8 @@ export const mkdir = promisify(mkdirp);
 export const parseJSON = unthrow(JSON.parse);
 
 export const parseTOML = unthrow(toml.parse);
+
+export const resolveGlob = promisify(glob);
 
 const CreateRequestErrorFactory = () =>
   CreateFactory(context => ({context}));

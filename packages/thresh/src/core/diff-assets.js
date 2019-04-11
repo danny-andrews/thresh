@@ -1,27 +1,45 @@
 import R from 'ramda';
+import micromatch from 'micromatch';
+
+import {sumReduce, listToMap} from '../shared';
 
 export default (
-  current,
-  original,
+  currentSizedTargetSets,
+  originalAssetStats,
   options = {onMismatchFound: R.identity}
-) => R.toPairs(current) |> R.reduce((acc, [filepath, fileStats]) => {
-  const originalStat = original[filepath];
-  if(!originalStat) {
-    options.onMismatchFound(filepath);
+) => {
+  const originalFilepaths = originalAssetStats.map(R.prop('filepath'));
 
-    return acc;
-  }
+  return R.chain(
+    ({targets, resolvedTargets, size}) => {
+      const originalResolvedTargets = micromatch(
+        originalFilepaths,
+        targets
+      );
+      if(originalResolvedTargets.length !== resolvedTargets.length) {
+        options.onMismatchFound(resolvedTargets);
 
-  const difference = fileStats.size - originalStat.size;
+        return [];
+      }
+      const originalAssetStatsMap = listToMap(
+        R.prop('filepath'),
+        originalAssetStats
+      );
+      const originalSize = sumReduce(
+        filepath => originalAssetStatsMap[filepath].size,
+        originalResolvedTargets
+      );
 
-  return {
-    ...acc,
-    [filepath]: {
-      original: originalStat.size,
-      current: fileStats.size,
-      difference,
-      // eslint-disable-next-line no-magic-numbers
-      percentChange: difference / originalStat.size * 100
-    }
-  };
-}, {});
+      const difference = size - originalSize;
+
+      return {
+        targets,
+        original: originalSize,
+        current: size,
+        difference,
+        percentChange: difference / originalSize * 100
+      };
+    },
+    currentSizedTargetSets
+  );
+};
