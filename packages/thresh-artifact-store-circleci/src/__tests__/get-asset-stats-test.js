@@ -1,124 +1,97 @@
 import test from 'ava';
-import expect, {createSpy} from 'expect';
+import expect from 'expect';
+import ReaderPromise from '@danny.andrews/reader-promise';
 
-import {FakeRequest} from '../test/helpers';
 import getPreviousAssetStats from '../get-asset-stats';
-import {PrResource, BuildResource, ArtifactResource}
-  from '../test/factories';
-import {
-  GetBaseBranchHandler,
-  GetRecentBuildsHandler,
-  GetArtifactsHandler,
-  GetArtifactHandler
-} from '../test/requests';
 import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr}
   from '../errors';
 
-export const createResponseSequence = (opts = {}) => {
-  const {
-    getBaseBranchResponse,
-    getRecentBuildsResponse,
-    getArtifactsResponse,
-    getArtifactResponse,
-    ref,
+const createFakeMakeCircleRequest = ({
+  baseBranch,
+  buildNum,
+  artifactUrl,
+  getRecentBuildsResponse,
+  getBuildArtifactsResponse,
+  getAssetSizeArtifactResponse
+} = {}) => ({path, url, raw}) => {
+  if(path === `tree/${baseBranch}`) {
+    return ReaderPromise.of(getRecentBuildsResponse);
+  } else if(path === `${buildNum}/artifacts`) {
+    return ReaderPromise.of(getBuildArtifactsResponse);
+  } else if(raw === true && url === artifactUrl) {
+    return ReaderPromise.of(getAssetSizeArtifactResponse);
+  }
+
+  throw new Error(`Unexpected call to makeCircleRequest: path=${path}, url=${url}, raw=${raw}`);
+};
+
+const subject = ({
+  buildNum = '92',
+  buildStatus = 'success',
+  artifactUrl = 'http://circle-artifacts/my-url/84jhdfhads.json',
+  baseBranch = 'master',
+  assetStatsFilepath = 'asset-stats.json',
+  getRecentBuildsResponse,
+  getBuildArtifactsResponse,
+  getAssetSizeArtifactResponse
+} = {}) => getPreviousAssetStats(baseBranch, assetStatsFilepath).run({
+  makeCircleRequest: createFakeMakeCircleRequest({
+    baseBranch,
     buildNum,
-    buildStatus,
-    artifactPath,
     artifactUrl,
-    artifactBody
-  } = opts;
+    getRecentBuildsResponse: getRecentBuildsResponse || [{buildNum, status: buildStatus}],
+    getBuildArtifactsResponse: getBuildArtifactsResponse || [{path: assetStatsFilepath, url: artifactUrl}],
+    getAssetSizeArtifactResponse
+  })
+});
 
-  return [
-    GetBaseBranchHandler(getBaseBranchResponse || PrResource({ref})),
-    GetRecentBuildsHandler(getRecentBuildsResponse || [
-      BuildResource({buildNum, status: buildStatus})
-    ]),
-    GetArtifactsHandler(getArtifactsResponse || [
-      ArtifactResource({path: artifactPath, url: artifactUrl})
-    ]),
-    GetArtifactHandler(getArtifactResponse || {
-      response: artifactBody,
-      matcher: new RegExp(artifactUrl)
+test(
+  'returns artifact body',
+  () => subject({getAssetSizeArtifactResponse: 'artifact text'})
+    .then(artifact => {
+      expect(artifact.right()).toBe('artifact text');
     })
-  ];
-};
-
-// Factory which makes this easy to test.
-const subject = ({responseData, repoOwner, repoName, ...opts} = {}) => {
-  const fakeRequest = createResponseSequence({
-    artifactPath: 'blah8372blah/dist/app.js',
-    ...responseData
-  }) |> FakeRequest;
-
-  return (
-    getPreviousAssetStats({
-      pullRequestId: '45',
-      assetSizesFilepath: 'dist/app.js',
-      repoOwner,
-      repoName,
-      ...opts
-    })
-  ).run({request: fakeRequest});
-};
-
-test('happy path (returns artifact body)', () =>
-  subject({
-    responseData: {
-      artifactBody: 'artifact text'
-    }
-  }).then(artifact => {
-    expect(artifact.right()).toBe('artifact text');
-  }));
+);
 
 test('uses most recent successful build if latest was unsuccessful', () => {
-  const getArtifactsSpy = createSpy().andReturn([
-    ArtifactResource({
-      path: '8932hfdlsajlf/thing/dist/my-file.js',
-      url: 'http://circle-artifacts/my-url/fj3298hf.json'
-    })
-  ]);
-
-  return subject({
-    assetSizesFilepath: 'dist/my-file.js',
-    responseData: {
-      getRecentBuildsResponse: [
-        BuildResource({
-          buildNum: '935',
-          status: 'failure',
-          previousSuccessfulBuild: BuildResource({buildNum: '452'})
-        }),
-        BuildResource({
+  subject({
+    buildNum: '452',
+    getRecentBuildsResponse: [
+      {
+        buildNum: '935',
+        status: 'failure',
+        previousSuccessfulBuild: {
           buildNum: '452',
           status: 'success'
-        })
-      ],
-      getArtifactsResponse: getArtifactsSpy
-    }
-  }).then(() => {
-    expect(getArtifactsSpy.calls[0].arguments[0]).toMatch(/.*\/452\/artifacts/);
+        }
+      },
+      {
+        buildNum: '452',
+        status: 'success'
+      }
+    ],
+    getAssetSizeArtifactResponse: 'artifact body'
+  }).then(artifact => {
+    expect(artifact.right()).toBe('artifact body');
   });
 });
 
 test('returns error when there are no recent builds for the base branch', () => {
   subject({
-    responseData: {
-      ref: 'fjd0823rf2',
-      getRecentBuildsResponse: []
-    }
-  }).catch(error => {
-    expect(error.message).toBe(NoRecentBuildsFoundErr('fjd0823rf2').message);
+    baseBranch: 'fjd0823rf2',
+    getRecentBuildsResponse: []
+  }).then(response => {
+    expect(response.left().message).toBe(NoRecentBuildsFoundErr('fjd0823rf2').message);
   });
 });
 
 test('returns error when there is no asset stats artifact found for latest build of base branch', () => {
   subject({
-    responseData: {
-      ref: 'lq3i7t42ug',
-      buildNum: '6390',
-      getArtifactsResponse: []
-    }
-  }).catch(error => {
-    expect(error.message)
+    baseBranch: 'lq3i7t42ug',
+    buildNum: '6390',
+    getBuildArtifactsResponse: []
+  }).then(response => {
+    expect(response.left().message)
       .toBe(NoAssetStatsArtifactFoundErr('lq3i7t42ug', '6390').message);
   });
 });

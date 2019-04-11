@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "stats": "echo 'LOC IN PROJECT...' && find packages/*/src -name '*.js' -not -path '**/__tests__/*' | xargs wc -l",
     "test": "ava",
-    "test:coverage": "nyc yarn test"
+    "test:coverage": "nyc ava -c 1"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",
@@ -21,7 +21,7 @@
     "@babel/preset-env": "^7.0.0",
     "@babel/register": "^7.0.0",
     "@danny.andrews/eslint-config": "latest",
-    "ava": "1.0.0-beta.8",
+    "ava": "^1.0.0",
     "babel-eslint": "^8.2.6",
     "eslint": "^5.0.0",
     "eslint-plugin-import": "^2.14.0",
