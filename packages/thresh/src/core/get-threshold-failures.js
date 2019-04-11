@@ -62,8 +62,7 @@ const uncheckedGetThresholdFailures = (assetStats, failureThresholds) => {
         return buildFailureObject({message, offendingAssets: targetSet});
       };
 
-      return targets
-        |> [].concat
+      return [].concat(targets)
         |> R.chain(target => {
           const targetSet = R.cond([
             [isFileExtensionTarget, assetStatsWithExt],

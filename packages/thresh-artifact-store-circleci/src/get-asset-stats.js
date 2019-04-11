@@ -23,8 +23,7 @@ export default (baseBranch, assetStatsFilepath) => {
 
   return getRecentBuilds(baseBranch).chain(recentBuilds => {
     if(recentBuilds.length === 0) {
-      return baseBranch
-        |> NoRecentBuildsFoundErr
+      return NoRecentBuildsFoundErr(baseBranch)
         |> Either.Left
         |> ReaderPromise.of;
     }

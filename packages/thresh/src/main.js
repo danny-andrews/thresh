@@ -113,15 +113,13 @@ export default ({
     });
   const postFinal = (assetDiffs, thresholdFailures) => {
     const formatMessages = R.join(' \n');
-    const successDescription = assetDiffs
-      |> R.toPairs
+    const successDescription = R.toPairs(assetDiffs)
       |> R.map(
         ([filename, {difference, current, percentChange}]) =>
           formatAssetDiff({filename, difference, current, percentChange})
       )
       |> formatMessages;
-    const failureDescription = thresholdFailures
-      |> R.map(R.prop('message'))
+    const failureDescription = R.map(R.prop('message'), thresholdFailures)
       |> formatMessages;
 
     return (
