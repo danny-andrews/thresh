@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "stats": "echo 'LOC IN PROJECT...' && find packages/*/src -name '*.js' -not -path '**/__tests__/*' | xargs wc -l",
     "test": "ava",
-    "test:coverage": "nyc ava -c 1"
+    "test:coverage": "nyc ava"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",
