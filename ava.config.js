@@ -1,8 +1,5 @@
 export default {
-  files: [
-    'packages/*/src/**/__tests__/**/*.js',
-    '!packages/thresh-artifact-store-circleci/**'
-  ],
+  files: ['packages/*/src/**/__tests__/**/*.js'],
   require: ['@babel/register'],
   failWithoutAssertions: false,
   verbose: true

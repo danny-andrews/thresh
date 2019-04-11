@@ -3,18 +3,16 @@ import expect, {createSpy} from 'expect';
 import {NoResponseError, Non200ResponseError, InvalidResponseError}
   from '@danny.andrews/fp-utils';
 
-import makeCircleRequest from '../make-circle-request';
+import MakeCircleRequest from '../make-circle-request';
 
-const subject = (opts = {}) => {
-  const {
-    request,
-    circleApiToken = '894fuhg',
-    path = 'hey',
-    ...rest
-  } = opts;
-
-  return makeCircleRequest({circleApiToken, path, ...rest}).run({request});
-};
+const subject = ({
+  request,
+  circleApiToken = '894fuhg',
+  repoOwner = 'microsoft',
+  repoName = 'excel',
+  ...rest
+} = {}) => MakeCircleRequest({circleApiToken, repoOwner, repoName})({...rest})
+  .run({request});
 
 test('sends request to url, if given', () => {
   const spy = createSpy().andReturn(Promise.resolve());
@@ -29,12 +27,18 @@ test('sends request to url, if given', () => {
     .toBe('circleci.artifacts/my-artifact.json?circle-token=4dfasg');
 });
 
-test('sends request to https://circleci.com/api/v1.1 + path', () => {
+test('sends request to correct url built from repoName, repoOwner, and path', () => {
   const spy = createSpy().andReturn(Promise.resolve());
-  subject({path: 'my-account/my-repo', request: spy, circleApiToken: '4dfasg'});
+  subject({
+    repoOwner: 'my-account',
+    repoName: 'my-repo',
+    path: 'my-path',
+    request: spy,
+    circleApiToken: '4dfasg'
+  });
 
   const [actual] = spy.calls[0].arguments;
-  expect(actual).toBe('https://circleci.com/api/v1.1/my-account/my-repo?circle-token=4dfasg');
+  expect(actual).toBe('https://circleci.com/api/v1.1/project/github/my-account/my-repo/my-path?circle-token=4dfasg');
 });
 
 test('sets Accept header to application/json', () => {
@@ -101,7 +105,7 @@ test("if raw is true, it doesn't deserialize response", () => {
 test('returns Error if request fails', () => {
   const spy = createSpy().andReturn(Promise.reject(NoResponseError('oh no')));
 
-  return subject({request: spy, circleApiToken: 'fdlsar32'})
+  return subject({request: spy, circleApiToken: 'fdlsar32', url: 'https://circleci.com/api/v1.1/hey'})
     .catch(actual => {
       expect(actual.message).toBe('Error making request to CircleCI https://circleci.com/api/v1.1/hey?circle-token=fdlsar32: oh no');
     });
@@ -110,13 +114,11 @@ test('returns Error if request fails', () => {
 test('returns error if non-200 status code received', () => {
   const spy = createSpy().andReturn(
     Promise.reject(
-      Non200ResponseError({
-        data: 'Internal Server Error'
-      })
+      Non200ResponseError('Internal Server Error')
     )
   );
 
-  return subject({request: spy, circleApiToken: 'djklay32r'})
+  return subject({request: spy, circleApiToken: 'djklay32r', url: 'https://circleci.com/api/v1.1/hey'})
     .catch(actual => {
       expect(actual.message).toBe('Error making request to CircleCI https://circleci.com/api/v1.1/hey?circle-token=djklay32r: Internal Server Error');
     });
@@ -129,7 +131,7 @@ test('returns error if body parsing fails', () => {
     )
   );
 
-  return subject({request: spy, circleApiToken: 'djklay32r'})
+  return subject({request: spy, circleApiToken: 'djklay32r', url: 'https://circleci.com/api/v1.1/hey'})
     .catch(actual => {
       expect(actual.message).toBe('Error making request to CircleCI https://circleci.com/api/v1.1/hey?circle-token=djklay32r: Cannot parse body');
     });

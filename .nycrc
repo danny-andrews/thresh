@@ -1,15 +1,15 @@
 {
-  "include": [
-    "./packages/*/src/"
-  ],
+  "include": ["./packages/*/src/"],
   "exclude": [
-    "**/src/test/",
-    "**/__tests__/"
+    "**/test/",
+    "**/__tests__/",
+    "./packages/thresh/src/index.js",
+    "./packages/thresh/src/shared/",
+    "./packages/thresh-artifact-store-circleci/src/index.js",
+    "./packages/fp-utils/"
   ],
-  "reporter": [
-    "html",
-    "text"
-  ],
+  "reporter": ["html", "text"],
+  "all": true,
   "check-coverage": true,
   "per-file": false,
   "lines": 95,
