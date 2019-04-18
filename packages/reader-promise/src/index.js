@@ -49,9 +49,9 @@ ReaderPromise.of = a => Promise.resolve(a) |> ReaderPromise.fromPromise;
 
 ReaderPromise.fromPromise = a => R.always(a) |> Reader |> ReaderPromise;
 
-ReaderPromise.fromError = a => Promise.reject(a) |> ReaderPromise.fromPromise;
-
 ReaderPromise.fromReaderFn = a => Reader(a) |> ReaderPromise;
+
+ReaderPromise.fromError = a => Promise.reject(a) |> ReaderPromise.fromPromise;
 
 ReaderPromise.fromEither = a => a.cata(
   ReaderPromise.fromError,

@@ -157,11 +157,13 @@ test(
 );
 
 test(
-  '"parallel" creates a ReaderPromise from a list of promises',
-  () => ReaderPromise.parallel([ReaderPromise.of(5), ReaderPromise.of(12)])
-    .run()
+  '"fromReaderFn" creates a ReaderPromise from a reader function',
+  // eslint-disable-next-line prefer-promise-reject-errors
+  () => ReaderPromise.fromReaderFn(({getEnvVar}) => getEnvVar('GIT_BRANCH'))
+    .map(x => x.toUpperCase())
+    .run({getEnvVar: () => Promise.resolve('master')})
     .then(actual => {
-      expect(actual).toEqual([5, 12]);
+      expect(actual).toBe('MASTER');
     })
 );
 
@@ -177,4 +179,13 @@ test(
   () => ReaderPromise.fromEither(Either.Left('stuff')).run().catch(actual => {
     expect(actual).toBe('stuff');
   })
+);
+
+test(
+  '"parallel" creates a ReaderPromise from a list of promises',
+  () => ReaderPromise.parallel([ReaderPromise.of(5), ReaderPromise.of(12)])
+    .run()
+    .then(actual => {
+      expect(actual).toEqual([5, 12]);
+    })
 );
