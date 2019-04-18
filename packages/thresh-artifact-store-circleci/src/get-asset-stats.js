@@ -9,7 +9,7 @@ const BuildStatuses = {SUCCESS: 'success', FIXED: 'fixed'};
 const isSuccessfulBuildStatus = buildStatus => [
   BuildStatuses.SUCCESS,
   BuildStatuses.FIXED
-].contains(buildStatus);
+].includes(buildStatus);
 
 export default (baseBranch, assetStatsFilepath) => {
   const getRecentBuilds = branch => ReaderPromise.fromReaderFn(
