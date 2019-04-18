@@ -1,34 +1,34 @@
 /* eslint-disable no-shadow */
 import ReaderPromise from '@danny.andrews/reader-promise';
+import R from 'ramda';
 
-export const mkdir = (...args) => ReaderPromise.fromReaderFn(
-  ({mkdir}) => mkdir(...args)
+const readerDependencyInvoker1 = ReaderPromise.invokeAt(R.identity);
+
+const readerDependencyAtPropInvoker = R.pipe(R.prop, readerDependencyInvoker1);
+
+export const mkdir = readerDependencyAtPropInvoker('mkdir');
+
+export const getFileStats = readerDependencyAtPropInvoker('getFileStats');
+
+export const readFile = readerDependencyAtPropInvoker('readFile');
+
+export const writeFile = readerDependencyAtPropInvoker('writeFile');
+
+export const request = readerDependencyAtPropInvoker('request');
+
+export const resolveGlob = readerDependencyAtPropInvoker('resolveGlob');
+
+export const logMessage = ReaderPromise.invokeAt(
+  a => Promise.resolve(a),
+  R.prop('logMessage')
 );
 
-export const resolve = (...args) => ReaderPromise.fromReaderFn(
-  ({resolve}) => Promise.resolve(resolve(...args))
+export const resolve = ReaderPromise.invokeAt(
+  a => Promise.resolve(a),
+  R.prop('resolve')
 );
 
-export const getFileStats = (...args) => ReaderPromise.fromReaderFn(
-  ({getFileStats}) => getFileStats(...args)
-);
-
-export const readFile = (...args) => ReaderPromise.fromReaderFn(
-  ({readFile}) => readFile(...args)
-);
-
-export const writeFile = (...args) => ReaderPromise.fromReaderFn(
-  ({writeFile}) => writeFile(...args)
-);
-
-export const request = (...args) => ReaderPromise.fromReaderFn(
-  ({request}) => request(...args)
-);
-
-export const logMessage = (...args) => ReaderPromise.fromReaderFn(
-  ({logMessage}) => Promise.resolve(logMessage(...args))
-);
-
-export const resolveGlob = (...args) => ReaderPromise.fromReaderFn(
-  ({resolveGlob}) => resolveGlob(...args)
+export const makeGitHubRequest = ReaderPromise.invokeAt(
+  (result, config) => result.run(config),
+  R.prop('makeGitHubRequest')
 );

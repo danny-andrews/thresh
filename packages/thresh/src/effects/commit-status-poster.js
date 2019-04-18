@@ -1,12 +1,15 @@
 import R from 'ramda';
-import ReaderPromise from '@danny.andrews/reader-promise';
 
 import {truncate} from '../shared';
+
+import {makeGitHubRequest} from './base';
 
 const MAX_DESCRIPTION_LENGTH = 140;
 
 const PENDING_STATUS_TEXT =
   'Calculating asset diffs and threshold failures (if any)...';
+
+const COMMIT_STATUS_LABEL = 'Asset Sizes';
 
 const StatusStates = {
   FAILURE: 'failure',
@@ -16,24 +19,22 @@ const StatusStates = {
 };
 
 const postCommitStatus = R.curry(
-  (sha, targetUrl, label, state, description) => ReaderPromise.fromReaderFn(
-    config => config.makeGitHubRequest(
-      `statuses/${sha}`,
-      {
-        method: 'POST',
-        body: {
-          state,
-          targetUrl,
-          context: label,
-          description: truncate({maxSize: MAX_DESCRIPTION_LENGTH}, description)
-        }
+  (sha, targetUrl, state, description) => makeGitHubRequest(
+    `statuses/${sha}`,
+    {
+      method: 'POST',
+      body: {
+        state,
+        targetUrl,
+        context: COMMIT_STATUS_LABEL,
+        description: truncate({maxSize: MAX_DESCRIPTION_LENGTH}, description)
       }
-    ).run(config)
+    }
   )
 );
 
-export default ({sha, targetUrl, label}) => {
-  const postCommitStatus2 = postCommitStatus(sha, targetUrl, label);
+export default ({sha, targetUrl}) => {
+  const postCommitStatus2 = postCommitStatus(sha, targetUrl);
 
   const postSuccess = postCommitStatus2(StatusStates.SUCCESS);
   const postFailure = postCommitStatus2(StatusStates.FAILURE);

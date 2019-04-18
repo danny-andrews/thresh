@@ -7,7 +7,6 @@ import CircleciArtifactStore
   from '@danny.andrews/thresh-artifact-store-circleci';
 
 import cli from './cli';
-import {Database} from './shared';
 import {MakeGitHubRequest} from './effects';
 
 const {repoOwner, repoName} = CircleciAdapter().getEnvVars();
@@ -17,7 +16,6 @@ cli().run({
   readFile,
   resolve: path.resolve,
   request,
-  db: Database('my.db'),
   mkdir,
   getFileStats,
   resolveGlob,

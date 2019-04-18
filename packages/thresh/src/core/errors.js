@@ -1,9 +1,9 @@
 import {CreateErrorFactory} from '@danny.andrews/fp-utils';
 
 /* eslint-disable max-len */
-export const InvalidFailureThresholdOptionErr = CreateErrorFactory("'thresholds' option is invalid. Problem(s): %s");
+export const InvalidThresholdOptionErr = CreateErrorFactory("'thresholds' option is invalid. Problem(s): %s");
 
-export const InvalidFailureThresholdErr = CreateErrorFactory('Invalid failure threshold provided. No files found for target(s): [%s]');
+export const InvalidThresholdErr = CreateErrorFactory('Invalid failure threshold provided. No files found for target(s): [%s]');
 
 export const ManifestFileReadErr = CreateErrorFactory('Error reading manifest file');
 

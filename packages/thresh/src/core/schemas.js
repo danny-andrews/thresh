@@ -1,5 +1,5 @@
-const failureThresholdSchema = {
-  title: 'Failure Threshold',
+const thresholdSchema = {
+  title: 'Threshold',
   type: 'object',
   properties: {
     maxSize: {
@@ -18,8 +18,8 @@ const failureThresholdSchema = {
   required: ['maxSize', 'targets']
 };
 
-export const failureThresholdListSchema = {
-  title: 'Failure Threshold List',
+export const thresholdListSchema = {
+  title: 'Threshold List',
   type: 'array',
-  items: failureThresholdSchema
+  items: thresholdSchema
 };

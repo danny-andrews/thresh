@@ -1,21 +1,24 @@
 import R from 'ramda';
 import {sprintf} from 'sprintf-js';
 import filesize from 'filesize';
-import {unthrow} from '@danny.andrews/fp-utils';
+import {Either} from 'monet';
 
-import {InvalidFailureThresholdErr} from './errors';
+import {InvalidThresholdErr} from './errors';
 
 const formatFilesize = size => filesize(size, {spacer: ''});
 
-const uncheckedGetThresholdFailures = sizedThresholds =>
-  R.chain(
+export default sizedThresholds => {
+  const emptyResolvedTargets = sizedThresholds.find(
+    ({resolvedTargets}) => R.isEmpty(resolvedTargets)
+  );
+
+  if(!R.isNil(emptyResolvedTargets)) {
+    return InvalidThresholdErr(emptyResolvedTargets) |> Either.Left;
+  }
+
+  return R.chain(
     threshold => {
       const {resolvedTargets, maxSize, size} = threshold;
-      if(R.isEmpty(resolvedTargets)) {
-        // Wouldn't normally throw in a helper method, but it's the only way
-        // to exit a non-for-loop.
-        throw InvalidFailureThresholdErr(resolvedTargets);
-      }
 
       if(size <= maxSize) return [];
 
@@ -37,8 +40,5 @@ const uncheckedGetThresholdFailures = sizedThresholds =>
       };
     },
     sizedThresholds
-  );
-
-// Just wrap uncheckedGetThresholdFailures and return Error object rather than
-// relying on exception bubbling.
-export default unthrow(uncheckedGetThresholdFailures);
+  ) |> Either.Right;
+};

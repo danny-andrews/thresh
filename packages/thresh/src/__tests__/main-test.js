@@ -1,12 +1,15 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
-import {Maybe, Either} from 'monet';
+import {Maybe} from 'monet';
 import ReaderPromise from '@danny.andrews/reader-promise';
 import {NoAssetStatsArtifactFoundErr, NoRecentBuildsFoundErr}
   from '@danny.andrews/thresh-artifact-store-circleci';
+import R from 'ramda';
 
-import {firstCallFirstArgument} from '../test/helpers';
+import {firstCallFirstArgument, firstCallArguments} from '../test/helpers';
 import main from '../main';
+
+const secondCallArguments = R.lensPath(['calls', 1, 'arguments']);
 
 const subject = ({
   artifactsDirectory = 'd34g2d/artifacts',
@@ -18,9 +21,7 @@ const subject = ({
 
   // Dependencies
   artifactStore = {
-    getAssetStats: () => Promise.resolve(
-      Either.Right({})
-    )
+    getAssetStats: () => Promise.resolve({})
   },
   db = () => Promise.resolve(),
   getFileStats = () => Promise.resolve({size: 200}),
@@ -109,11 +110,9 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
   const getAssetStatsRequestHandlers = new Map([
     [
       baseBranch,
-      () => Promise.resolve(
-        Either.Right([
-          {filepath: 'dist/app.h9832h.js', size: originalSize}
-        ])
-      )
+      () => Promise.resolve([
+        {filepath: 'dist/app.h9832h.js', size: originalSize}
+      ])
     ]
   ]);
 
@@ -136,7 +135,10 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
     resolveGlob,
     writeFile: writeFileSpy
   }).then(() => {
-    const [assetStatsFilepath, assetStats] = writeFileSpy.calls[0].arguments;
+    const [assetStatsFilepath, assetStats] = R.view(
+      firstCallArguments,
+      writeFileSpy
+    );
     expect(assetStatsFilepath)
       .toBe('djeh9h/artifacts/thresh/asset-stats.json');
     expect(JSON.parse(assetStats)).toEqual([{
@@ -144,7 +146,10 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
       size: 400
     }]);
 
-    const [assetDiffsFilepath, assetDiffs] = writeFileSpy.calls[1].arguments;
+    const [assetDiffsFilepath, assetDiffs] = R.view(
+      secondCallArguments,
+      writeFileSpy
+    );
     expect(assetDiffsFilepath)
       .toBe('djeh9h/artifacts/thresh/asset-diffs.json');
     expect(JSON.parse(assetDiffs)).toEqual({
@@ -157,7 +162,10 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
       }],
       failures: []
     });
-    const [, pendingStatusArguments] = postCommitStatusSpy.calls[0].arguments;
+    const [, pendingStatusArguments] = R.view(
+      firstCallArguments,
+      postCommitStatusSpy
+    );
     expect(pendingStatusArguments.method).toBe('POST');
     expect(pendingStatusArguments.body).toEqual({
       state: 'pending',
@@ -166,7 +174,10 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
       description: 'Calculating asset diffs and threshold failures (if any)...'
     });
 
-    const [, successStatusArguments] = postCommitStatusSpy.calls[1].arguments;
+    const [, successStatusArguments] = R.view(
+      secondCallArguments,
+      postCommitStatusSpy
+    );
     expect(successStatusArguments.method).toBe('POST');
     expect(successStatusArguments.body).toEqual({
       state: 'success',
@@ -197,14 +208,12 @@ test('writes message to the console when no previous stat found for given filepa
   const getAssetStatsRequestHandlers = new Map([
     [
       baseBranch,
-      () => Promise.resolve(
-        Either.Right([
-          {
-            filepath: mismatchedAssetFilepath,
-            size: 300
-          }
-        ])
-      )
+      () => Promise.resolve([
+        {
+          filepath: mismatchedAssetFilepath,
+          size: 300
+        }
+      ])
     ]
   ]);
 
@@ -221,7 +230,7 @@ test('writes message to the console when no previous stat found for given filepa
     }],
     resolveGlob
   }).then(() => {
-    const actual = firstCallFirstArgument(logMessageSpy);
+    const actual = R.view(firstCallFirstArgument, logMessageSpy);
     expect(actual).toBe('No previous stats found for dist/vendor.fdjsayr.js. Did you rename that file recently?');
   });
 });
@@ -254,10 +263,8 @@ test('posts error commit status and logs message when previous build has no stat
   const getAssetStatsRequestHandlers = new Map([
     [
       baseBranch,
-      () => Promise.resolve(
-        Either.Left(
-          NoAssetStatsArtifactFoundErr(baseBranch, buildNumber)
-        )
+      () => Promise.reject(
+        NoAssetStatsArtifactFoundErr(baseBranch, buildNumber)
       )
     ]
   ]);
@@ -275,7 +282,10 @@ test('posts error commit status and logs message when previous build has no stat
     logMessage: logMessageSpy
   }).then(() => {
     const expectedMessage = 'No asset stats artifact found for latest build of: `master`. Build number: `78`.';
-    const [, errorStatusArguments] = postCommitStatusSpy.calls[1].arguments;
+    const [, errorStatusArguments] = R.view(
+      secondCallArguments,
+      postCommitStatusSpy
+    );
     expect(errorStatusArguments.method).toBe('POST');
     expect(errorStatusArguments.body).toEqual({
       state: 'error',
@@ -284,7 +294,7 @@ test('posts error commit status and logs message when previous build has no stat
       description: expectedMessage
     });
 
-    const actualMessage = firstCallFirstArgument(logMessageSpy);
+    const actualMessage = R.view(firstCallFirstArgument, logMessageSpy);
     expect(actualMessage).toBe(expectedMessage);
   });
 });
@@ -317,10 +327,8 @@ test('posts error commit status and logs message when no previous builds are fou
   const getAssetStatsRequestHandlers = new Map([
     [
       baseBranch,
-      () => Promise.resolve(
-        Either.Left(
-          NoRecentBuildsFoundErr(baseBranch)
-        )
+      () => Promise.reject(
+        NoRecentBuildsFoundErr(baseBranch)
       )
     ]
   ]);
@@ -338,7 +346,10 @@ test('posts error commit status and logs message when no previous builds are fou
     logMessage: logMessageSpy
   }).then(() => {
     const expectedMessage = 'No recent successful builds found for the base branch: `develop`.';
-    const [, errorStatusArguments] = postCommitStatusSpy.calls[1].arguments;
+    const [, errorStatusArguments] = R.view(
+      secondCallArguments,
+      postCommitStatusSpy
+    );
     expect(errorStatusArguments.method).toBe('POST');
     expect(errorStatusArguments.body).toEqual({
       state: 'error',
@@ -347,7 +358,7 @@ test('posts error commit status and logs message when no previous builds are fou
       description: expectedMessage
     });
 
-    const actualMessage = firstCallFirstArgument(logMessageSpy);
+    const actualMessage = R.view(firstCallFirstArgument, logMessageSpy);
     expect(actualMessage).toBe(expectedMessage);
   });
 });
@@ -359,6 +370,7 @@ test('writes asset stats and posts success commit status with asset stats (and a
   const assetSize = 258;
   const assetPath = 'build/main.38552hd3.js';
   const postCommitStatusSpy = createSpy();
+  const logMessageSpy = createSpy();
   const gitHubRequestHandlers = new Map([
     [
       `statuses/${buildSha}`,
@@ -384,9 +396,13 @@ test('writes asset stats and posts success commit status with asset stats (and a
       maxSize: Infinity,
       targets: 'dist/main.*.js'
     }],
+    logMessage: logMessageSpy,
     writeFile: writeFileSpy
   }).then(() => {
-    const [assetStatsFilepath, assetStats] = writeFileSpy.calls[0].arguments;
+    const [assetStatsFilepath, assetStats] = R.view(
+      firstCallArguments,
+      writeFileSpy
+    );
     expect(assetStatsFilepath)
       .toBe('83jgs3/artifacts/thresh/asset-stats.json');
     expect(JSON.parse(assetStats)).toEqual([
@@ -396,18 +412,23 @@ test('writes asset stats and posts success commit status with asset stats (and a
       }
     ]);
 
-    const [, successStatusArguments] = postCommitStatusSpy.calls[1].arguments;
+    const [, successStatusArguments] = R.view(
+      secondCallArguments,
+      postCommitStatusSpy
+    );
     expect(successStatusArguments.method).toBe('POST');
     expect(successStatusArguments.body).toEqual({
       state: 'success',
       targetUrl: 'http://circle.com/build/29#artifacts',
       context: 'Asset Sizes',
-      description: 'build/main.38552hd3.js: 258B (no open PR to calculate diffs from)'
+      description: 'build/main.38552hd3.js: 258B (no open PR; cannot calculate diffs)'
     });
+
+    expect(R.view(firstCallFirstArgument, logMessageSpy)).toBe('No open pull request found. Skipping asset diff step.');
   });
 });
 
-test('posts success commit status when failure thresholds are not met', () => {
+test('posts failure commit status when thresholds are not met', () => {
   const writeFileSpy = createSpy();
   const buildSha = 'fjdk29uw';
   const pr = '200';
@@ -437,14 +458,12 @@ test('posts success commit status when failure thresholds are not met', () => {
   const getAssetStatsRequestHandlers = new Map([
     [
       baseBranch,
-      () => Promise.resolve(
-        Either.Right([
-          {
-            filepath: assetPath,
-            size: 200
-          }
-        ])
-      )
+      () => Promise.resolve([
+        {
+          filepath: assetPath,
+          size: 200
+        }
+      ])
     ]
   ]);
 
@@ -466,7 +485,10 @@ test('posts success commit status when failure thresholds are not met', () => {
     writeFile: writeFileSpy,
     resolveGlob: () => Promise.resolve([assetPath])
   }).then(() => {
-    const [, failureStatusArguments] = postCommitStatusSpy.calls[1].arguments;
+    const [, failureStatusArguments] = R.view(
+      secondCallArguments,
+      postCommitStatusSpy
+    );
     expect(failureStatusArguments.method).toBe('POST');
     expect(failureStatusArguments.body).toEqual({
       state: 'failure',
@@ -507,14 +529,12 @@ test('posts success commit status when failure thresholds are met', () => {
   const getAssetStatsRequestHandlers = new Map([
     [
       baseBranch,
-      () => Promise.resolve(
-        Either.Right([
-          {
-            filepath: assetPath,
-            size: 400
-          }
-        ])
-      )
+      () => Promise.resolve([
+        {
+          filepath: assetPath,
+          size: 400
+        }
+      ])
     ]
   ]);
 
@@ -536,7 +556,10 @@ test('posts success commit status when failure thresholds are met', () => {
     resolveGlob: () => Promise.resolve([assetPath]),
     writeFile: writeFileSpy
   }).then(() => {
-    const [, successStatusArguments] = postCommitStatusSpy.calls[1].arguments;
+    const [, successStatusArguments] = R.view(
+      secondCallArguments,
+      postCommitStatusSpy
+    );
     expect(successStatusArguments.method).toBe('POST');
     expect(successStatusArguments.body).toEqual({
       state: 'success',

@@ -1,5 +1,4 @@
 import commandLineArgs from 'command-line-args';
-import {Maybe} from 'monet';
 import CircleciAdapter from '@danny.andrews/thresh-ci-adapter-circleci';
 import {camelizeKeys} from 'humps';
 
@@ -16,8 +15,7 @@ const cliOptions = commandLineArgs([
 export default () => readConfig(cliOptions['config-path'])
   .map(camelizeKeys)
   .chain(
-    ({projectName, thresholds}) => main({
-      projectName: Maybe.fromNull(projectName),
+    ({thresholds}) => main({
       pullRequestId,
       thresholds,
       buildSha,

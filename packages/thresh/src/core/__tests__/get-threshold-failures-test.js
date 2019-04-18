@@ -2,7 +2,7 @@ import test from 'ava';
 import expect from 'expect';
 import R from 'ramda';
 
-import {InvalidFailureThresholdErr} from '../errors';
+import {InvalidThresholdErr} from '../errors';
 import subject from '../get-threshold-failures';
 
 const testSets = [
@@ -77,7 +77,7 @@ const testSets = [
       {resolvedTargets: [], maxSize: 200, size: 3532}
     ],
     output: actual => {
-      expect(actual.left().constructor).toBe(InvalidFailureThresholdErr);
+      expect(actual.left().constructor).toBe(InvalidThresholdErr);
     }
   }
 ];

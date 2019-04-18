@@ -1,9 +1,8 @@
 import R from 'ramda';
-import FlatFileDb from 'flat-file-db';
 import Ajv from 'ajv';
 import {Either} from 'monet';
 
-import {JSON_OUTPUT_SPACING} from '../core/constants';
+const JSON_OUTPUT_SPACING = 2;
 
 export const truncate = R.curry(({maxSize, contSuffix = '...'}, string) => (
   string.length > maxSize
@@ -13,14 +12,6 @@ export const truncate = R.curry(({maxSize, contSuffix = '...'}, string) => (
 
 export const serializeForFile = val =>
   JSON.stringify(val, null, JSON_OUTPUT_SPACING);
-
-export const Database = (...args) => {
-  const flatFileDb = FlatFileDb(...args);
-
-  return new Promise(
-    resolve => flatFileDb.on('open', () => resolve(flatFileDb))
-  );
-};
 
 export const validateSchema = (schema, object) => {
   const validator = new Ajv({allErrors: true});
@@ -35,8 +26,10 @@ export const sumReduce = R.curry(
 );
 
 export const listToMap = R.curry(
-  (getId, list) => list.reduce(
-    (obj, item) => ({[getId(item)]: item, ...obj}),
+  (getKey, list) => list.reduce(
+    (obj, item) => ({[getKey(item)]: item, ...obj}),
     {}
   )
 );
+
+export const toList = a => R.flatten([a]);

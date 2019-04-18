@@ -1,6 +1,7 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
 import ReaderPromise from '@danny.andrews/reader-promise';
+import R from 'ramda';
 
 import CommitStatusPoster from '../commit-status-poster';
 import {firstCallArguments} from '../../test/helpers';
@@ -9,12 +10,11 @@ test('postPending makes request to post pending commit status to GitHub', () => 
   const spy = createSpy().andReturn(ReaderPromise.of());
   const {postPending} = CommitStatusPoster({
     sha: 'h8g94hg9',
-    targetUrl: 'info.com/53',
-    label: 'interesting info'
+    targetUrl: 'info.com/53'
   });
   postPending().run({makeGitHubRequest: spy});
 
-  const [path, fetchOpts] = firstCallArguments(spy);
+  const [path, fetchOpts] = R.view(firstCallArguments, spy);
   expect(path).toBe('statuses/h8g94hg9');
   expect(fetchOpts).toEqual({
     method: 'POST',
@@ -22,7 +22,7 @@ test('postPending makes request to post pending commit status to GitHub', () => 
       state: 'pending',
       targetUrl: 'info.com/53',
       description: 'Calculating asset diffs and threshold failures (if any)...',
-      context: 'interesting info'
+      context: 'Asset Sizes'
     }
   });
 });
@@ -31,13 +31,12 @@ test('postError makes request to post error commit status to GitHub', () => {
   const spy = createSpy().andReturn(ReaderPromise.of());
   const {postError} = CommitStatusPoster({
     sha: 'h8g94hg9',
-    targetUrl: 'info.com/53',
-    label: 'interesting info'
+    targetUrl: 'info.com/53'
   });
 
   postError('Error encountered while doing thing...').run({makeGitHubRequest: spy});
 
-  const [path, fetchOpts] = firstCallArguments(spy);
+  const [path, fetchOpts] = R.view(firstCallArguments, spy);
   expect(path).toBe('statuses/h8g94hg9');
   expect(fetchOpts).toEqual({
     method: 'POST',
@@ -45,7 +44,7 @@ test('postError makes request to post error commit status to GitHub', () => {
       state: 'error',
       targetUrl: 'info.com/53',
       description: 'Error encountered while doing thing...',
-      context: 'interesting info'
+      context: 'Asset Sizes'
     }
   });
 });
@@ -56,7 +55,7 @@ test('postErrorPrStatus truncates description to 140 characters (using ellipsis)
   const spy = createSpy().andReturn(ReaderPromise.of());
   postError(message).run({makeGitHubRequest: spy});
 
-  const [, fetchOpts] = firstCallArguments(spy);
+  const [, fetchOpts] = R.view(firstCallArguments, spy);
 
   // Sanity check
   expect(message.length).toBeGreaterThan(140);

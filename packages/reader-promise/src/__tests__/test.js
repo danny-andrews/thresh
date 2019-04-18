@@ -157,9 +157,9 @@ test(
 );
 
 test(
-  '"fromReaderFn" creates a ReaderPromise from a reader function',
+  '"asks" creates a ReaderPromise from a reader function',
   // eslint-disable-next-line prefer-promise-reject-errors
-  () => ReaderPromise.fromReaderFn(({getEnvVar}) => getEnvVar('GIT_BRANCH'))
+  () => ReaderPromise.asks(({getEnvVar}) => getEnvVar('GIT_BRANCH'))
     .map(x => x.toUpperCase())
     .run({getEnvVar: () => Promise.resolve('master')})
     .then(actual => {
