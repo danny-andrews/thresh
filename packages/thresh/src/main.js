@@ -11,30 +11,24 @@ import getThresholdFailures from './core/get-threshold-failures';
 import {NoOpenPullRequestFoundErr, NoPreviousStatsFoundForFilepath}
   from './core/errors';
 import {
-  getAssetFilestats,
+  getFileSizes,
   getBaseBranch,
   makeArtifactDirectory,
   CommitStatusPoster,
-  readManifest,
   saveStats,
   writeAssetDiffs,
   writeAssetStats,
-  logMessage
+  logMessage,
+  resolveGlobs
 } from './effects';
+import {sumReduce, listToMap} from './shared';
 
-const assetStatListToMap = assetStats => R.reduce(
-  (acc, {filename, ...rest}) => ({...acc, [filename]: rest}),
-  {},
-  assetStats
-);
-
-const assetStatMapToList = a => R.toPairs(a) |> R.map(
-  ([filename, filepath]) => ({
-    filename,
-    path: filepath
-  })
-);
-
+// Types
+// AssetStat :: { filepath: String, size: Int }
+// Threshold :: { maxSize: Int, targets: [String] }
+// ResolvedThreshold :: { Threshold, resolvedTargets: [String] }
+// SizedThreshold :: { ResolvedThreshold, size: Int }
+// SizedTargets :: { targets: [String], size: Int }
 const getPreviousAssetStats = pullRequestId =>
   pullRequestId.toEither().cata(
     () => NoOpenPullRequestFoundErr() |> Either.Left |> ReaderPromise.of,
@@ -85,21 +79,40 @@ const diffAssets2 = (current, original) => ReaderPromise.fromReaderFn(
   )
 );
 
+const normalizeThresholds = thresholds => ReaderPromise.parallel(
+  thresholds.map(threshold => {
+    const targets = [].concat(threshold.targets);
+
+    return resolveGlobs(targets)
+      .map(R.flatten)
+      .map(resolvedTargets => ({...threshold, targets, resolvedTargets}));
+  })
+);
+
+const assetSizeListToMap = listToMap(R.prop('filepath'));
+
+const sizeResolvedTargets = (assetSizeMap, thresholdTargets) =>
+  sumReduce(filepath => assetSizeMap[filepath].size, thresholdTargets);
+
+const sizeThreshold = (assetSizes, thresholds) => {
+  const assetSizeMap = assetSizeListToMap(assetSizes);
+
+  return thresholds.map(
+    threshold => ({
+      ...threshold,
+      size: sizeResolvedTargets(assetSizeMap, threshold.resolvedTargets)
+    })
+  );
+};
+
 export default ({
   artifactsDirectory,
   buildSha,
   buildUrl,
-  failureThresholds,
-  manifestFilepath,
-  outputDirectory,
+  thresholds,
   projectName,
   pullRequestId
 }) => {
-  const resolvePath = path => [outputDirectory, path].join('/');
-  const decorateAsset = ({path, ...rest}) => ({
-    ...rest,
-    path: resolvePath(path)
-  });
   const {
     transformStats,
     saveRunningStats,
@@ -113,13 +126,16 @@ export default ({
     });
   const postFinal = (assetDiffs, thresholdFailures) => {
     const formatMessages = R.join(' \n');
-    const successDescription = R.toPairs(assetDiffs)
-      |> R.map(
-        ([filename, {difference, current, percentChange}]) =>
-          formatAssetDiff({filename, difference, current, percentChange})
-      )
-      |> formatMessages;
-    const failureDescription = R.map(R.prop('message'), thresholdFailures)
+    const successDescription = assetDiffs.map(
+      ({targets, difference, current, percentChange}) =>
+        formatAssetDiff({
+          filename: targets,
+          difference,
+          current,
+          percentChange
+        })
+    ) |> formatMessages;
+    const failureDescription = thresholdFailures.map(R.prop('message'))
       |> formatMessages;
 
     return (
@@ -129,56 +145,59 @@ export default ({
     );
   };
 
-  return validateFailureThresholdSchemaWrapped(failureThresholds).chain(
-    () => ReaderPromise.parallel([
-      readManifest(manifestFilepath)
-        .map(assetStatMapToList)
-        .map(R.map(decorateAsset))
-        .chain(getAssetFilestats)
-        .map(assetStatListToMap),
+  return validateFailureThresholdSchemaWrapped(thresholds).chain(
+    () => normalizeThresholds(thresholds)
+  ).chain(
+    resolvedThresholds => ReaderPromise.parallel([
+      getFileSizes(
+        R.chain(R.prop('resolvedTargets'), resolvedThresholds) |> R.uniq
+      ),
       getPreviousAssetStats(pullRequestId),
+      ReaderPromise.of(resolvedThresholds),
       postPending(),
       makeArtifactDirectory(artifactsDirectory)
     ])
-  ).map(([currentAssetStats, previousAssetStats]) => [
-    transformStats(currentAssetStats),
-    previousAssetStats.map(transformStats)
+  ).map(([assetSizes, previousAssetSizes, resolvedThresholds]) => [
+    transformStats(assetSizes),
+    previousAssetSizes.map(transformStats),
+    sizeThreshold(assetSizes, resolvedThresholds)
   ]).chain(
-    ([currentAssetStats, previousAssetStats]) => ReaderPromise.parallel([
-      writeAssetStats(currentAssetStats, artifactsDirectory),
-      saveRunningStats(currentAssetStats, previousAssetStats)
-    ]).map(() => [currentAssetStats, previousAssetStats])
+    ([assetSizes, previousAssetSizes, sizedThresholds]) =>
+      ReaderPromise.parallel([
+        writeAssetStats(assetSizes, artifactsDirectory),
+        saveRunningStats(assetSizes, previousAssetSizes)
+      ]).map(() => [assetSizes, previousAssetSizes, sizedThresholds])
   ).chain(
-    ([currentAssetStats, previousAssetStats]) => previousAssetStats.cata(
-      error => (
-        error.constructor === NoOpenPullRequestFoundErr
-          ? R.toPairs(currentAssetStats)
-            |> R.map(([filename, {size}]) => formatAsset(filename, size))
-            |> R.join(' \n')
-            |> noPrFoundStatusMessage
-            |> postSuccess
-          : ReaderPromise.of(error)
-      ).chain(
-        () => logMessage(error.message)
-          .chain(() => ReaderPromise.fromError(error))
-      ),
-      value => diffAssets2(currentAssetStats, value)
-    )
+    ([assetSizes, previousAssetSizes, sizedThresholds]) =>
+      previousAssetSizes.cata(
+        error => (
+          error.constructor === NoOpenPullRequestFoundErr
+            ? assetSizes.map(({filepath, size}) => formatAsset(filepath, size))
+              |> R.join(' \n')
+              |> noPrFoundStatusMessage
+              |> postSuccess
+            : ReaderPromise.of(error)
+        ).chain(() => ReaderPromise.fromError(error)),
+        value => diffAssets2(sizedThresholds, value)
+          .map(assetDiffs => [assetDiffs, sizedThresholds])
+      )
   ).chain(
-    assetDiffs => getThresholdFailures(
-      R.toPairs(assetDiffs)
-        |> R.map(([filepath, {current: size}]) => ({filepath, size})),
-      failureThresholds
-    ).cata(
-      ReaderPromise.fromError,
-      thresholdFailures => ReaderPromise.parallel([
-        writeAssetDiffs({
-          rootPath: artifactsDirectory,
-          assetDiffs,
-          thresholdFailures
-        }),
-        postFinal(assetDiffs, thresholdFailures)
-      ])
-    )
-  ).chainErr(error => postError(error.message));
+    ([assetDiffs, sizedThresholds]) => getThresholdFailures(sizedThresholds)
+      .cata(
+        ReaderPromise.fromError,
+        thresholdFailures => ReaderPromise.parallel([
+          writeAssetDiffs({
+            rootPath: artifactsDirectory,
+            assetDiffs,
+            thresholdFailures
+          }),
+          postFinal(assetDiffs, thresholdFailures)
+        ])
+      )
+  ).chainErr(
+    ({message}) => ReaderPromise.parallel([
+      postError(message),
+      logMessage(message)
+    ])
+  );
 };

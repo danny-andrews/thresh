@@ -5,7 +5,6 @@ import ReaderPromise from '@danny.andrews/reader-promise';
 import {NoAssetStatsArtifactFoundErr, NoRecentBuildsFoundErr}
   from '@danny.andrews/thresh-artifact-store-circleci';
 
-import {DFAULT_FAILURE_THRESHOLD_STRATEGY} from '../core/schemas';
 import {firstCallFirstArgument} from '../test/helpers';
 import main from '../main';
 
@@ -13,33 +12,29 @@ const subject = ({
   artifactsDirectory = 'd34g2d/artifacts',
   buildSha = 'f83jfhg2',
   buildUrl = 'http://circle.com/build/45',
-  failureThresholds = [],
-  manifestFilepath = 'manifest.json',
-  outputDirectory = 'dist',
+  thresholds = [],
   projectName = Maybe.None(),
   pullRequestId = Maybe.of('33'),
 
   // Dependencies
-  writeFile = () => Promise.resolve(),
-  readFile = () => Promise.resolve('{}'),
-  resolve = (...args) => [...args].join('/'),
-  db = () => Promise.resolve(),
-  mkdir = () => Promise.resolve(),
-  getFileStats = () => Promise.resolve({}),
-  logMessage = () => {},
-  makeGitHubRequest = () => ReaderPromise.of({base: {}}),
   artifactStore = {
     getAssetStats: () => Promise.resolve(
       Either.Right({})
     )
-  }
+  },
+  db = () => Promise.resolve(),
+  getFileStats = () => Promise.resolve({size: 200}),
+  logMessage = console.log,
+  makeGitHubRequest = () => ReaderPromise.of({base: {}}),
+  mkdir = () => Promise.resolve(),
+  resolve = (...args) => [...args].join('/'),
+  resolveGlob = () => Promise.resolve(),
+  writeFile = () => Promise.resolve()
 } = {}) => main({
   artifactsDirectory,
   buildSha,
   buildUrl,
-  failureThresholds,
-  manifestFilepath,
-  outputDirectory,
+  thresholds,
   projectName,
   pullRequestId
 }).run({
@@ -49,10 +44,10 @@ const subject = ({
   logMessage,
   makeGitHubRequest,
   mkdir,
-  readFile,
   resolve,
+  resolveGlob,
   writeFile
-});
+}).catch(console.error);
 
 const warnOnMissingHandlers = false;
 
@@ -87,13 +82,11 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
   const buildSha = 'dkg93hdk';
   const pr = '99';
   const baseBranch = 'master';
-  const artifactsDirectory = 'djeh9h/artifacts';
   const originalSize = 500;
   const currentSize = 400;
-  const assetName = 'app.js';
-  const assetPath = 'app.3u3232.js';
-  const manifestFilepath = 'manifest.json';
-  const outputDirectory = 'dist';
+  const artifactsDirectory = 'djeh9h/artifacts';
+  const assetPath = 'dist/app.3u3232.js';
+  const resolveGlob = () => Promise.resolve([assetPath]);
   const postCommitStatusSpy = createSpy();
   const gitHubRequestHandlers = new Map([
     [
@@ -117,11 +110,9 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
     [
       baseBranch,
       () => Promise.resolve(
-        Either.Right({
-          [assetName]: {
-            size: originalSize
-          }
-        })
+        Either.Right([
+          {filepath: 'dist/app.h9832h.js', size: originalSize}
+        ])
       )
     ]
   ]);
@@ -130,43 +121,40 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
     artifactsDirectory,
     buildSha,
     buildUrl: 'http://circle.com/build/78',
-    manifestFilepath,
-    outputDirectory,
     pullRequestId: Maybe.of(pr),
+    thresholds: [{
+      maxSize: Infinity,
+      targets: 'dist/app.*.js'
+    }],
 
     // Dependencies
-    makeGitHubRequest: fakeGitHubRequest(gitHubRequestHandlers),
     artifactStore: {
       getAssetStats: fakeGetAssetStats(getAssetStatsRequestHandlers)
     },
     getFileStats: () => Promise.resolve({size: currentSize}),
-    readFile: path => path === manifestFilepath
-      ? Promise.resolve(JSON.stringify({[assetName]: assetPath}))
-      : Promise.reject(Error()),
+    makeGitHubRequest: fakeGitHubRequest(gitHubRequestHandlers),
+    resolveGlob,
     writeFile: writeFileSpy
   }).then(() => {
     const [assetStatsFilepath, assetStats] = writeFileSpy.calls[0].arguments;
     expect(assetStatsFilepath)
       .toBe('djeh9h/artifacts/thresh/asset-stats.json');
-    expect(JSON.parse(assetStats)).toEqual({
-      'app.js': {
-        size: 400,
-        path: 'dist/app.3u3232.js'
-      }
-    });
+    expect(JSON.parse(assetStats)).toEqual([{
+      filepath: 'dist/app.3u3232.js',
+      size: 400
+    }]);
 
     const [assetDiffsFilepath, assetDiffs] = writeFileSpy.calls[1].arguments;
     expect(assetDiffsFilepath)
       .toBe('djeh9h/artifacts/thresh/asset-diffs.json');
     expect(JSON.parse(assetDiffs)).toEqual({
-      diffs: {
-        'app.js': {
-          original: 500,
-          current: 400,
-          difference: -100,
-          percentChange: -20
-        }
-      },
+      diffs: [{
+        targets: ['dist/app.*.js'],
+        original: 500,
+        current: 400,
+        difference: -100,
+        percentChange: -20
+      }],
       failures: []
     });
     const [, pendingStatusArguments] = postCommitStatusSpy.calls[0].arguments;
@@ -184,18 +172,18 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
       state: 'success',
       targetUrl: 'http://circle.com/build/78#artifacts',
       context: 'Asset Sizes',
-      description: 'app.js: 400B (-100B, -20.00%)'
+      description: 'dist/app.*.js: 400B (-100B, -20.00%)'
     });
   });
 });
 
 test('writes message to the console when no previous stat found for given filepath', () => {
   const baseBranch = 'develop';
-  const assetName = 'vendor.js';
-  const assetPath = 'vendor.fdjsayr.js';
-  const mismatchedAssetName = 'app.js';
+  const assetPath = 'dist/vendor.fdjsayr.js';
+  const mismatchedAssetFilepath = 'dist/app.hfdsy4.js';
   const logMessageSpy = createSpy();
   const pr = '235';
+  const resolveGlob = () => Promise.resolve([assetPath]);
   const gitHubRequestHandlers = new Map([
     [
       `pulls/${pr}`,
@@ -210,26 +198,31 @@ test('writes message to the console when no previous stat found for given filepa
     [
       baseBranch,
       () => Promise.resolve(
-        Either.Right({
-          [mismatchedAssetName]: {
+        Either.Right([
+          {
+            filepath: mismatchedAssetFilepath,
             size: 300
           }
-        })
+        ])
       )
     ]
   ]);
 
   return subject({
     pullRequestId: Maybe.of(pr),
-    readFile: () => Promise.resolve(JSON.stringify({[assetName]: assetPath})),
     makeGitHubRequest: fakeGitHubRequest(gitHubRequestHandlers),
     artifactStore: {
       getAssetStats: fakeGetAssetStats(getAssetStatsRequestHandlers)
     },
-    logMessage: logMessageSpy
+    logMessage: logMessageSpy,
+    thresholds: [{
+      maxSize: Infinity,
+      targets: 'dist/vendor.*.js'
+    }],
+    resolveGlob
   }).then(() => {
     const actual = firstCallFirstArgument(logMessageSpy);
-    expect(actual).toBe('No previous stats found for vendor.js. Did you rename that file recently?');
+    expect(actual).toBe('No previous stats found for dist/vendor.fdjsayr.js. Did you rename that file recently?');
   });
 });
 
@@ -344,7 +337,7 @@ test('posts error commit status and logs message when no previous builds are fou
     },
     logMessage: logMessageSpy
   }).then(() => {
-    const expectedMessage = 'No recent builds found for the base branch: `develop`.';
+    const expectedMessage = 'No recent successful builds found for the base branch: `develop`.';
     const [, errorStatusArguments] = postCommitStatusSpy.calls[1].arguments;
     expect(errorStatusArguments.method).toBe('POST');
     expect(errorStatusArguments.body).toEqual({
@@ -364,10 +357,7 @@ test('writes asset stats and posts success commit status with asset stats (and a
   const buildSha = 'ljghay3h';
   const artifactsDirectory = '83jgs3/artifacts';
   const assetSize = 258;
-  const assetName = 'main.js';
-  const assetPath = 'main.38552hd3.js';
-  const manifestFilepath = 'manifest.json';
-  const outputDirectory = 'build';
+  const assetPath = 'build/main.38552hd3.js';
   const postCommitStatusSpy = createSpy();
   const gitHubRequestHandlers = new Map([
     [
@@ -384,25 +374,27 @@ test('writes asset stats and posts success commit status with asset stats (and a
     artifactsDirectory,
     buildSha,
     buildUrl: 'http://circle.com/build/29',
-    manifestFilepath,
-    outputDirectory,
     pullRequestId: Maybe.None(),
 
     // Dependencies
     makeGitHubRequest: fakeGitHubRequest(gitHubRequestHandlers),
     getFileStats: () => Promise.resolve({size: assetSize}),
-    readFile: () => Promise.resolve(JSON.stringify({[assetName]: assetPath})),
+    resolveGlob: () => Promise.resolve([assetPath]),
+    thresholds: [{
+      maxSize: Infinity,
+      targets: 'dist/main.*.js'
+    }],
     writeFile: writeFileSpy
   }).then(() => {
     const [assetStatsFilepath, assetStats] = writeFileSpy.calls[0].arguments;
     expect(assetStatsFilepath)
       .toBe('83jgs3/artifacts/thresh/asset-stats.json');
-    expect(JSON.parse(assetStats)).toEqual({
-      'main.js': {
+    expect(JSON.parse(assetStats)).toEqual([
+      {
         size: 258,
-        path: 'build/main.38552hd3.js'
+        filepath: 'build/main.38552hd3.js'
       }
-    });
+    ]);
 
     const [, successStatusArguments] = postCommitStatusSpy.calls[1].arguments;
     expect(successStatusArguments.method).toBe('POST');
@@ -410,7 +402,7 @@ test('writes asset stats and posts success commit status with asset stats (and a
       state: 'success',
       targetUrl: 'http://circle.com/build/29#artifacts',
       context: 'Asset Sizes',
-      description: 'main.js: 258B (no open PR to calculate diffs from)'
+      description: 'build/main.38552hd3.js: 258B (no open PR to calculate diffs from)'
     });
   });
 });
@@ -421,7 +413,6 @@ test('posts success commit status when failure thresholds are not met', () => {
   const pr = '200';
   const baseBranch = 'master';
   const assetSize = 400;
-  const assetName = 'build.js';
   const assetPath = 'build.3u3232.js';
   const buildNumber = '21';
   const postCommitStatusSpy = createSpy();
@@ -447,11 +438,12 @@ test('posts success commit status when failure thresholds are not met', () => {
     [
       baseBranch,
       () => Promise.resolve(
-        Either.Right({
-          [assetName]: {
+        Either.Right([
+          {
+            filepath: assetPath,
             size: 200
           }
-        })
+        ])
       )
     ]
   ]);
@@ -460,10 +452,9 @@ test('posts success commit status when failure thresholds are not met', () => {
     buildSha,
     buildUrl: `http://circle.com/build/${buildNumber}`,
     pullRequestId: Maybe.of(pr),
-    failureThresholds: [{
+    thresholds: [{
       maxSize: 300,
-      targets: '.js',
-      strategy: DFAULT_FAILURE_THRESHOLD_STRATEGY
+      targets: '*.js'
     }],
 
     // Dependencies
@@ -472,8 +463,8 @@ test('posts success commit status when failure thresholds are not met', () => {
       getAssetStats: fakeGetAssetStats(getAssetStatsRequestHandlers)
     },
     getFileStats: () => Promise.resolve({size: assetSize}),
-    readFile: () => Promise.resolve(JSON.stringify({[assetName]: assetPath})),
-    writeFile: writeFileSpy
+    writeFile: writeFileSpy,
+    resolveGlob: () => Promise.resolve([assetPath])
   }).then(() => {
     const [, failureStatusArguments] = postCommitStatusSpy.calls[1].arguments;
     expect(failureStatusArguments.method).toBe('POST');
@@ -481,7 +472,7 @@ test('posts success commit status when failure thresholds are not met', () => {
       state: 'failure',
       targetUrl: 'http://circle.com/build/21#artifacts',
       context: 'Asset Sizes',
-      description: '"build.js" (400B) must be less than or equal to 300B!'
+      description: 'The total size of ["build.3u3232.js"] (400B) must be less than or equal to 300B!'
     });
   });
 });
@@ -492,7 +483,6 @@ test('posts success commit status when failure thresholds are met', () => {
   const pr = '200';
   const baseBranch = 'master';
   const assetSize = 267;
-  const assetName = 'app.js';
   const assetPath = 'app.dj39hf.js';
   const buildNumber = '29';
   const postCommitStatusSpy = createSpy();
@@ -518,11 +508,12 @@ test('posts success commit status when failure thresholds are met', () => {
     [
       baseBranch,
       () => Promise.resolve(
-        Either.Right({
-          [assetName]: {
+        Either.Right([
+          {
+            filepath: assetPath,
             size: 400
           }
-        })
+        ])
       )
     ]
   ]);
@@ -531,10 +522,9 @@ test('posts success commit status when failure thresholds are met', () => {
     buildSha,
     buildUrl: `http://circle.com/build/${buildNumber}`,
     pullRequestId: Maybe.of(pr),
-    failureThresholds: [{
+    thresholds: [{
       maxSize: 550,
-      targets: '.js',
-      strategy: DFAULT_FAILURE_THRESHOLD_STRATEGY
+      targets: '*.js'
     }],
 
     // Dependencies
@@ -543,7 +533,7 @@ test('posts success commit status when failure thresholds are met', () => {
       getAssetStats: fakeGetAssetStats(getAssetStatsRequestHandlers)
     },
     getFileStats: () => Promise.resolve({size: assetSize}),
-    readFile: () => Promise.resolve(JSON.stringify({[assetName]: assetPath})),
+    resolveGlob: () => Promise.resolve([assetPath]),
     writeFile: writeFileSpy
   }).then(() => {
     const [, successStatusArguments] = postCommitStatusSpy.calls[1].arguments;
@@ -552,9 +542,7 @@ test('posts success commit status when failure thresholds are met', () => {
       state: 'success',
       targetUrl: 'http://circle.com/build/29#artifacts',
       context: 'Asset Sizes',
-      description: 'app.js: 267B (-133B, -33.25%)'
+      description: '*.js: 267B (-133B, -33.25%)'
     });
   });
 });
-
-test.todo('saves running stats in database and appends projectName to commit status label when projectName is given (monorepo usecase)');

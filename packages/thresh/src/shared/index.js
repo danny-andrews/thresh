@@ -29,3 +29,14 @@ export const validateSchema = (schema, object) => {
     ? Either.Right(true)
     : Either.Left(validator);
 };
+
+export const sumReduce = R.curry(
+  (getValue, list) => list.reduce((sum, item) => sum + getValue(item), 0)
+);
+
+export const listToMap = R.curry(
+  (getId, list) => list.reduce(
+    (obj, item) => ({[getId(item)]: item, ...obj}),
+    {}
+  )
+);

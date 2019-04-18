@@ -35,6 +35,7 @@
     "filesize": "^3.5.10",
     "flat-file-db": "^1.0.0",
     "humps": "^2.0.1",
+    "micromatch": "^4.0.1",
     "monet": "^0.8.10",
     "node-fetch": "^1.7.1",
     "ramda": "^0.24.1",

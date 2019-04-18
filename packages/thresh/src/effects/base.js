@@ -28,3 +28,7 @@ export const request = (...args) => ReaderPromise.fromReaderFn(
 export const logMessage = (...args) => ReaderPromise.fromReaderFn(
   ({logMessage}) => Promise.resolve(logMessage(...args))
 );
+
+export const resolveGlob = (...args) => ReaderPromise.fromReaderFn(
+  ({resolveGlob}) => resolveGlob(...args)
+);
