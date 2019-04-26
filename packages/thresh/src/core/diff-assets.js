@@ -6,9 +6,13 @@ import {sumReduce, listToMap} from '../shared';
 export default (
   currentSizedTargetSets,
   originalAssetStats,
-  options = {onMismatchFound: R.identity}
+  onMismatchFound = R.identity
 ) => {
   const originalFilepaths = originalAssetStats.map(R.prop('filepath'));
+  const originalAssetStatsMap = listToMap(
+    R.prop('filepath'),
+    originalAssetStats
+  );
 
   return R.chain(
     ({targets, resolvedTargets, size}) => {
@@ -16,20 +20,17 @@ export default (
         originalFilepaths,
         targets
       );
+
       if(originalResolvedTargets.length !== resolvedTargets.length) {
-        options.onMismatchFound(resolvedTargets);
+        onMismatchFound(resolvedTargets);
 
         return [];
       }
-      const originalAssetStatsMap = listToMap(
-        R.prop('filepath'),
-        originalAssetStats
-      );
+
       const originalSize = sumReduce(
         filepath => originalAssetStatsMap[filepath].size,
         originalResolvedTargets
       );
-
       const difference = size - originalSize;
 
       return {

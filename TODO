@@ -2,7 +2,16 @@ Write test for cli.js.
 
 Remove monorepo logic.
 
-Stats should passed around as a list, not an object. Currently, we have to do a
-bunch of conversions back and forth.
+Create effect for reading command line args.
 
-Update eslint config to get import rules.
+Create effect for freading environment variables.
+
+Move logic from cli.js to main.js.
+
+Use property tests where you can.
+
+Break logic out of main.
+
+Clean up 'request' abstraction.
+
+Develop better API for request.

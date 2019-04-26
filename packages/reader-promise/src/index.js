@@ -1,11 +1,6 @@
 import {Reader} from 'monet';
 import R from 'ramda';
-
-const CreateFactory = f => {
-  const constructor = (...args) => ({...f(...args), constructor});
-
-  return constructor;
-};
+import {CreateFactory} from '@danny.andrews/fp-utils';
 
 const ReaderPromise = CreateFactory(value => {
   const map = fn => ReaderPromise(
@@ -13,6 +8,7 @@ const ReaderPromise = CreateFactory(value => {
       promise => promise.then(fn)
     )
   );
+
   const chain = fn => ReaderPromise(
     value.chain(
       promise => Reader(
@@ -22,6 +18,7 @@ const ReaderPromise = CreateFactory(value => {
       )
     )
   );
+
   const mapErr = fn => ReaderPromise(
     value.map(
       promise => promise.catch(
@@ -31,6 +28,7 @@ const ReaderPromise = CreateFactory(value => {
       )
     )
   );
+
   const chainErr = fn => ReaderPromise(
     value.chain(
       promise => Reader(
@@ -40,6 +38,7 @@ const ReaderPromise = CreateFactory(value => {
       )
     )
   );
+
   const run = config => value.run(config);
 
   return Object.freeze({map, chain, mapErr, chainErr, run});
@@ -49,19 +48,28 @@ ReaderPromise.of = a => Promise.resolve(a) |> ReaderPromise.fromPromise;
 
 ReaderPromise.fromPromise = a => R.always(a) |> Reader |> ReaderPromise;
 
-ReaderPromise.fromError = a => Promise.reject(a) |> ReaderPromise.fromPromise;
+ReaderPromise.asks = fn => Reader(fn) |> ReaderPromise;
 
-ReaderPromise.fromReaderFn = a => Reader(a) |> ReaderPromise;
+ReaderPromise.fromError = e => Promise.reject(e) |> ReaderPromise.fromPromise;
 
-ReaderPromise.fromEither = a => a.cata(
+ReaderPromise.fromEither = either => either.cata(
   ReaderPromise.fromError,
   ReaderPromise.of
 );
 
-ReaderPromise.parallel = readerPromises => ReaderPromise.fromReaderFn(
+ReaderPromise.parallel = readerPromises => ReaderPromise.asks(
   config => Promise.all(
     readerPromises.map(
-      rp => rp.run(config)
+      readerPromise => readerPromise.run(config)
+    )
+  )
+);
+
+ReaderPromise.invokeAt = R.curry(
+  (transform, select) => (...args) => ReaderPromise.asks(
+    config => transform(
+      select(config)(...args),
+      config
     )
   )
 );

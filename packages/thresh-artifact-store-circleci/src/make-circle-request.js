@@ -7,11 +7,11 @@ import {NoResponseError, Non200ResponseError, InvalidResponseError, switchCaseF}
 
 import {CircleCiFetchErr, CircleCiInvalidResponseErr} from './errors';
 
-export const request = (...args) => ReaderPromise.fromReaderFn(
+export const request = (...args) => ReaderPromise.asks(
   ({request}) => request(...args) // eslint-disable-line no-shadow
 );
 
-const circleDeserializer = payload => camelizeKeys(payload);
+const circleDeserializer = camelizeKeys;
 
 const API_ROOT = 'https://circleci.com/api/v1.1';
 

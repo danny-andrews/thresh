@@ -1,7 +1,9 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
+import R from 'ramda';
 
 import subject from '../diff-assets';
+import {calls} from '../../test/helpers';
 
 const FLOAT_PERCISION = 0.000001;
 
@@ -82,10 +84,10 @@ test('calls onMismatchFound for every mismatch found', () => {
       }
     ],
     [],
-    {onMismatchFound: spy}
+    spy
   );
 
-  expect(spy.calls.length).toBe(2);
+  expect(R.view(calls, spy).length).toBe(2);
   expect(spy).toHaveBeenCalledWith(['new-asset.js']);
   expect(spy).toHaveBeenCalledWith(['new-asset.css']);
 });

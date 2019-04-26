@@ -2,8 +2,13 @@ import test from 'ava';
 import expect, {createSpy} from 'expect';
 import {NoResponseError, Non200ResponseError, InvalidResponseError}
   from '@danny.andrews/fp-utils';
+import R from 'ramda';
 
 import MakeCircleRequest from '../make-circle-request';
+
+const firstCallFirstArgument = R.lensPath(['calls', 0, 'arguments', 0]);
+
+const firstCallArguments = R.lensPath(['calls', 0, 'arguments']);
 
 const subject = ({
   request,
@@ -22,7 +27,7 @@ test('sends request to url, if given', () => {
     circleApiToken: '4dfasg'
   });
 
-  const [actual] = spy.calls[0].arguments;
+  const actual = R.view(firstCallFirstArgument, spy);
   expect(actual)
     .toBe('circleci.artifacts/my-artifact.json?circle-token=4dfasg');
 });
@@ -37,7 +42,7 @@ test('sends request to correct url built from repoName, repoOwner, and path', ()
     circleApiToken: '4dfasg'
   });
 
-  const [actual] = spy.calls[0].arguments;
+  const actual = R.view(firstCallFirstArgument, spy);
   expect(actual).toBe('https://circleci.com/api/v1.1/project/github/my-account/my-repo/my-path?circle-token=4dfasg');
 });
 
@@ -45,7 +50,7 @@ test('sets Accept header to application/json', () => {
   const spy = createSpy().andReturn(Promise.resolve());
   subject({request: spy});
 
-  const [, {headers: actual}] = spy.calls[0].arguments;
+  const [, {headers: actual}] = R.view(firstCallArguments, spy);
   expect(actual).toEqual({Accept: 'application/json'});
 });
 
@@ -61,14 +66,14 @@ test('accepts additional headers', () => {
     request: spy
   });
 
-  const [, {headers: actual}] = spy.calls[0].arguments;
+  const [, {headers: actual}] = R.view(firstCallArguments, spy);
   expect(actual).toEqual({
     Accept: 'application/my-mime',
     'Content-Type': 'application/json'
   });
 });
 
-test('accepts other fetch optioms', () => {
+test('accepts other fetch options', () => {
   const spy = createSpy().andReturn(Promise.resolve());
   subject({
     fetchOpts: {
@@ -78,7 +83,7 @@ test('accepts other fetch optioms', () => {
     request: spy
   });
 
-  const [, {method, body}] = spy.calls[0].arguments;
+  const [, {method, body}] = R.view(firstCallArguments, spy);
 
   expect(method).toBe('POST');
   expect(body).toBe('hi');
@@ -102,7 +107,7 @@ test("if raw is true, it doesn't deserialize response", () => {
   });
 });
 
-test('returns Error if request fails', () => {
+test('returns error if request fails', () => {
   const spy = createSpy().andReturn(Promise.reject(NoResponseError('oh no')));
 
   return subject({request: spy, circleApiToken: 'fdlsar32', url: 'https://circleci.com/api/v1.1/hey'})

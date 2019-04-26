@@ -5,7 +5,7 @@ import subject from '../format-asset-diff';
 
 test('no difference', () => {
   const actual = subject({
-    filename: 'app.js',
+    targets: ['app.js'],
     difference: 0,
     current: 3523,
     percentChange: 0
@@ -16,7 +16,7 @@ test('no difference', () => {
 
 test('positive difference', () => {
   const actual = subject({
-    filename: 'app.js',
+    targets: ['app.js'],
     difference: 23,
     current: 95842,
     percentChange: 0.02
@@ -27,7 +27,7 @@ test('positive difference', () => {
 
 test('negative difference', () => {
   const actual = subject({
-    filename: 'app.js',
+    targets: ['app.js'],
     difference: -352,
     current: 9423,
     percentChange: -3.60
@@ -38,7 +38,7 @@ test('negative difference', () => {
 
 test('rounds percent change to 2 decimal points', () => {
   const actual = subject({
-    filename: 'app.js',
+    targets: ['app.js'],
     difference: -734729,
     current: 5364634,
     percentChange: -12.046
@@ -49,7 +49,7 @@ test('rounds percent change to 2 decimal points', () => {
 
 test("pads with 0's to 2 decimal points", () => {
   const actual = subject({
-    filename: 'app.js',
+    targets: ['app.js'],
     difference: 839,
     current: 4336,
     percentChange: 24

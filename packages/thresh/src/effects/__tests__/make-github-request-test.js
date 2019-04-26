@@ -5,8 +5,10 @@ import {
   Non200ResponseError,
   InvalidResponseError
 } from '@danny.andrews/fp-utils';
+import R from 'ramda';
 
 import makeGithubRequest from '../make-github-request';
+import {firstCallFirstArgument, firstCallArguments} from '../../test/helpers';
 
 const subject = ({
   githubApiToken = 'fjidq8y32',
@@ -30,7 +32,7 @@ test('sends request to correct path', () => {
     request: spy
   });
 
-  const [actual] = spy.calls[0].arguments;
+  const actual = R.view(firstCallFirstArgument, spy);
   expect(actual).toBe('https://api.github.com/repos/me/my-repo/my-path');
 });
 
@@ -38,7 +40,7 @@ test('sets Accept header to application/vnd.github.v3+json', () => {
   const spy = createSpy().andReturn(Promise.resolve());
   subject({request: spy});
 
-  const [, {headers}] = spy.calls[0].arguments;
+  const [, {headers}] = R.view(firstCallArguments, spy);
   expect(headers.Accept).toBe('application/vnd.github.v3+json');
 });
 
@@ -46,7 +48,7 @@ test('sets Authorization header to token + apiToken', () => {
   const spy = createSpy().andReturn(Promise.resolve());
   subject({request: spy, githubApiToken: 'fdlsy892'});
 
-  const [, {headers}] = spy.calls[0].arguments;
+  const [, {headers}] = R.view(firstCallArguments, spy);
   expect(headers.Authorization).toBe('token fdlsy892');
 });
 
@@ -62,7 +64,7 @@ test('accepts additional headers', () => {
     request: spy
   });
 
-  const [, {headers}] = spy.calls[0].arguments;
+  const [, {headers}] = R.view(firstCallArguments, spy);
   expect(headers.Accept).toBe('application/my-mime');
   expect(headers['Content-Type']).toBe('application/json');
 });
@@ -76,7 +78,7 @@ test('accepts other fetch options', () => {
     request: spy
   });
 
-  const [, {method: actual}] = spy.calls[0].arguments;
+  const [, {method: actual}] = R.view(firstCallArguments, spy);
 
   expect(actual).toBe('POST');
 });
@@ -92,7 +94,7 @@ test('decamelizes and stringifies body', () => {
     },
     request: spy
   });
-  const [, {body: actual}] = spy.calls[0].arguments;
+  const [, {body: actual}] = R.view(firstCallArguments, spy);
 
   expect(actual).toEqual('{"my_msg":"hello"}');
 });

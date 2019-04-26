@@ -11,9 +11,6 @@ export default ({rootPath, assetDiffs, thresholdFailures}) => resolve(
 ).chain(
   filepath => writeFile(
     filepath,
-    serializeForFile({
-      diffs: assetDiffs,
-      failures: thresholdFailures
-    })
+    serializeForFile({diffs: assetDiffs, failures: thresholdFailures})
   )
 ).mapErr(AssetDiffsWriteErr);
