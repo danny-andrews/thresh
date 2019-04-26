@@ -1,17 +1,12 @@
-Write test for cli.js.
-
-Remove monorepo logic.
-
-Create effect for reading command line args.
-
-Create effect for freading environment variables.
+Clean up main test.
 
 Move logic from cli.js to main.js.
+  Create effect for reading command line args.
+  Create effect for freading environment variables.
+  Write test for cli.js.
 
 Use property tests where you can.
 
-Break logic out of main.
-
-Clean up 'request' abstraction.
-
 Develop better API for request.
+
+Break out Github-specific code into thresh-repository-adapter-github.

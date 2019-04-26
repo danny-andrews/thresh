@@ -30,8 +30,8 @@ export default ({
   artifactsDirectory,
   buildSha,
   buildUrl,
-  thresholds,
-  pullRequestId
+  pullRequestId,
+  thresholds
 }) => {
   const {
     postPending,
@@ -109,7 +109,9 @@ export default ({
                 |> formatStatusMessages
                 |> noPrFoundStatusMessage
                 |> postSuccess
-            ).chain(R.pipe(NoOpenPullRequestFoundErr, ReaderPromise.fromError)),
+            ).chain(
+              R.pipe(NoOpenPullRequestFoundErr, ReaderPromise.fromError)
+            ),
             diffAssets2(sizedThresholds)
           ),
           getThresholdFailures(sizedThresholds) |> ReaderPromise.fromEither,

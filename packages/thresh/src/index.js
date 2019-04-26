@@ -12,20 +12,20 @@ import {MakeGitHubRequest} from './effects';
 const {repoOwner, repoName} = CircleciAdapter().getEnvVars();
 
 cli().run({
-  writeFile,
-  readFile,
-  resolve: path.resolve,
-  request,
-  mkdir,
+  artifactStore: CircleciArtifactStore({repoOwner, repoName}),
   getFileStats,
-  resolveGlob,
   logMessage: console.log, // eslint-disable-line no-console
   makeGitHubRequest: MakeGitHubRequest({
     githubApiToken: process.env.GITHUB_API_TOKEN,
     repoOwner,
     repoName
   }),
-  artifactStore: CircleciArtifactStore({repoOwner, repoName})
+  mkdir,
+  readFile,
+  request,
+  resolve: path.resolve,
+  resolveGlob,
+  writeFile
 }).catch(err => {
   console.error(err); // eslint-disable-line no-console
   process.exit(1); // eslint-disable-line no-process-exit
