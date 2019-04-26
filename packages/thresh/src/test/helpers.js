@@ -4,11 +4,6 @@ export const PromiseError = a => Promise.reject(Error(a));
 
 export const calls = R.lensProp('calls');
 
-export const callCount = R.compose(
-  calls,
-  R.lensProp('length')
-);
-
 export const firstCallArguments = R.compose(
   calls,
   R.lensPath([0, 'arguments'])
