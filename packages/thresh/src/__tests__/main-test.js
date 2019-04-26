@@ -71,9 +71,10 @@ const subject = ({
 }).catch(console.error);
 
 test('posts pending commit status, writes asset stats to file, writes asset diffs to file, and posts success commit status', () => {
-  const writeFileSpy = createSpy();
   const buildSha = 'dkg93hdk';
   const pr = '99';
+  const mkdirSpy = createSpy().andReturn(Promise.resolve());
+  const writeFileSpy = createSpy();
   const resolveGlob = () => Promise.resolve(['dist/app.3u3232.js']);
   const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
   const getAssetStatsSpy = createSpy().andReturn(
@@ -110,9 +111,16 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
         ]
       ])
     ),
+    mkdir: mkdirSpy,
     resolveGlob,
     writeFile: writeFileSpy
   }).then(() => {
+    const directory = R.view(
+      firstCallFirstArgument,
+      mkdirSpy
+    );
+    expect(directory).toBe('thressh');
+
     const [assetStatsFilepath, assetStats] = R.view(
       firstCallArguments,
       writeFileSpy

@@ -131,9 +131,9 @@ export default ({
         ])
     )
     .chainErr(
-      ({message}) => ReaderPromise.parallel([
+      ({message, stack}) => ReaderPromise.parallel([
         postError(message),
-        logMessage(message)
+        logMessage(stack)
       ])
     );
 };
