@@ -4,12 +4,9 @@ import {Maybe} from 'monet';
 import ReaderPromise from '@danny.andrews/reader-promise';
 import {NoAssetStatsArtifactFoundErr, NoRecentBuildsFoundErr}
   from '@danny.andrews/thresh-artifact-store-circleci';
-import R from 'ramda';
 
-import {firstCallFirstArgument, firstCallArguments} from '../test/helpers';
 import main from '../main';
-
-const secondCallArguments = R.lensPath(['calls', 1, 'arguments']);
+import {serializeForFile} from '../shared';
 
 const fakeGitHubRequest = handlers => (path, ...rest) => {
   if(!handlers.has(path)) {
@@ -75,13 +72,16 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
   const pr = '99';
   const mkdirSpy = createSpy().andReturn(Promise.resolve());
   const writeFileSpy = createSpy();
-  const resolveGlob = () => Promise.resolve(['dist/app.3u3232.js']);
+  const resolveGlobSpy = createSpy().andReturn(
+    Promise.resolve(['dist/app.3u3232.js'])
+  );
   const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
   const getAssetStatsSpy = createSpy().andReturn(
     Promise.resolve([
       {filepath: 'dist/app.h9832h.js', size: 500}
     ])
   );
+  const getFileStatsSpy = createSpy().andReturn(Promise.resolve({size: 400}));
 
   return subject({
     artifactsDirectory: 'djeh9h/artifacts',
@@ -97,7 +97,7 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
     artifactStore: {
       getAssetStats: getAssetStatsSpy
     },
-    getFileStats: () => Promise.resolve({size: 400}),
+    getFileStats: getFileStatsSpy,
     makeGitHubRequest: fakeGitHubRequest(
       new Map([
         [`statuses/${buildSha}`, postCommitStatusSpy],
@@ -112,66 +112,57 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
       ])
     ),
     mkdir: mkdirSpy,
-    resolveGlob,
+    resolveGlob: resolveGlobSpy,
     writeFile: writeFileSpy
   }).then(() => {
-    const directory = R.view(
-      firstCallFirstArgument,
-      mkdirSpy
+    expect(mkdirSpy).toHaveBeenCalledWith('djeh9h/artifacts/thresh');
+    expect(resolveGlobSpy).toHaveBeenCalledWith('dist/app.*.js');
+    expect(getFileStatsSpy).toHaveBeenCalledWith('dist/app.3u3232.js');
+    expect(writeFileSpy).toHaveBeenCalledWith(
+      'djeh9h/artifacts/thresh/asset-stats.json',
+      serializeForFile([{
+        filepath: 'dist/app.3u3232.js',
+        size: 400
+      }])
     );
-    expect(directory).toBe('thressh');
-
-    const [assetStatsFilepath, assetStats] = R.view(
-      firstCallArguments,
-      writeFileSpy
+    expect(writeFileSpy).toHaveBeenCalledWith(
+      'djeh9h/artifacts/thresh/asset-diffs.json',
+      serializeForFile({
+        diffs: [{
+          targets: ['dist/app.*.js'],
+          original: 500,
+          current: 400,
+          difference: -100,
+          percentChange: -20
+        }],
+        failures: []
+      })
     );
-    expect(assetStatsFilepath)
-      .toBe('djeh9h/artifacts/thresh/asset-stats.json');
-    expect(JSON.parse(assetStats)).toEqual([{
-      filepath: 'dist/app.3u3232.js',
-      size: 400
-    }]);
-
-    const [assetDiffsFilepath, assetDiffs] = R.view(
-      secondCallArguments,
-      writeFileSpy
+    expect(postCommitStatusSpy).toHaveBeenCalledWith(
+      'statuses/dkg93hdk',
+      {
+        method: 'POST',
+        body: {
+          state: 'pending',
+          targetUrl: 'http://circle.com/build/78#artifacts',
+          context: 'Asset Sizes',
+          description: 'Calculating asset diffs and threshold failures (if any)...'
+        }
+      }
     );
-    expect(assetDiffsFilepath)
-      .toBe('djeh9h/artifacts/thresh/asset-diffs.json');
-    expect(JSON.parse(assetDiffs)).toEqual({
-      diffs: [{
-        targets: ['dist/app.*.js'],
-        original: 500,
-        current: 400,
-        difference: -100,
-        percentChange: -20
-      }],
-      failures: []
-    });
-    const [, pendingStatusArguments] = R.view(
-      firstCallArguments,
-      postCommitStatusSpy
+    expect(postCommitStatusSpy).toHaveBeenCalledWith(
+      'statuses/dkg93hdk',
+      {
+        method: 'POST',
+        body: {
+          state: 'success',
+          targetUrl: 'http://circle.com/build/78#artifacts',
+          context: 'Asset Sizes',
+          description: 'dist/app.*.js: 400B (-100B, -20.00%)'
+        }
+      }
     );
-    expect(pendingStatusArguments.method).toBe('POST');
-    expect(pendingStatusArguments.body).toEqual({
-      state: 'pending',
-      targetUrl: 'http://circle.com/build/78#artifacts',
-      context: 'Asset Sizes',
-      description: 'Calculating asset diffs and threshold failures (if any)...'
-    });
-
-    const [, successStatusArguments] = R.view(
-      secondCallArguments,
-      postCommitStatusSpy
-    );
-    expect(successStatusArguments.method).toBe('POST');
-    expect(successStatusArguments.body).toEqual({
-      state: 'success',
-      targetUrl: 'http://circle.com/build/78#artifacts',
-      context: 'Asset Sizes',
-      description: 'dist/app.*.js: 400B (-100B, -20.00%)'
-    });
-
+    expect(postCommitStatusSpy.calls.length).toBe(2);
     expect(getAssetStatsSpy).toHaveBeenCalledWith('master', 'asset-stats.json');
   });
 });
@@ -198,9 +189,7 @@ test('writes message to the console when no previous stat found for given filepa
     logMessage: logMessageSpy,
     resolveGlob: () => Promise.resolve(['dist/vendor.fdjsayr.js'])
   }).then(() => {
-    const actual = R.view(firstCallFirstArgument, logMessageSpy);
-    expect(actual).toBe('No previous stats found for dist/vendor.fdjsayr.js. Did you rename that file recently?');
-
+    expect(logMessageSpy).toHaveBeenCalledWith('No previous stats found for dist/vendor.fdjsayr.js. Did you rename that file recently?');
     expect(getAssetStatsSpy).toHaveBeenCalledWith('develop', 'asset-stats.json');
   });
 });
@@ -245,22 +234,19 @@ test('posts error commit status and logs message when previous build has no stat
       ])
     )
   }).then(() => {
-    const expectedMessage = 'No asset stats artifact found for latest build of: `master`. Build number: `78`.';
-    const [, errorStatusArguments] = R.view(
-      secondCallArguments,
-      postCommitStatusSpy
+    expect(postCommitStatusSpy).toHaveBeenCalledWith(
+      'statuses/lnbs3hdk',
+      {
+        method: 'POST',
+        body: {
+          state: 'error',
+          targetUrl: 'http://circle.com/build/78#artifacts',
+          context: 'Asset Sizes',
+          description: 'No asset stats artifact found for latest build of: `master`. Build number: `78`.'
+        }
+      }
     );
-    expect(errorStatusArguments.method).toBe('POST');
-    expect(errorStatusArguments.body).toEqual({
-      state: 'error',
-      targetUrl: 'http://circle.com/build/78#artifacts',
-      context: 'Asset Sizes',
-      description: expectedMessage
-    });
-
-    const actualMessage = R.view(firstCallFirstArgument, logMessageSpy);
-    expect(actualMessage).toBe(expectedMessage);
-
+    expect(logMessageSpy).toHaveBeenCalledWith('No asset stats artifact found for latest build of: `master`. Build number: `78`.');
     expect(getAssetStatsSpy).toHaveBeenCalledWith(baseBranch, 'asset-stats.json');
   });
 });
@@ -301,22 +287,19 @@ test('posts error commit status and logs message when no previous builds are fou
       ])
     )
   }).then(() => {
-    const expectedMessage = 'No recent successful builds found for the base branch: `develop`.';
-    const [, errorStatusArguments] = R.view(
-      secondCallArguments,
-      postCommitStatusSpy
+    expect(postCommitStatusSpy).toHaveBeenCalledWith(
+      'statuses/ng832hfd',
+      {
+        method: 'POST',
+        body: {
+          state: 'error',
+          targetUrl: 'http://circle.com/build/139#artifacts',
+          context: 'Asset Sizes',
+          description: 'No recent successful builds found for the base branch: `develop`.'
+        }
+      }
     );
-    expect(errorStatusArguments.method).toBe('POST');
-    expect(errorStatusArguments.body).toEqual({
-      state: 'error',
-      targetUrl: 'http://circle.com/build/139#artifacts',
-      context: 'Asset Sizes',
-      description: expectedMessage
-    });
-
-    const actualMessage = R.view(firstCallFirstArgument, logMessageSpy);
-    expect(actualMessage).toBe(expectedMessage);
-
+    expect(logMessageSpy).toHaveBeenCalledWith('No recent successful builds found for the base branch: `develop`.');
     expect(getAssetStatsSpy).toHaveBeenCalledWith(baseBranch, 'asset-stats.json');
   });
 });
@@ -347,32 +330,30 @@ test('writes asset stats and posts success commit status with asset stats (and a
     resolveGlob: () => Promise.resolve(['build/main.38552hd3.js']),
     writeFile: writeFileSpy
   }).then(() => {
-    const [assetStatsFilepath, assetStats] = R.view(
-      firstCallArguments,
-      writeFileSpy
+    expect(writeFileSpy).toHaveBeenCalledWith(
+      '83jgs3/artifacts/thresh/asset-stats.json',
+      serializeForFile([
+        {
+          filepath: 'build/main.38552hd3.js',
+          size: 258
+        }
+      ])
     );
-    expect(assetStatsFilepath)
-      .toBe('83jgs3/artifacts/thresh/asset-stats.json');
-    expect(JSON.parse(assetStats)).toEqual([
+
+    expect(postCommitStatusSpy).toHaveBeenCalledWith(
+      'statuses/ljghay3h',
       {
-        size: 258,
-        filepath: 'build/main.38552hd3.js'
+        method: 'POST',
+        body: {
+          state: 'success',
+          targetUrl: 'http://circle.com/build/29#artifacts',
+          context: 'Asset Sizes',
+          description: 'build/main.38552hd3.js: 258B (no open PR; cannot calculate diffs)'
+        }
       }
-    ]);
-
-    const [, successStatusArguments] = R.view(
-      secondCallArguments,
-      postCommitStatusSpy
     );
-    expect(successStatusArguments.method).toBe('POST');
-    expect(successStatusArguments.body).toEqual({
-      state: 'success',
-      targetUrl: 'http://circle.com/build/29#artifacts',
-      context: 'Asset Sizes',
-      description: 'build/main.38552hd3.js: 258B (no open PR; cannot calculate diffs)'
-    });
-
-    expect(R.view(firstCallFirstArgument, logMessageSpy)).toBe('No open pull request found. Skipping asset diff step.');
+    expect(postCommitStatusSpy.calls.length).toBe(2);
+    expect(logMessageSpy).toHaveBeenCalledWith('No open pull request found. Skipping asset diff step.');
   });
 });
 
@@ -418,18 +399,18 @@ test('posts failure commit status when thresholds are not met', () => {
     resolveGlob: () => Promise.resolve([assetPath]),
     writeFile: writeFileSpy
   }).then(() => {
-    const [, failureStatusArguments] = R.view(
-      secondCallArguments,
-      postCommitStatusSpy
+    expect(postCommitStatusSpy).toHaveBeenCalledWith(
+      'statuses/fjdk29uw',
+      {
+        method: 'POST',
+        body: {
+          state: 'failure',
+          targetUrl: 'http://circle.com/build/21#artifacts',
+          context: 'Asset Sizes',
+          description: 'The total size of ["build.3u3232.js"] (400B) must be less than or equal to 300B!'
+        }
+      }
     );
-    expect(failureStatusArguments.method).toBe('POST');
-    expect(failureStatusArguments.body).toEqual({
-      state: 'failure',
-      targetUrl: 'http://circle.com/build/21#artifacts',
-      context: 'Asset Sizes',
-      description: 'The total size of ["build.3u3232.js"] (400B) must be less than or equal to 300B!'
-    });
-
     expect(getAssetStatsSpy).toHaveBeenCalledWith('master', 'asset-stats.json');
   });
 });
@@ -476,18 +457,18 @@ test('posts success commit status when failure thresholds are met', () => {
     resolveGlob: () => Promise.resolve([assetPath]),
     writeFile: writeFileSpy
   }).then(() => {
-    const [, successStatusArguments] = R.view(
-      secondCallArguments,
-      postCommitStatusSpy
+    expect(postCommitStatusSpy).toHaveBeenCalledWith(
+      'statuses/algh83he',
+      {
+        method: 'POST',
+        body: {
+          state: 'success',
+          targetUrl: 'http://circle.com/build/29#artifacts',
+          context: 'Asset Sizes',
+          description: '*.js: 267B (-133B, -33.25%)'
+        }
+      }
     );
-    expect(successStatusArguments.method).toBe('POST');
-    expect(successStatusArguments.body).toEqual({
-      state: 'success',
-      targetUrl: 'http://circle.com/build/29#artifacts',
-      context: 'Asset Sizes',
-      description: '*.js: 267B (-133B, -33.25%)'
-    });
-
     expect(getAssetStatsSpy).toHaveBeenCalledWith('master', 'asset-stats.json');
   });
 });

@@ -131,9 +131,14 @@ export default ({
         ])
     )
     .chainErr(
+      error => error.constructor === NoOpenPullRequestFoundErr
+        ? logMessage(error.message)
+        : ReaderPromise.fromError(error)
+    )
+    .chainErr(
       ({message, stack}) => ReaderPromise.parallel([
         postError(message),
-        logMessage(stack)
+        logMessage(Maybe.fromNull(stack).orSome(message))
       ])
     );
 };
