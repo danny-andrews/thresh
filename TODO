@@ -10,3 +10,9 @@ Use property tests where you can.
 Develop better API for request.
 
 Break out Github-specific code into thresh-repository-adapter-github.
+
+Output one file instead of one for diffs and one for stats.
+
+Not finding an open PR is not an error condition. We should still print out the asset stats (with a note).
+
+Do we need to create a directory manually?

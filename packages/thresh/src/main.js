@@ -10,7 +10,6 @@ import {NoPreviousStatsFoundForFilepath, NoOpenPullRequestFoundErr}
   from './core/errors';
 import {
   getFileSizes,
-  makeArtifactDirectory,
   CommitStatusPoster,
   writeAssetDiffs,
   writeAssetStats,
@@ -92,8 +91,7 @@ export default ({
           prId => getPreviousAssetStats(prId).map(Maybe.Some)
         ),
         ReaderPromise.of(resolvedThresholds),
-        postPending(),
-        makeArtifactDirectory(artifactsDirectory)
+        postPending()
       ])
     )
     .chain(
