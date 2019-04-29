@@ -23,11 +23,11 @@ import {sumReduce, listToMap} from './shared';
 import {NO_PR_FOUND_STATUS_MESSAGE_TEMPLATE} from './core/constants';
 
 // Types
-// AssetStat :: { filepath: String, size: Int }
-// Threshold :: { maxSize: Int, targets: [String] }
-// ResolvedThreshold :: { Threshold, resolvedTargets: [String] }
-// SizedThreshold :: { ResolvedThreshold, size: Int }
-// SizedTargets :: { targets: [String], size: Int }
+// AssetStat          :: { filepath: String, size: Int }
+// Threshold          :: { maxSize: Int, targets: [String] }
+// ResolvedThreshold  :: { Threshold, resolvedTargets: [String] }
+// SizedThreshold     :: { ResolvedThreshold, size: Int }
+// SizedTargets       :: { targets: [String], size: Int }
 export default ({
   artifactsDirectory,
   buildSha,
@@ -72,17 +72,15 @@ export default ({
 
   const writeMismatchErrors = mismatchedTargetSets => ReaderPromise.parallel(
     mismatchedTargetSets.map(
-      filepath => NoPreviousStatsFoundForFilepath(filepath)
-        |> R.prop('message')
+      filepath => NoPreviousStatsFoundForFilepath(filepath).message
         |> logMessage
     )
   );
 
-  const postNoPrFoundCommitStatus = assetSizes => (
+  const postNoPrFoundCommitStatus = assetSizes => postSuccess(
     assetSizes.map(({filepath, size}) => formatAsset(filepath, size))
       |> formatStatusMessages
       |> (stats => sprintf(NO_PR_FOUND_STATUS_MESSAGE_TEMPLATE, stats))
-      |> postSuccess
   );
 
   const getPreviousAssetStats0 = () => pullRequestId.cata(
@@ -118,7 +116,7 @@ export default ({
       ([assetSizes, previousAssetSizes, sizedThresholds]) => {
         if(previousAssetSizes.isNone()) {
           return postNoPrFoundCommitStatus(assetSizes).chain(
-            R.pipe(NoOpenPullRequestFoundErr, R.prop('message'), logMessage)
+            () => NoOpenPullRequestFoundErr().message |> logMessage
           );
         }
 

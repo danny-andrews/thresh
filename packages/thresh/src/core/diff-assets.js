@@ -10,7 +10,7 @@ export default (currentSizedTargetSets, originalAssetStats) => {
     originalAssetStats
   );
 
-  return R.reduce(
+  return currentSizedTargetSets.reduce(
     ([diffs, mismatchedTargets], {targets, resolvedTargets, size}) => {
       const originalResolvedTargets = micromatch(
         originalFilepaths,
@@ -41,7 +41,6 @@ export default (currentSizedTargetSets, originalAssetStats) => {
         mismatchedTargets
       ];
     },
-    [[], []],
-    currentSizedTargetSets
+    [[], []]
   );
 };
