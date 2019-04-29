@@ -5,6 +5,7 @@ import {readFile, mkdir, writeFile, getFileStats, request, resolveGlob}
 import CircleciAdapter from '@danny.andrews/thresh-ci-adapter-circleci';
 import CircleciArtifactStore
   from '@danny.andrews/thresh-artifact-store-circleci';
+import commandLineArgs from 'command-line-args';
 
 import cli from './cli';
 import {MakeGitHubRequest} from './effects';
@@ -13,7 +14,9 @@ const {repoOwner, repoName} = CircleciAdapter().getEnvVars();
 
 cli().run({
   artifactStore: CircleciArtifactStore({repoOwner, repoName}),
+  ciAdapter: CircleciAdapter(),
   getFileStats,
+  getCommandLineArgs: commandLineArgs,
   logMessage: console.log, // eslint-disable-line no-console
   makeGitHubRequest: MakeGitHubRequest({
     githubApiToken: process.env.GITHUB_API_TOKEN,

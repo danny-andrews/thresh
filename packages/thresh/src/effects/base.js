@@ -32,3 +32,13 @@ export const makeGitHubRequest = ReaderPromise.invokeAt(
   (result, config) => result.run(config),
   R.prop('makeGitHubRequest')
 );
+
+export const getCommandLineArgs = () => ReaderPromise.asks(
+  config => config.getCommandLineArgs([
+    {name: 'config-path', defaultValue: './.threshrc.toml'}
+  ])
+);
+
+export const getCiEnvVars = () => ReaderPromise.asks(
+  ({ciAdapter}) => Promise.resolve(ciAdapter.getEnvVars())
+);

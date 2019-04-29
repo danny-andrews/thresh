@@ -1,25 +1,20 @@
-import commandLineArgs from 'command-line-args';
-import CircleciAdapter from '@danny.andrews/thresh-ci-adapter-circleci';
-import {camelizeKeys} from 'humps';
+import ReaderPromise from '@danny.andrews/reader-promise';
 
 import main from './main';
-import {readConfig} from './effects';
+import {getConfig, getCiEnvVars} from './effects';
 
-const {buildSha, buildUrl, artifactsDirectory, pullRequestId} =
-  CircleciAdapter().getEnvVars();
-
-const cliOptions = commandLineArgs([
-  {name: 'config-path', defaultValue: './.threshrc.toml'}
-]);
-
-export default () => readConfig(cliOptions['config-path'])
-  .map(camelizeKeys)
-  .chain(
-    ({thresholds}) => main({
-      pullRequestId,
-      thresholds,
-      buildSha,
-      buildUrl,
-      artifactsDirectory
-    })
-  );
+export default () => ReaderPromise.parallel([
+  getConfig(),
+  getCiEnvVars()
+]).chain(
+  ([
+    {thresholds},
+    {buildSha, buildUrl, artifactsDirectory, pullRequestId}
+  ]) => main({
+    pullRequestId,
+    thresholds,
+    buildSha,
+    buildUrl,
+    artifactsDirectory
+  })
+);
