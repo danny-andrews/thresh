@@ -1,7 +1,7 @@
 import mkdirp from 'mkdirp';
 import {promisify} from 'util';
 import fs from 'fs';
-import toml from 'toml';
+import TOML from '@iarna/toml';
 import fetch from 'node-fetch';
 import glob from 'glob';
 
@@ -17,7 +17,7 @@ export const mkdir = promisify(mkdirp);
 
 export const parseJSON = unthrow(JSON.parse);
 
-export const parseTOML = unthrow(toml.parse);
+export const parseTOML = unthrow(TOML.parse);
 
 export const resolveGlob = promisify(glob);
 

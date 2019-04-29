@@ -4,8 +4,9 @@ import {Maybe} from 'monet';
 import ReaderPromise from '@danny.andrews/reader-promise';
 import {NoAssetStatsArtifactFoundErr, NoRecentBuildsFoundErr}
   from '@danny.andrews/thresh-artifact-store-circleci';
+import TOML from '@iarna/toml';
 
-import main from '../main';
+import thresh from '../thresh';
 import {serializeForFile} from '../shared';
 
 const fakeGitHubRequest = handlers => (path, ...rest) => {
@@ -28,6 +29,7 @@ const subject = ({
   artifactStore = {
     getAssetStats: () => Promise.resolve({})
   },
+  getCommandLineArgs = () => Promise.resolve({'config-path': 'config.toml'}),
   getFileStats = () => Promise.resolve({size: 200}),
   logMessage = console.log,
   makeGitHubRequest,
@@ -35,14 +37,17 @@ const subject = ({
   resolve = (...args) => [...args].join('/'),
   resolveGlob = () => Promise.resolve(),
   writeFile = () => Promise.resolve()
-} = {}) => main({
-  artifactsDirectory,
-  buildSha,
-  buildUrl,
-  pullRequestId,
-  thresholds
-}).run({
+} = {}) => thresh().run({
   artifactStore,
+  ciAdapter: {
+    getEnvVars: () => Promise.resolve({
+      artifactsDirectory,
+      buildSha,
+      buildUrl,
+      pullRequestId
+    })
+  },
+  getCommandLineArgs,
   getFileStats,
   logMessage,
   makeGitHubRequest: makeGitHubRequest || fakeGitHubRequest(
@@ -62,6 +67,9 @@ const subject = ({
     ])
   ),
   mkdir,
+  readFile: () => Promise.resolve(
+    TOML.stringify({thresholds})
+  ),
   resolve,
   resolveGlob,
   writeFile
