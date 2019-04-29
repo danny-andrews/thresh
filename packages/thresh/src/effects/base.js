@@ -34,9 +34,11 @@ export const makeGitHubRequest = ReaderPromise.invokeAt(
 );
 
 export const getCommandLineArgs = () => ReaderPromise.asks(
-  config => config.getCommandLineArgs([
-    {name: 'config-path', defaultValue: './.threshrc.toml'}
-  ])
+  config => Promise.resolve(
+    config.getCommandLineArgs([
+      {name: 'config-path', defaultValue: './.threshrc.toml'}
+    ])
+  )
 );
 
 export const getCiEnvVars = () => ReaderPromise.asks(
