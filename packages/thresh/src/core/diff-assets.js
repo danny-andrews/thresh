@@ -3,28 +3,22 @@ import micromatch from 'micromatch';
 
 import {sumReduce, listToMap} from '../shared';
 
-export default (
-  currentSizedTargetSets,
-  originalAssetStats,
-  onMismatchFound = R.identity
-) => {
+export default (currentSizedTargetSets, originalAssetStats) => {
   const originalFilepaths = originalAssetStats.map(R.prop('filepath'));
   const originalAssetStatsMap = listToMap(
     R.prop('filepath'),
     originalAssetStats
   );
 
-  return R.chain(
-    ({targets, resolvedTargets, size}) => {
+  return currentSizedTargetSets.reduce(
+    ([diffs, mismatchedTargets], {targets, resolvedTargets, size}) => {
       const originalResolvedTargets = micromatch(
         originalFilepaths,
         targets
       );
 
       if(originalResolvedTargets.length !== resolvedTargets.length) {
-        onMismatchFound(resolvedTargets);
-
-        return [];
+        return [diffs, R.append(resolvedTargets, mismatchedTargets)];
       }
 
       const originalSize = sumReduce(
@@ -33,14 +27,20 @@ export default (
       );
       const difference = size - originalSize;
 
-      return {
-        targets,
-        original: originalSize,
-        current: size,
-        difference,
-        percentChange: difference / originalSize * 100
-      };
+      return [
+        R.append(
+          {
+            targets,
+            original: originalSize,
+            current: size,
+            difference,
+            percentChange: difference / originalSize * 100
+          },
+          diffs
+        ),
+        mismatchedTargets
+      ];
     },
-    currentSizedTargetSets
+    [[], []]
   );
 };

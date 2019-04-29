@@ -6,7 +6,7 @@ export {default as getPreviousAssetStats} from './get-previous-asset-stats';
 export {default as makeArtifactDirectory} from './make-artifact-directory';
 export {default as MakeGitHubRequest} from './make-github-request';
 export {default as normalizeThresholds} from './normalize-thresholds';
-export {default as readConfig} from './read-config';
+export {default as getConfig} from './get-config';
 export {default as resolveGlobs} from './resolve-globs';
 export {default as writeAssetDiffs} from './write-asset-diffs';
 export {default as writeAssetStats} from './write-asset-stats';

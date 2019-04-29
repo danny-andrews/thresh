@@ -1,20 +1,18 @@
 import test from 'ava';
-import expect, {createSpy} from 'expect';
-import R from 'ramda';
+import expect from 'expect';
 
 import subject from '../diff-assets';
-import {calls} from '../../test/helpers';
 
 const FLOAT_PERCISION = 0.000001;
 
 test('empty', () => {
   const actual = subject([], []);
 
-  expect(actual).toEqual([]);
+  expect(actual).toEqual([[], []]);
 });
 
 test('calculates stats properly', () => {
-  const actual = subject(
+  const [diffs, mismatchedTargetSets] = subject(
     [
       {targets: ['asset1.js'], resolvedTargets: ['asset1.js'], size: 5},
       {targets: ['asset2.js'], resolvedTargets: ['asset2.js'], size: 80}
@@ -25,7 +23,7 @@ test('calculates stats properly', () => {
     ]
   );
 
-  expect(actual).toMatch([
+  expect(diffs).toMatch([
     {
       targets: ['asset1.js'],
       current: 5,
@@ -39,14 +37,13 @@ test('calculates stats properly', () => {
       difference: -20
     }
   ]);
-  expect(actual[0].percentChange - 25)
-    .toBeLessThan(FLOAT_PERCISION);
-  expect(actual[1].percentChange - (-20))
-    .toBeLessThan(FLOAT_PERCISION);
+  expect(diffs[0].percentChange - 25).toBeLessThan(FLOAT_PERCISION);
+  expect(diffs[1].percentChange - (-20)).toBeLessThan(FLOAT_PERCISION);
+  expect(mismatchedTargetSets).toEqual([]);
 });
 
 test('calculates diff correctly even when mismatch found', () => {
-  const actual = subject(
+  const [diffs, mismatchedTargetSets] = subject(
     [
       {targets: ['asset1.js'], resolvedTargets: ['asset1.js'], size: 6},
       {targets: ['asset2.js'], resolvedTargets: ['asset2.js'], size: 424}
@@ -56,7 +53,7 @@ test('calculates diff correctly even when mismatch found', () => {
     ]
   );
 
-  expect(actual).toMatch([
+  expect(diffs).toMatch([
     {
       targets: ['asset1.js'],
       current: 6,
@@ -64,13 +61,13 @@ test('calculates diff correctly even when mismatch found', () => {
       difference: -10
     }
   ]);
-  expect(actual[0].percentChange - 0.625)
+  expect(diffs[0].percentChange - 0.625)
     .toBeLessThan(FLOAT_PERCISION);
+  expect(mismatchedTargetSets).toEqual([['asset2.js']]);
 });
 
-test('calls onMismatchFound for every mismatch found', () => {
-  const spy = createSpy();
-  subject(
+test('calculates mismatches correctly', () => {
+  const [, mismatchedTargetSets] = subject(
     [
       {
         targets: ['new-asset.js'],
@@ -84,10 +81,7 @@ test('calls onMismatchFound for every mismatch found', () => {
       }
     ],
     [],
-    spy
   );
 
-  expect(R.view(calls, spy).length).toBe(2);
-  expect(spy).toHaveBeenCalledWith(['new-asset.js']);
-  expect(spy).toHaveBeenCalledWith(['new-asset.css']);
+  expect(mismatchedTargetSets).toEqual([['new-asset.js'], ['new-asset.css']]);
 });

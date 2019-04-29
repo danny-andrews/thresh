@@ -1,6 +1,7 @@
 import R from 'ramda';
 import ReaderPromise from '@danny.andrews/reader-promise';
 import {Maybe} from 'monet';
+import {sprintf} from 'sprintf-js';
 
 import validateThresholdSchema from './core/validate-threshold-schema';
 import diffAssets from './core/diff-assets';
@@ -19,13 +20,14 @@ import {
   normalizeThresholds
 } from './effects';
 import {sumReduce, listToMap} from './shared';
+import {NO_PR_FOUND_STATUS_MESSAGE_TEMPLATE} from './core/constants';
 
 // Types
-// AssetStat :: { filepath: String, size: Int }
-// Threshold :: { maxSize: Int, targets: [String] }
-// ResolvedThreshold :: { Threshold, resolvedTargets: [String] }
-// SizedThreshold :: { ResolvedThreshold, size: Int }
-// SizedTargets :: { targets: [String], size: Int }
+// AssetStat          :: { filepath: String, size: Int }
+// Threshold          :: { maxSize: Int, targets: [String] }
+// ResolvedThreshold  :: { Threshold, resolvedTargets: [String] }
+// SizedThreshold     :: { ResolvedThreshold, size: Int }
+// SizedTargets       :: { targets: [String], size: Int }
 export default ({
   artifactsDirectory,
   buildSha,
@@ -68,72 +70,76 @@ export default ({
     );
   };
 
-  const diffAssets2 = R.curry(
-    (current, original) => ReaderPromise.asks(
-      config => Promise.resolve(
-        diffAssets(
-          current,
-          original,
-          filepath => NoPreviousStatsFoundForFilepath(filepath)
-            |> R.prop('message')
-            |> config.logMessage
-        )
-      )
+  const writeMismatchErrors = mismatchedTargetSets => ReaderPromise.parallel(
+    mismatchedTargetSets.map(
+      filepath => NoPreviousStatsFoundForFilepath(filepath).message
+        |> logMessage
     )
+  );
+
+  const postNoPrFoundCommitStatus = assetSizes => postSuccess(
+    assetSizes.map(({filepath, size}) => formatAsset(filepath, size))
+      |> formatStatusMessages
+      |> (stats => sprintf(NO_PR_FOUND_STATUS_MESSAGE_TEMPLATE, stats))
+  );
+
+  const getPreviousAssetStats0 = () => pullRequestId.cata(
+    R.pipe(Maybe.None, ReaderPromise.of),
+    prId => getPreviousAssetStats(prId).map(Maybe.Some)
+  );
+
+  const getFileSizesForResolvedThresholds = R.pipe(
+    R.chain(R.prop('resolvedTargets')),
+    getFileSizes
   );
 
   return validateThresholdSchemaWrapped(thresholds)
     .chain(normalizeThresholds)
     .chain(
       resolvedThresholds => ReaderPromise.parallel([
-        getFileSizes(R.chain(R.prop('resolvedTargets'), resolvedThresholds)),
-        pullRequestId.cata(
-          () => Maybe.None() |> ReaderPromise.of,
-          prId => getPreviousAssetStats(prId).map(Maybe.Some)
-        ),
+        getFileSizesForResolvedThresholds(resolvedThresholds),
+        getPreviousAssetStats0(),
         ReaderPromise.of(resolvedThresholds),
         postPending(),
         makeArtifactDirectory(artifactsDirectory)
       ])
     )
     .chain(
-      ([assetSizes, previousAssetSizes, resolvedThresholds]) => {
-        const sizedThresholds = sizeThresholds(assetSizes, resolvedThresholds);
-        const noPrFoundStatusMessage = statsString =>
-          `${statsString} (no open PR; cannot calculate diffs)`;
-
-        return ReaderPromise.parallel([
-          previousAssetSizes.cata(
-            () => (
-              assetSizes.map(({filepath, size}) => formatAsset(filepath, size))
-                |> formatStatusMessages
-                |> noPrFoundStatusMessage
-                |> postSuccess
-            ).chain(
-              R.pipe(NoOpenPullRequestFoundErr, ReaderPromise.fromError)
-            ),
-            diffAssets2(sizedThresholds)
-          ),
-          getThresholdFailures(sizedThresholds) |> ReaderPromise.fromEither,
-          writeAssetStats(assetSizes, artifactsDirectory)
-        ]);
-      }
+      ([assetSizes, previousAssetSizes, resolvedThresholds]) =>
+        writeAssetStats(assetSizes, artifactsDirectory).map(() => [
+          assetSizes,
+          previousAssetSizes,
+          sizeThresholds(assetSizes, resolvedThresholds)
+        ])
     )
     .chain(
-      ([assetDiffs, thresholdFailures]) =>
-        ReaderPromise.parallel([
+      ([assetSizes, previousAssetSizes, sizedThresholds]) => {
+        if(previousAssetSizes.isNone()) {
+          return postNoPrFoundCommitStatus(assetSizes).chain(
+            () => NoOpenPullRequestFoundErr().message |> logMessage
+          );
+        }
+
+        const [assetDiffs, mismatchedTargetSets] = diffAssets(
+          sizedThresholds,
+          previousAssetSizes.some()
+        );
+
+        const thresholdFailures = getThresholdFailures(sizedThresholds);
+        if(thresholdFailures.isLeft()) {
+          return ReaderPromise.fromError(thresholdFailures.left());
+        }
+
+        return ReaderPromise.parallel([
+          postFinal(assetDiffs, thresholdFailures.right()),
           writeAssetDiffs({
             rootPath: artifactsDirectory,
             assetDiffs,
-            thresholdFailures
+            thresholdFailures: thresholdFailures.right()
           }),
-          postFinal(assetDiffs, thresholdFailures)
-        ])
-    )
-    .chainErr(
-      error => error.constructor === NoOpenPullRequestFoundErr
-        ? logMessage(error.message)
-        : ReaderPromise.fromError(error)
+          writeMismatchErrors(mismatchedTargetSets)
+        ]);
+      }
     )
     .chainErr(
       ({message, stack}) => ReaderPromise.parallel([

@@ -30,7 +30,7 @@ export default sizedThresholds => {
         'The total size of [%s] (%s) must be less than or equal to %s!',
         offendingAssetPaths,
         formatFilesize(size),
-        formatFilesize(maxSize),
+        formatFilesize(maxSize)
       );
 
       return {

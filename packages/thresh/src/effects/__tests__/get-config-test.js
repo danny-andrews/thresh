@@ -1,20 +1,28 @@
 import test from 'ava';
-import expect from 'expect';
+import expect, {createSpy} from 'expect';
 
-import readConfig from '../read-config';
+import getConfig from '../get-config';
 import {PromiseError} from '../../test/helpers';
 import {ConfigFileReadErr, ConfigFileParseErr} from '../../core/errors';
 
 const subject = ({
   readFile = () => Promise.resolve(),
-  configFilepath = 'config.toml'
-} = {}) => readConfig(configFilepath).run({readFile});
+  getCommandLineArgs = () => Promise.resolve({'config-path': 'config.toml'})
+} = {}) => getConfig().run({readFile, getCommandLineArgs});
 
-test('returns parsed contents of config', () => subject({
-  readFile: () => Promise.resolve('key = "value"')
-}).then(contents => {
-  expect(contents).toEqual({key: 'value'});
-}));
+test('returns parsed contents of config', () => {
+  const readFileSpy = createSpy().andReturn(Promise.resolve('key = "value"'));
+
+  return subject({
+    readFile: readFileSpy,
+    getCommandLineArgs: () => Promise.resolve({
+      'config-path': 'config/threshrc.toml'
+    })
+  }).then(contents => {
+    expect(contents).toEqual({key: 'value'});
+    expect(readFileSpy).toHaveBeenCalledWith('config/threshrc.toml');
+  });
+});
 
 test('returns ConfigFileReadErr when an error is encountered reading stats file', () => subject({
   readFile: () => PromiseError()
