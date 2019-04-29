@@ -36,5 +36,8 @@
     "node-fetch": "^1.7.1",
     "ramda": "^0.24.1",
     "sprintf-js": "^1.1.1"
+  },
+  "devDependencies": {
+    "@iarna/toml": "^2.2.3"
   }
 }

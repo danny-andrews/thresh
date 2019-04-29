@@ -7,12 +7,12 @@ import CircleciArtifactStore
   from '@danny.andrews/thresh-artifact-store-circleci';
 import commandLineArgs from 'command-line-args';
 
-import cli from './cli';
+import thresh from './thresh';
 import {MakeGitHubRequest} from './effects';
 
 const {repoOwner, repoName} = CircleciAdapter().getEnvVars();
 
-cli().run({
+thresh().run({
   artifactStore: CircleciArtifactStore({repoOwner, repoName}),
   ciAdapter: CircleciAdapter(),
   getFileStats,
