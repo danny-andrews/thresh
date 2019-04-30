@@ -31,8 +31,6 @@ getConfig().run(deps).then(
     const CiAdapter = require(ciAdapterPath).default;
     /* eslint-enable global-require */
 
-    console.log('kjdsa', CiAdapter);
-
     const ciAdapter = CiAdapter();
 
     const {repoOwner, repoName} = ciAdapter.getEnvVars();
