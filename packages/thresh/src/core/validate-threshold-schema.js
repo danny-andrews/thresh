@@ -1,6 +1,6 @@
 import R from 'ramda';
 
-import {validateSchema} from '../shared';
+import {validateSchema, toList} from '../shared';
 
 import {thresholdListSchema} from './schemas';
 import {InvalidThresholdOptionErr} from './errors';
@@ -12,5 +12,10 @@ export default thresholds => validateSchema(
   validator => InvalidThresholdOptionErr(
     validator.errorsText(validator.errors, {separator: '\n'})
   ),
-  R.always(thresholds)
+  () => thresholds.map(
+    R.over(
+      R.lensProp('targets'),
+      toList
+    )
+  )
 );
