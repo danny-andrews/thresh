@@ -27,9 +27,11 @@ getConfig().run(deps).then(
       ciAdapterPath = '@danny.andrews/thresh-ci-adapter-circleci'
   }) => {
     /* eslint-disable global-require */
-    const ArtifactStore = require(ciStorePath);
-    const CiAdapter = require(ciAdapterPath);
+    const ArtifactStore = require(ciStorePath).default;
+    const CiAdapter = require(ciAdapterPath).default;
     /* eslint-enable global-require */
+
+    console.log('kjdsa', CiAdapter);
 
     const ciAdapter = CiAdapter();
 
