@@ -12,8 +12,22 @@ test("returns error when object doesn't match schema", () => {
 });
 
 test('returns success when object matches schema', () => {
-  const thresholds = [{maxSize: 5666, targets: 'dist/*.js'}];
+  const thresholds = [
+    {maxSize: 5666, targets: ['dist/*.js']}
+  ];
   const actual = subject(thresholds).right();
 
-  expect(actual).toBe(thresholds);
+  expect(actual).toEqual(thresholds);
+});
+
+test('converts targets into array if needed', () => {
+  const thresholds = [{
+    maxSize: 323,
+    targets: 'dist/*.js'
+  }];
+  const actual = subject(thresholds).right();
+
+  expect(actual).toEqual([
+    {maxSize: 323, targets: ['dist/*.js']}
+  ]);
 });

@@ -2,27 +2,44 @@
 import path from 'path';
 import {readFile, mkdir, writeFile, getFileStats, request, resolveGlob}
   from '@danny.andrews/fp-utils';
-import CircleciAdapter from '@danny.andrews/thresh-ci-adapter-circleci';
-import CircleciArtifactStore
-  from '@danny.andrews/thresh-artifact-store-circleci';
 import commandLineArgs from 'command-line-args';
 
 import thresh from './thresh';
-import {MakeGitHubRequest} from './effects';
+import {MakeGitHubRequest, getConfig} from './effects';
 
-const {repoOwner, repoName} = CircleciAdapter().getEnvVars();
+getConfig().chain(
+  ({
+    artifactStore:
+      ciStorePath = '@danny.andrews/thresh-artifact-store-circleci',
+    ciAdapter:
+      ciAdapterPath = '@danny.andrews/thresh-ci-adapter-circleci'
+  }) => {
+    /* eslint-disable global-require */
+    const ArtifactStore = require(ciStorePath).default;
+    const CiAdapter = require(ciAdapterPath).default;
+    /* eslint-enable global-require */
 
-thresh().run({
-  artifactStore: CircleciArtifactStore({repoOwner, repoName}),
-  ciAdapter: CircleciAdapter(),
+    const ciAdapter = CiAdapter();
+
+    const {repoOwner, repoName} = ciAdapter.getEnvVars();
+
+    return thresh().local(
+      config => ({
+        ...config,
+        artifactStore: ArtifactStore({repoOwner, repoName}),
+        ciAdapter,
+        makeGitHubRequest: MakeGitHubRequest({
+          githubApiToken: process.env.GITHUB_API_TOKEN,
+          repoOwner,
+          repoName
+        })
+      })
+    );
+  }
+).run({
   getFileStats,
   getCommandLineArgs: commandLineArgs,
   logMessage: console.log, // eslint-disable-line no-console
-  makeGitHubRequest: MakeGitHubRequest({
-    githubApiToken: process.env.GITHUB_API_TOKEN,
-    repoOwner,
-    repoName
-  }),
   mkdir,
   readFile,
   request,

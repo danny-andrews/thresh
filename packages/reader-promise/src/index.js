@@ -9,21 +9,21 @@ const ReaderPromise = CreateFactory(value => {
     )
   );
 
-  const chain = fn => ReaderPromise(
-    value.chain(
-      promise => Reader(
-        config => promise.then(
-          a => fn(a).run(config)
-        )
-      )
-    )
-  );
-
   const mapErr = fn => ReaderPromise(
     value.map(
       promise => promise.catch(
         err => Promise.reject(
           fn(err)
+        )
+      )
+    )
+  );
+
+  const chain = fn => ReaderPromise(
+    value.chain(
+      promise => Reader(
+        config => promise.then(
+          a => fn(a).run(config)
         )
       )
     )
@@ -41,21 +41,20 @@ const ReaderPromise = CreateFactory(value => {
 
   const run = config => value.run(config);
 
-  return Object.freeze({map, chain, mapErr, chainErr, run});
+  const local = fn => ReaderPromise(
+    Reader(
+      config => value.run(
+        fn(config)
+      )
+    )
+  );
+
+  return Object.freeze({map, mapErr, chain, chainErr, run, local});
 });
 
 ReaderPromise.of = a => Promise.resolve(a) |> ReaderPromise.fromPromise;
 
-ReaderPromise.fromPromise = a => R.always(a) |> Reader |> ReaderPromise;
-
 ReaderPromise.asks = fn => Reader(fn) |> ReaderPromise;
-
-ReaderPromise.fromError = e => Promise.reject(e) |> ReaderPromise.fromPromise;
-
-ReaderPromise.fromEither = either => either.cata(
-  ReaderPromise.fromError,
-  ReaderPromise.of
-);
 
 ReaderPromise.parallel = readerPromises => ReaderPromise.asks(
   config => Promise.all(
@@ -73,5 +72,14 @@ ReaderPromise.invokeAt = R.curry(
     )
   )
 );
+
+ReaderPromise.fromError = e => Promise.reject(e) |> ReaderPromise.fromPromise;
+
+ReaderPromise.fromEither = either => either.cata(
+  ReaderPromise.fromError,
+  ReaderPromise.of
+);
+
+ReaderPromise.fromPromise = a => R.always(a) |> Reader |> ReaderPromise;
 
 export default ReaderPromise;
