@@ -136,6 +136,24 @@ test('"mapErr" obeys functor composition law', () => {
 });
 
 test(
+  '"local" modifies config',
+  () => ReaderPromise.asks(num => {
+    expect(num).toBe(5);
+
+    return Promise.resolve();
+  })
+    .local(config => config + 1)
+    .chain(
+      () => ReaderPromise.asks(num => {
+        expect(num).toBe(4);
+
+        return Promise.resolve();
+      })
+    )
+    .run(4)
+);
+
+test(
   '"fromPromise" creates a ReaderPromise from a resolved promise',
   () => ReaderPromise.fromPromise(Promise.resolve(5))
     .map(x => x * 2)

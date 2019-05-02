@@ -7,19 +7,7 @@ import commandLineArgs from 'command-line-args';
 import thresh from './thresh';
 import {MakeGitHubRequest, getConfig} from './effects';
 
-const deps = {
-  getFileStats,
-  getCommandLineArgs: commandLineArgs,
-  logMessage: console.log, // eslint-disable-line no-console
-  mkdir,
-  readFile,
-  request,
-  resolve: path.resolve,
-  resolveGlob,
-  writeFile
-};
-
-getConfig().run(deps).then(
+getConfig().chain(
   ({
     artifactStore:
       ciStorePath = '@danny.andrews/thresh-artifact-store-circleci',
@@ -35,18 +23,30 @@ getConfig().run(deps).then(
 
     const {repoOwner, repoName} = ciAdapter.getEnvVars();
 
-    return thresh().run({
-      ...deps,
-      artifactStore: ArtifactStore({repoOwner, repoName}),
-      ciAdapter,
-      makeGitHubRequest: MakeGitHubRequest({
-        githubApiToken: process.env.GITHUB_API_TOKEN,
-        repoOwner,
-        repoName
+    return thresh().local(
+      config => ({
+        ...config,
+        artifactStore: ArtifactStore({repoOwner, repoName}),
+        ciAdapter,
+        makeGitHubRequest: MakeGitHubRequest({
+          githubApiToken: process.env.GITHUB_API_TOKEN,
+          repoOwner,
+          repoName
+        })
       })
-    });
+    );
   }
-).catch(err => {
+).run({
+  getFileStats,
+  getCommandLineArgs: commandLineArgs,
+  logMessage: console.log, // eslint-disable-line no-console
+  mkdir,
+  readFile,
+  request,
+  resolve: path.resolve,
+  resolveGlob,
+  writeFile
+}).catch(err => {
   console.error(err); // eslint-disable-line no-console
   process.exit(1); // eslint-disable-line no-process-exit
 });
