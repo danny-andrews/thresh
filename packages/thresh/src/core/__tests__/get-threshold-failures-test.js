@@ -86,7 +86,7 @@ R.forEach(
   ({output: expecteds, input, title}) => {
     test(title, () => {
       const actuals = subject(input);
-      if(R.type(expecteds) === 'Function') {
+      if(R.is(Function, expecteds)) {
         expecteds(actuals);
       } else {
         expect(actuals.right().length).toBe(expecteds.length);
