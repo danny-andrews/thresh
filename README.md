@@ -6,9 +6,47 @@ A CI integration for tracking file size changes across builds. Pluggable for dif
 
 ## What it Does
 
-At its core, thresh does four things:
+At its core, thresh does two things:
 1. Outputs file sizes of assets targeted by your thresh config. (Where and how these are output depends on the `artifactStore` plugin you use.)
-3. If current bulid is associated with an existing PR, posts commit status. This status will be `success` if there are no assets which violate size thresholds defined in your thresh config, `failure` if there are assets which violate sizes thresholds, and `error` if any errors were encountered. The contents of this status will contain asset diffs if they could be calculated.
+1. If the current bulid is associated with an existing PR, posts a commit status. This status will be `success` if there are no assets which violate size thresholds defined in your thresh config, `failure` if there are assets which violate sizes thresholds, and `error` if any errors were encountered. The contents of this status will contain asset diffs if they could be calculated.
+
+<details>
+  <summary>Example asset-sizes.json:</summary>
+
+```json
+[
+  {
+    "filepath": "example/dist/app1.js",
+    "size": 53
+  },
+  {
+    "filepath": "example/dist/app2.js",
+    "size": 95
+  }
+]
+```
+</details>
+
+<details>
+  <summary>Example asset-diffs.json:</summary>
+
+```json
+{
+  "diffs": [
+    {
+      "targets": [
+        "example/dist/*.js"
+      ],
+      "original": 148,
+      "current": 148,
+      "difference": 0,
+      "percentChange": 0
+    }
+  ],
+  "failures": []
+}
+```
+</details>
 
 ## CLI Options
 
@@ -46,6 +84,8 @@ This example would post a failed GitHub status if the total size of all javascri
   - Must have read access to repository (`public_repo` scope for public repos, and `repo` scope for private repos)
   - Must have `repo:status` scope
 
+(Check out the README's for the artifact store plugin you are using for any additional required environment variables.)
+
 ## Comparison with Other Offerings
 
 | | [bundlesize](https://github.com/siddharthkp/bundlesize) | [buildsize](https://buildsize.org/) | [thresh](https://github.com/danny-andrews/thresh) |
@@ -62,17 +102,17 @@ This example would post a failed GitHub status if the total size of all javascri
 
 A valid thresh ci adapter is just a function which returns an object with methods with the following signatures:
 ```
-isRunning :: () => Boolean
+isRunning :: () -> Boolean
 ```
 
 ```
-getEnvVars :: () => {
+getEnvVars :: () -> {
   buildSha: String,
   buildUrl: String,
   artifactsDirectory: String,
   repoOwner: String,
   repoName: String,
-  pullRequestId: Maybe[String]
+  pullRequestId: Maybe String
 }
 ```
 
@@ -82,10 +122,10 @@ A valid thresh artifactStore is just a function with the following signature:
 
 ```
 () => {
-  getAssetStats: (baseBranch = String, assetStatsFilepath = String) -> ReaderPromise[AssetStat]
+  getAssetStats: (baseBranch = String, assetStatsFilepath = String) -> ReaderPromise AssetStat
 }
 ```
 
 ## Future Plans
 
-Creating more integrations for different CI environments.
+Creating more plugins for different CI environments.
