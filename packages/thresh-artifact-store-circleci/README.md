@@ -2,47 +2,7 @@
 
 ## What it does
 
-When used with thresh, this plugin uses CircleCI as a storage facility for asset diff and/or stat files. It stores asset them `$CIRCLE_ARTIFACTS/thresh/` directory:
-
-<details>
-  <summary>Example asset-sizes.json:</summary>
-
-```json
-{
-  "public/css/app.css": 52336,
-  "public/js/app.js": 408489,
-  "public/js/vendor.js": 2284786
-}
-```
-</details>
-
-<details>
-  <summary>Example asset-diffs.json:</summary>
-
-```json
-{
-  "public/css/app.css": {
-    "current": 52336,
-    "original": 52336,
-    "difference": 0,
-    "percentChange": 0
-  },
-  "public/js/app.js": {
-    "current": 408489,
-    "original": 408489,
-    "difference": 0,
-    "percentChange": 0
-  },
-  "public/js/vendor.js": {
-    "current": 3279826,
-    "original": 2284786,
-    "difference": 995040,
-    "percentChange": 43.55
-  }
-}
-```
-</details>
-<br/>
+When used with thresh, this plugin uses CircleCI as a storage facility for asset diff and/or stat files. It stores them in the `$CIRCLE_ARTIFACTS/thresh/` directory.
 
 ## Required Environment Variables
 
