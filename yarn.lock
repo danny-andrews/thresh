@@ -2745,6 +2745,14 @@ cyclist@~0.2.2:
   resolved "https://registry.yarnpkg.com/cyclist/-/cyclist-0.2.2.tgz#1b33792e11e914a2fd6d6ed6447464444e5fa640"
   integrity sha1-GzN5LhHpFKL9bW7WRHRkRE5fpkA=
 
+daggy@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/daggy/-/daggy-1.4.0.tgz#178b4722866e1c8fac7b91d4bbf171d3767c1573"
+  integrity sha512-6g8sOIPMzriYtyoCfpM2bUobu2yj0UPdaPy+Yzdqow8RqJy/Dv2PrqiNOzCvbxUuT6B1eSbr2EmFPlLNfKFDzQ==
+  dependencies:
+    sanctuary-type-classes "3.0.0"
+    sanctuary-type-identifiers "1.0.0"
+
 dargs@^4.0.1:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/dargs/-/dargs-4.1.0.tgz#03a9dbb4b5c2f139bf14ae53f0b8a2a6a86f4e17"
@@ -6682,6 +6690,18 @@ safe-regex@^1.1.0:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/safer-buffer/-/safer-buffer-2.1.2.tgz#44fa161b0187b9549dd84bb91802f9bd8385cd6a"
   integrity sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==
+
+sanctuary-type-classes@3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/sanctuary-type-classes/-/sanctuary-type-classes-3.0.0.tgz#e4cf422abceb8c78b6f625d84d61fdb5c6d44116"
+  integrity sha1-5M9CKrzrjHi29iXYTWH9tcbUQRY=
+  dependencies:
+    sanctuary-type-identifiers "1.0.x"
+
+sanctuary-type-identifiers@1.0.0, sanctuary-type-identifiers@1.0.x:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/sanctuary-type-identifiers/-/sanctuary-type-identifiers-1.0.0.tgz#e8f359f006cb5e624cfb8464603fc114608bde9f"
+  integrity sha1-6PNZ8AbLXmJM+4RkYD/BFGCL3p8=
 
 sax@^1.2.4:
   version "1.2.4"

@@ -4,8 +4,9 @@ import fs from 'fs';
 import TOML from '@iarna/toml';
 import fetch from 'node-fetch';
 import glob from 'glob';
+import daggy from 'daggy';
 
-import {unthrow, CreateFactory} from './util';
+import {unthrow} from './util';
 
 export const readFile = promisify(fs.readFile);
 
@@ -21,19 +22,29 @@ export const parseTOML = unthrow(TOML.parse);
 
 export const resolveGlob = promisify(glob);
 
-const CreateRequestErrorFactory = () =>
-  CreateFactory(context => ({context}));
+export const ResponseError = daggy.taggedSum('ResponseError', {
+  InvalidResponseError: ['context'],
+  Non200ResponseError: ['context'],
+  NoResponseError: ['context']
+});
 
-export const Non200ResponseError = CreateRequestErrorFactory();
-export const NoResponseError = CreateRequestErrorFactory();
-export const InvalidResponseError = CreateRequestErrorFactory();
+export const request = (url, ...args) => {
+  // eslint-disable-next-line no-magic-numbers
+  const rejectWith = ErrorType => e => Promise.reject(
+    ErrorType({message: e.message, url, wrappedError: e})
+  );
 
-const rejectWith = Type => a => Promise.reject(Type(a));
-
-export const request = (...args) => fetch(...args).then(
-  response => response.json().then(
-    data => response.ok
-      ? data
-      : rejectWith(Non200ResponseError)({...response, data})
-  ).catch(rejectWith(InvalidResponseError))
-).catch(rejectWith(NoResponseError));
+  return fetch(url, ...args).then(
+    response => response.json().then(
+      data => response.ok
+        ? data
+        : Promise.reject(
+          ResponseError.Non200ResponseError({
+            url,
+            status: response.status,
+            body: data
+          })
+        )
+    ).catch(rejectWith(ResponseError.InvalidResponseError))
+  ).catch(rejectWith(ResponseError.NoResponseError));
+};
