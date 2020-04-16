@@ -1,7 +1,5 @@
 import {camelizeKeys, decamelizeKeys} from 'humps';
 import R from 'ramda';
-import {NoResponseError, Non200ResponseError, InvalidResponseError, switchCaseF}
-  from '@danny.andrews/fp-utils';
 
 import {
   GitHubFetchErr,
@@ -27,19 +25,15 @@ const serializer = payload => JSON.stringify(decamelizeKeys(payload));
 const deserializer = payload => camelizeKeys(payload);
 const HOSTNAME = 'https://api.github.com';
 
-const mapError = ({url, context}) =>
-  switchCaseF(
-    new Map([
-      [NoResponseError, GitHubFetchErr(url, context)],
-      [InvalidResponseError, GitHubInvalidResponseErr(url, context)],
-      [
-        Non200ResponseError,
-        () => isAuthError(context.status)
-          ? GitHubAuthorizationErr(url, context.data)
-          : GitHubInvalidResponseErr(url, context.data)
-      ]
-    ])
-  )();
+const mapError = error =>
+  error.cata({
+    NoResponseError: context => GitHubFetchErr(context.url, context.message),
+    InvalidResponseError: context =>
+      GitHubInvalidResponseErr(context.url, context.message),
+    Non200ResponseError: context => isAuthError(context.status)
+      ? GitHubAuthorizationErr(context.url, context.body)
+      : GitHubInvalidResponseErr(context.url, context.body)
+  });
 
 export default ({githubApiToken, repoOwner, repoName}) =>
   (path, {body, headers, method, ...rest} = {}) => {
@@ -57,7 +51,5 @@ export default ({githubApiToken, repoOwner, repoName}) =>
       ...rest
     })
       .map(deserializer)
-      .mapErr(
-        ({context, constructor}) => mapError({url, context})(constructor)
-      );
+      .mapErr(mapError);
   };

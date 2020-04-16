@@ -1,10 +1,6 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
-import {
-  NoResponseError,
-  Non200ResponseError,
-  InvalidResponseError
-} from '@danny.andrews/fp-utils';
+import {ResponseError} from '@danny.andrews/fp-utils';
 import R from 'ramda';
 
 import makeGithubRequest from '../make-github-request';
@@ -111,7 +107,10 @@ test('camelizes response', () => {
 test('returns error if response fails', () => {
   const spy = createSpy().andReturn(
     Promise.reject(
-      NoResponseError('oh no')
+      ResponseError.NoResponseError({
+        message: 'oh no',
+        url: 'https://api.github.com/repos/owner/repo/my-stuff'
+      })
     )
   );
 
@@ -129,7 +128,10 @@ test('returns error if response fails', () => {
 test('returns error if body parsing fails', () => {
   const spy = createSpy().andReturn(
     Promise.reject(
-      InvalidResponseError('Cannot parse body')
+      ResponseError.InvalidResponseError({
+        message: 'Cannot parse body',
+        url: 'https://api.github.com/repos/owner/repo/my-stuff'
+      })
     )
   );
 
@@ -147,7 +149,10 @@ test('returns error if body parsing fails', () => {
 test('returns error if non-200 status code received', () => {
   const spy = createSpy().andReturn(
     Promise.reject(
-      Non200ResponseError({data: 'Internal Server Error'})
+      ResponseError.Non200ResponseError({
+        body: 'Internal Server Error',
+        url: 'https://api.github.com/repos/owner/repo/my-stuff'
+      })
     )
   );
 
@@ -165,7 +170,11 @@ test('returns error if non-200 status code received', () => {
 test('returns authorization error if UNATHORIZED status received', () => {
   const spy = createSpy().andReturn(
     Promise.reject(
-      Non200ResponseError({status: 401, data: 'Unathorized'})
+      ResponseError.Non200ResponseError({
+        status: 401,
+        body: 'Unathorized',
+        url: 'https://api.github.com/repos/owner/repo/my-stuff'
+      })
     )
   );
 
@@ -183,7 +192,11 @@ test('returns authorization error if UNATHORIZED status received', () => {
 test('returns authorization error if FORBIDDEN status received', () => {
   const spy = createSpy().andReturn(
     Promise.reject(
-      Non200ResponseError({status: 403, data: 'Forbidden'})
+      ResponseError.Non200ResponseError({
+        status: 403,
+        body: 'Forbidden',
+        url: 'https://api.github.com/repos/owner/repo/my-stuff'
+      })
     )
   );
 

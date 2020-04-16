@@ -1,7 +1,6 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
-import {NoResponseError, Non200ResponseError, InvalidResponseError}
-  from '@danny.andrews/fp-utils';
+import {ResponseError} from '@danny.andrews/fp-utils';
 import R from 'ramda';
 
 import MakeCircleRequest from '../make-circle-request';
@@ -108,7 +107,14 @@ test("if raw is true, it doesn't deserialize response", () => {
 });
 
 test('returns error if request fails', () => {
-  const spy = createSpy().andReturn(Promise.reject(NoResponseError('oh no')));
+  const spy = createSpy().andReturn(
+    Promise.reject(
+      ResponseError.NoResponseError({
+        message: 'oh no',
+        url: 'https://circleci.com/api/v1.1/hey?circle-token=fdlsar32'
+      })
+    )
+  );
 
   return subject({request: spy, circleApiToken: 'fdlsar32', url: 'https://circleci.com/api/v1.1/hey'})
     .catch(actual => {
@@ -119,7 +125,10 @@ test('returns error if request fails', () => {
 test('returns error if non-200 status code received', () => {
   const spy = createSpy().andReturn(
     Promise.reject(
-      Non200ResponseError('Internal Server Error')
+      ResponseError.Non200ResponseError({
+        message: 'Internal Server Error',
+        url: 'https://circleci.com/api/v1.1/hey?circle-token=djklay32r'
+      })
     )
   );
 
@@ -132,7 +141,10 @@ test('returns error if non-200 status code received', () => {
 test('returns error if body parsing fails', () => {
   const spy = createSpy().andReturn(
     Promise.reject(
-      InvalidResponseError('Cannot parse body')
+      ResponseError.InvalidResponseError({
+        message: 'Cannot parse body',
+        url: 'https://circleci.com/api/v1.1/hey?circle-token=djklay32r'
+      })
     )
   );
 
