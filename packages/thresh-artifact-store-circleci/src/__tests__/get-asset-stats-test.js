@@ -14,9 +14,11 @@ const createFakeMakeCircleRequest = ({
 } = {}) => ({path, url, raw}) => {
   if(path === `tree/${baseBranch}`) {
     return ReaderPromise.of(getRecentBuildsResponse);
-  } else if(path === `${buildNum}/artifacts`) {
+  }
+  if(path === `${buildNum}/artifacts`) {
     return ReaderPromise.of(getBuildArtifactsResponse);
-  } else if(raw === true && url === artifactUrl) {
+  }
+  if(raw === true && url === artifactUrl) {
     return ReaderPromise.of(getAssetSizeArtifactResponse);
   }
 

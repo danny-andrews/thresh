@@ -1,11 +1,9 @@
 extends: '@danny.andrews/eslint-config'
 rules:
-  no-underscore-dangle:
-    - error
-    - allow:
-      - __
+  no-underscore-dangle: error
   # Remove once http://tinyurl.com/yayyweu3 is fixed.
   import/no-extraneous-dependencies: off
+  node/no-extraneous-import: off
 env:
   node: true
   browser: false
