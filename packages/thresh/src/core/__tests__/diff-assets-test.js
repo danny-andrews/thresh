@@ -80,7 +80,7 @@ test('calculates mismatches correctly', () => {
         size: 200
       }
     ],
-    [],
+    []
   );
 
   expect(mismatchedTargetSets).toEqual([['new-asset.js'], ['new-asset.css']]);

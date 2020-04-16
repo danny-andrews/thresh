@@ -37,7 +37,7 @@ export default (baseBranch, assetStatsFilepath) => {
   const getAssetSizeArtifactUrl = buildNumber =>
     makeCircleRequest({path: `${buildNumber}/artifacts`})
       .chain(buildArtifacts => {
-        const artifactPathRegExp = new RegExp(`${assetStatsFilepath}$`);
+        const artifactPathRegExp = new RegExp(`${assetStatsFilepath}$`, 'u');
         const assetSizeArtifact = buildArtifacts
           .find(artifact => artifact.path.match(artifactPathRegExp));
         if(!assetSizeArtifact) {

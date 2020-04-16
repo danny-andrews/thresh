@@ -6,7 +6,7 @@ const JSON_OUTPUT_SPACING = 2;
 
 export const truncate = R.curry(({maxSize, contSuffix = '...'}, string) => (
   string.length > maxSize
-    ? [string.substring(0, maxSize - contSuffix.length), contSuffix].join('')
+    ? [string.slice(0, maxSize - contSuffix.length), contSuffix].join('')
     : string
 ));
 
