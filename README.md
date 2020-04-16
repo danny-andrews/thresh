@@ -58,13 +58,37 @@ At its core, thresh does two things:
 
 ## Setup
 
-### Create threshrc.toml File (Documented in JSDoc Format)
+### Create threshrc.toml File
 
-- `{string} thresholds` - A list of configuration objects used to determine the conditions under which the [GitHub status](https://developer.github.com/v3/repos/statuses/#create-a-status) will be posted as "failed."
-  - `{(string|string[])} thresholds.targets` - The target(s) of the threshold. Each target can be either a file path or a glob.
-  - `{string} thresholds.maxSize`
-- `{string} [artifactStore = '@danny-andrews/thresh-artifact-store-circleci']` - The module name of the artifact store plugin you want to use. Defaults to CircleCI.
-- `{string} [ciAdapter = '@danny-andrews/thresh-ci-adapter-circleci']` - The module name of the CI adapter you want to use. Defaults to CircleCI.
+A threshrc config file has the following format:
+
+```
+type Config = {
+  thresholds :: [Threshold],
+  artifactStore :: String,
+  ciAdapter :: String
+}
+```
+
+where:
+
+- `thresholds` - A list of configuration objects used to determine the conditions under which the [GitHub status](https://developer.github.com/v3/repos/statuses/#create-a-status) will be posted as "failed."
+- `artifactStore = '@danny-andrews/thresh-artifact-store-circleci'` - The module name of the artifact store plugin you want to use. (Defaults to CircleCI.)
+- `ciAdapter = '@danny-andrews/thresh-ci-adapter-circleci'` - The module name of the CI adapter you want to use. (Defaults to CircleCI.)
+
+With `Threshold` being:
+
+```
+type Threshold = {
+  targets: String | [String],
+  maxSize: Number
+}
+```
+
+where:
+
+- `targets` - The target(s) of the threshold. Each target can be either a file path or a glob.
+- `maxSize` - The max size of the total of all the files.
 
 <details>
   <summary>Example config file:</summary>
