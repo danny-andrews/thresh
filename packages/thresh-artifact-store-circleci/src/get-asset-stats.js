@@ -10,9 +10,8 @@ const isSuccessfulBuildStatus = buildStatus => [
   BuildStatuses.FIXED
 ].includes(buildStatus);
 
-const makeCircleRequest = ReaderPromise.invokeAt(
-  (result, config) => result.run(config),
-  R.prop('makeCircleRequest')
+const makeCircleRequest = (...args) => ReaderPromise.asks(
+  config => config.makeGitHubRequest(...args).run(config)
 );
 
 export default (baseBranch, assetStatsFilepath) => {
