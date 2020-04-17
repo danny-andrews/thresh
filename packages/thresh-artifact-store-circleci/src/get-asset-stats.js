@@ -11,7 +11,7 @@ const isSuccessfulBuildStatus = buildStatus => [
 ].includes(buildStatus);
 
 const makeCircleRequest = (...args) => ReaderPromise.asks(
-  config => config.makeGitHubRequest(...args).run(config)
+  config => config.makeCircleRequest(...args).run(config)
 );
 
 export default (baseBranch, assetStatsFilepath) => {
