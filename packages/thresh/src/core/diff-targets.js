@@ -3,11 +3,11 @@ import micromatch from 'micromatch';
 
 import {sumReduce, listToMap} from '../shared';
 
-export default (currentSizedTargetSets, originalAssetStats) => {
-  const originalFilepaths = originalAssetStats.map(R.prop('filepath'));
-  const originalAssetStatsMap = listToMap(
+export default (currentSizedTargetSets, originalTargetStats) => {
+  const originalFilepaths = originalTargetStats.map(R.prop('filepath'));
+  const originalTargetStatsMap = listToMap(
     R.prop('filepath'),
-    originalAssetStats
+    originalTargetStats
   );
 
   return currentSizedTargetSets.reduce(
@@ -22,7 +22,7 @@ export default (currentSizedTargetSets, originalAssetStats) => {
       }
 
       const originalSize = sumReduce(
-        filepath => originalAssetStatsMap[filepath].size,
+        filepath => originalTargetStatsMap[filepath].size,
         originalResolvedTargets
       );
       const difference = size - originalSize;

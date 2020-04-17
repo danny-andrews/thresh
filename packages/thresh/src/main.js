@@ -4,7 +4,7 @@ import {Maybe} from 'monet';
 import {sprintf} from 'sprintf-js';
 
 import validateThresholdSchema from './core/validate-threshold-schema';
-import diffAssets from './core/diff-assets';
+import diffTargets from './core/diff-targets';
 import formatAssetDiff, {formatAsset} from './core/format-asset-diff';
 import getThresholdFailures from './core/get-threshold-failures';
 import {NoPreviousStatsFoundForFilepath, NoOpenPullRequestFoundErr}
@@ -120,7 +120,7 @@ export default ({
           );
         }
 
-        const [assetDiffs, mismatchedTargetSets] = diffAssets(
+        const [assetDiffs, mismatchedTargetSets] = diffTargets(
           sizedThresholds,
           previousAssetSizes.some()
         );
