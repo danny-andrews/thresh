@@ -13,8 +13,8 @@ import {
   getFileSizes,
   makeArtifactDirectory,
   CommitStatusPoster,
-  writeAssetDiffs,
-  writeAssetStats,
+  writeTargetDiffs,
+  writeTargetStats,
   logMessage,
   getPreviousTargetStats,
   normalizeThresholds
@@ -23,7 +23,7 @@ import {sumReduce, listToMap} from './shared';
 import {NO_PR_FOUND_STATUS_MESSAGE_TEMPLATE} from './core/constants';
 
 // Types
-// AssetStat          :: { filepath: String, size: Int }
+// TargetStat          :: { filepath: String, size: Int }
 // Threshold          :: { maxSize: Int, targets: [String] }
 // ResolvedThreshold  :: { Threshold, resolvedTargets: [String] }
 // SizedThreshold     :: { ResolvedThreshold, size: Int }
@@ -42,14 +42,14 @@ export default ({
     postSuccess
   } = CommitStatusPoster({targetUrl: `${buildUrl}#artifacts`, sha: buildSha});
   const formatStatusMessages = R.join(' \n');
-  const postFinal = (assetDiffs, thresholdFailures) => {
+  const postFinal = (targetDiffs, thresholdFailures) => {
     if(!R.isEmpty(thresholdFailures)) {
       return postFailure(
         thresholdFailures.map(R.prop('message')) |> formatStatusMessages
       );
     }
 
-    return assetDiffs.map(formatTargetDiff)
+    return targetDiffs.map(formatTargetDiff)
       |> formatStatusMessages
       |> postSuccess;
   };
@@ -59,10 +59,10 @@ export default ({
     ReaderPromise.fromEither
   );
 
-  const sizeThresholds = (assetSizes, resolvedThresholds) => {
-    const assetSizeListToMap = listToMap(R.prop('filepath'));
-    const assetSizeMap = assetSizeListToMap(assetSizes);
-    const sizeTargets = sumReduce(filepath => assetSizeMap[filepath].size);
+  const sizeThresholds = (targetSizes, resolvedThresholds) => {
+    const targetSizeListToMap = listToMap(R.prop('filepath'));
+    const targetSizeMap = targetSizeListToMap(targetSizes);
+    const sizeTargets = sumReduce(filepath => targetSizeMap[filepath].size);
 
     return resolvedThresholds.map(
       threshold => ({
@@ -79,8 +79,8 @@ export default ({
     )
   );
 
-  const postNoPrFoundCommitStatus = assetSizes => postSuccess(
-    assetSizes.map(({filepath, size}) => formatTarget(filepath, size))
+  const postNoPrFoundCommitStatus = targetSizes => postSuccess(
+    targetSizes.map(({filepath, size}) => formatTarget(filepath, size))
       |> formatStatusMessages
       |> (stats => sprintf(NO_PR_FOUND_STATUS_MESSAGE_TEMPLATE, stats))
   );
@@ -107,24 +107,24 @@ export default ({
       ])
     )
     .chain(
-      ([assetSizes, previousAssetSizes, resolvedThresholds]) =>
-        writeAssetStats(assetSizes, artifactsDirectory).map(() => [
-          assetSizes,
-          previousAssetSizes,
-          sizeThresholds(assetSizes, resolvedThresholds)
+      ([targetSizes, previousTargetSizes, resolvedThresholds]) =>
+        writeTargetStats(targetSizes, artifactsDirectory).map(() => [
+          targetSizes,
+          previousTargetSizes,
+          sizeThresholds(targetSizes, resolvedThresholds)
         ])
     )
     .chain(
-      ([assetSizes, previousAssetSizes, sizedThresholds]) => {
-        if(previousAssetSizes.isNone()) {
-          return postNoPrFoundCommitStatus(assetSizes).chain(
+      ([targetSizes, previousTargetSizes, sizedThresholds]) => {
+        if(previousTargetSizes.isNone()) {
+          return postNoPrFoundCommitStatus(targetSizes).chain(
             () => NoOpenPullRequestFoundErr().message |> logMessage
           );
         }
 
-        const [assetDiffs, mismatchedTargetSets] = diffTargets(
+        const [targetDiffs, mismatchedTargetSets] = diffTargets(
           sizedThresholds,
-          previousAssetSizes.some()
+          previousTargetSizes.some()
         );
 
         const thresholdFailures = getThresholdFailures(sizedThresholds);
@@ -133,10 +133,10 @@ export default ({
         }
 
         return ReaderPromise.parallel([
-          postFinal(assetDiffs, thresholdFailures.right()),
-          writeAssetDiffs({
+          postFinal(targetDiffs, thresholdFailures.right()),
+          writeTargetDiffs({
             rootPath: artifactsDirectory,
-            assetDiffs,
+            targetDiffs,
             thresholdFailures: thresholdFailures.right()
           }),
           writeMismatchErrors(mismatchedTargetSets)

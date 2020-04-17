@@ -1,3 +1,1 @@
 Break out Github-specific code into thresh-repository-adapter-github.
-
-Make a list of terms used so naming remains consistent (assetStat, threshold, etc.)

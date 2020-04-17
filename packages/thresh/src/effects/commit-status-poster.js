@@ -7,9 +7,9 @@ import {makeGitHubRequest} from './base';
 const MAX_DESCRIPTION_LENGTH = 140;
 
 const PENDING_STATUS_TEXT =
-  'Calculating asset diffs and threshold failures (if any)...';
+  'Calculating target diffs and threshold failures (if any)...';
 
-const COMMIT_STATUS_LABEL = 'Asset Sizes';
+const COMMIT_STATUS_LABEL = 'Target Sizes';
 
 const StatusStates = {
   FAILURE: 'failure',

@@ -1,17 +1,17 @@
 # thresh
 
-## Separate the wheat from the chaff in your static asset bundles
+## Separate the wheat from the chaff in your build files
 
 A CI integration for tracking file size changes across builds. Pluggable for different CI providers. (Currently plugins only exist for CircleCI.)
 
 ## What it Does
 
 At its core, thresh does two things:
-1. Outputs file sizes of assets targeted by your thresh config. (Where and how these are output depends on the `artifactStore` plugin you use.)
-1. If the current bulid is associated with an existing PR, posts a commit status. This status will be `success` if there are no assets which violate size thresholds defined in your thresh config, `failure` if there are assets which violate sizes thresholds, and `error` if any errors were encountered. The contents of this status will contain asset diffs if they could be calculated.
+1. Outputs file sizes of files targeted by your thresh config. (Where and how these are output depends on the `artifactStore` plugin you use.)
+1. If the current bulid is associated with an existing PR, posts a commit status. This status will be `success` if there are no target files which violate size thresholds defined in your thresh config, `failure` if there are target files which violate sizes thresholds, and `error` if any errors were encountered. The contents of this status will contain target diffs if they could be calculated.
 
 <details>
-  <summary>Example asset-sizes.json:</summary>
+  <summary>Example target-sizes.json:</summary>
 
 ```json
 [
@@ -95,10 +95,10 @@ where:
 
 ```toml
 [[thresholds]]
-targets = "dist/app.js"
+targets = "dist/*.js"
 maxSize = 20000
 ```
-This example would post a failed GitHub status if the total size of all javascript assets was larger than 20kB.
+This example would post a failed GitHub status if the total size of all JavaScript files contained in the `dist` directory was larger than 20kB.
 </details>
 
 ### Define Environment Variables
@@ -123,29 +123,38 @@ This example would post a failed GitHub status if the total size of all javascri
 
 ### `ciAdapter` Plugins
 
-A valid thresh ci adapter is just a function which returns an object with methods with the following signatures:
-```
-isRunning :: () -> Boolean
-```
+A valid thresh ci adapter is just a function which returns an object with the following type:
 
 ```
-getEnvVars :: () -> {
-  buildSha: String,
-  buildUrl: String,
-  artifactsDirectory: String,
-  repoOwner: String,
-  repoName: String,
-  pullRequestId: Maybe String
+type CIAdapter = {
+  isRunning :: () -> Boolean
+  getEnvVars :: () -> EnvVars
+}
+
+type EnvVars = {
+  buildSha :: String,
+  buildUrl :: String,
+  artifactsDirectory :: String,
+  repoOwner :: String,
+  repoName :: String,
+  pullRequestId :: Maybe String
 }
 ```
 
 ### `artifactStore` Plugins
 
-A valid thresh artifactStore is just a function with the following signature:
+A valid thresh artifactStore is just a function which returns an object with the following type:
 
 ```
-() => {
-  getAssetStats: (baseBranch = String, assetStatsFilepath = String) -> ReaderPromise AssetStat
+type ArtifactStore = {
+  getTargetStats :: (baseBranch = String)
+    -> (targetStatsFilepath = String)
+    -> ReaderPromise TargetStat
+}
+
+type TargetStat = {
+  filepath :: String,
+  size :: Int
 }
 ```
 

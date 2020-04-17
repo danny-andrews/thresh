@@ -22,13 +22,13 @@ export default sizedThresholds => {
 
       if(size <= maxSize) return [];
 
-      const offendingAssetPaths = resolvedTargets
+      const offendingTargetPaths = resolvedTargets
         .map(filepath => `"${filepath}"`)
         .join(', ');
 
       const message = sprintf(
         'The total size of [%s] (%s) must be less than or equal to %s!',
-        offendingAssetPaths,
+        offendingTargetPaths,
         formatFilesize(size),
         formatFilesize(maxSize)
       );
@@ -36,7 +36,7 @@ export default sizedThresholds => {
       return {
         message,
         threshold,
-        offendingAssets: resolvedTargets
+        offendingTargets: resolvedTargets
       };
     },
     sizedThresholds

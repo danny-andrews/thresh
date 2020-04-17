@@ -75,7 +75,7 @@ const subject = ({
   writeFile
 }).catch(console.error);
 
-test('posts pending commit status, writes asset stats to file, writes asset diffs to file, and posts success commit status', () => {
+test('posts pending commit status, writes target stats to file, writes target diffs to file, and posts success commit status', () => {
   const buildSha = 'dkg93hdk';
   const pr = '99';
   const mkdirSpy = createSpy().andReturn(Promise.resolve());
@@ -153,8 +153,8 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
         body: {
           state: 'pending',
           targetUrl: 'http://circle.com/build/78#artifacts',
-          context: 'Asset Sizes',
-          description: 'Calculating asset diffs and threshold failures (if any)...'
+          context: 'Target Sizes',
+          description: 'Calculating target diffs and threshold failures (if any)...'
         }
       }
     );
@@ -165,7 +165,7 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
         body: {
           state: 'success',
           targetUrl: 'http://circle.com/build/78#artifacts',
-          context: 'Asset Sizes',
+          context: 'Target Sizes',
           description: 'dist/app.*.js: 400B (-100B, -20.00%)'
         }
       }
@@ -249,7 +249,7 @@ test('posts error commit status and logs message when previous build has no stat
         body: {
           state: 'error',
           targetUrl: 'http://circle.com/build/78#artifacts',
-          context: 'Asset Sizes',
+          context: 'Target Sizes',
           description: 'No target stats artifact found for latest build of: `master`. Build number: `78`.'
         }
       }
@@ -302,7 +302,7 @@ test('posts error commit status and logs message when no previous builds are fou
         body: {
           state: 'error',
           targetUrl: 'http://circle.com/build/139#artifacts',
-          context: 'Asset Sizes',
+          context: 'Target Sizes',
           description: 'No recent successful builds found for the base branch: `develop`.'
         }
       }
@@ -312,7 +312,7 @@ test('posts error commit status and logs message when no previous builds are fou
   });
 });
 
-test('writes asset stats and posts success commit status with asset stats (and a note explaining that diffs could not be calculated) when open pull request is not found', () => {
+test('writes target stats and posts success commit status with target stats (and a note explaining that diffs could not be calculated) when open pull request is not found', () => {
   const writeFileSpy = createSpy();
   const buildSha = 'ljghay3h';
   const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
@@ -355,24 +355,24 @@ test('writes asset stats and posts success commit status with asset stats (and a
         body: {
           state: 'success',
           targetUrl: 'http://circle.com/build/29#artifacts',
-          context: 'Asset Sizes',
+          context: 'Target Sizes',
           description: 'build/main.38552hd3.js: 258B (no open PR; cannot calculate diffs)'
         }
       }
     );
     expect(postCommitStatusSpy.calls.length).toBe(2);
-    expect(logMessageSpy).toHaveBeenCalledWith('No open pull request found. Skipping asset diff step.');
+    expect(logMessageSpy).toHaveBeenCalledWith('No open pull request found. Skipping target diff step.');
   });
 });
 
 test('posts failure commit status when thresholds are not met', () => {
   const buildSha = 'fjdk29uw';
   const pr = '200';
-  const assetPath = 'build.3u3232.js';
+  const targetPath = 'build.3u3232.js';
   const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
   const getTargetStatsSpy = createSpy().andReturn(
     Promise.resolve([
-      {filepath: assetPath, size: 200}
+      {filepath: targetPath, size: 200}
     ])
   );
 
@@ -403,7 +403,7 @@ test('posts failure commit status when thresholds are not met', () => {
         ]
       ])
     ),
-    resolveGlob: () => Promise.resolve([assetPath])
+    resolveGlob: () => Promise.resolve([targetPath])
   }).then(() => {
     expect(postCommitStatusSpy).toHaveBeenCalledWith(
       'statuses/fjdk29uw',
@@ -412,7 +412,7 @@ test('posts failure commit status when thresholds are not met', () => {
         body: {
           state: 'failure',
           targetUrl: 'http://circle.com/build/21#artifacts',
-          context: 'Asset Sizes',
+          context: 'Target Sizes',
           description: 'The total size of ["build.3u3232.js"] (400B) must be less than or equal to 300B!'
         }
       }
@@ -424,11 +424,11 @@ test('posts failure commit status when thresholds are not met', () => {
 test('posts success commit status when failure thresholds are met', () => {
   const buildSha = 'algh83he';
   const pr = '200';
-  const assetPath = 'app.dj39hf.js';
+  const targetPath = 'app.dj39hf.js';
   const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
   const getTargetStatsSpy = createSpy().andReturn(
     Promise.resolve([
-      {filepath: assetPath, size: 400}
+      {filepath: targetPath, size: 400}
     ])
   );
 
@@ -459,7 +459,7 @@ test('posts success commit status when failure thresholds are met', () => {
         ]
       ])
     ),
-    resolveGlob: () => Promise.resolve([assetPath])
+    resolveGlob: () => Promise.resolve([targetPath])
   }).then(() => {
     expect(postCommitStatusSpy).toHaveBeenCalledWith(
       'statuses/algh83he',
@@ -468,7 +468,7 @@ test('posts success commit status when failure thresholds are met', () => {
         body: {
           state: 'success',
           targetUrl: 'http://circle.com/build/29#artifacts',
-          context: 'Asset Sizes',
+          context: 'Target Sizes',
           description: '*.js: 267B (-133B, -33.25%)'
         }
       }
@@ -516,7 +516,7 @@ test('posts failure commit status and logs a message when a threshold does not r
         body: {
           state: 'error',
           targetUrl: 'http://circle.com/build/29#artifacts',
-          context: 'Asset Sizes',
+          context: 'Target Sizes',
           description: 'Invalid failure threshold provided. No files found for target(s): [*.js]'
         }
       }

@@ -8,5 +8,5 @@ export {default as MakeGitHubRequest} from './make-github-request';
 export {default as normalizeThresholds} from './normalize-thresholds';
 export {default as getConfig} from './get-config';
 export {default as resolveGlobs} from './resolve-globs';
-export {default as writeAssetDiffs} from './write-asset-diffs';
-export {default as writeAssetStats} from './write-asset-stats';
+export {default as writeTargetDiffs} from './write-target-diffs';
+export {default as writeTargetStats} from './write-target-stats';

@@ -1,22 +1,22 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
 
-import writeAssetStats from '../write-asset-stats';
-import {AssetStatsWriteErr} from '../../core/errors';
+import writeTargetStats from '../write-target-stats';
+import {TargetStatsWriteErr} from '../../core/errors';
 
 const subject = ({
   writeFile = () => Promise.resolve(),
   resolve = (...args) => args.join('/'),
   rootPath = 'root',
-  assetStats = {}
-} = {}) => writeAssetStats(assetStats, rootPath).run({writeFile, resolve});
+  targetStats = {}
+} = {}) => writeTargetStats(targetStats, rootPath).run({writeFile, resolve});
 
-test('writes asset stats file', () => {
+test('writes target stats file', () => {
   const writeFileSpy = createSpy().andReturn(Promise.resolve());
 
   return subject({
     rootPath: 'dist',
-    assetStats: {
+    targetStats: {
       'app.css': {
         size: 213,
         path: 'app.css'
@@ -36,9 +36,9 @@ test('writes asset stats file', () => {
   });
 });
 
-test('returns error when an error is encountered writing asset stats file', () => subject({
+test('returns error when an error is encountered writing target stats file', () => subject({
   writeFile: () => Promise.reject(Error())
 }).catch(({message, constructor}) => {
-  expect(constructor).toBe(AssetStatsWriteErr);
-  expect(message).toBe('Error writing asset stats artifact');
+  expect(constructor).toBe(TargetStatsWriteErr);
+  expect(message).toBe('Error writing target stats artifact');
 }));

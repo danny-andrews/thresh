@@ -21,8 +21,8 @@ test('postPending makes request to post pending commit status to GitHub', () => 
     body: {
       state: 'pending',
       targetUrl: 'info.com/53',
-      description: 'Calculating asset diffs and threshold failures (if any)...',
-      context: 'Asset Sizes'
+      description: 'Calculating target diffs and threshold failures (if any)...',
+      context: 'Target Sizes'
     }
   });
 });
@@ -44,7 +44,7 @@ test('postError makes request to post error commit status to GitHub', () => {
       state: 'error',
       targetUrl: 'info.com/53',
       description: 'Error encountered while doing thing...',
-      context: 'Asset Sizes'
+      context: 'Target Sizes'
     }
   });
 });
