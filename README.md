@@ -97,7 +97,6 @@ where:
 [[thresholds]]
 targets = "dist/app.js"
 maxSize = 20000
-strategy = "total"
 ```
 This example would post a failed GitHub status if the total size of all javascript assets was larger than 20kB.
 </details>
