@@ -2,12 +2,12 @@ import test from 'ava';
 import expect from 'expect';
 
 import {FileSizeReadErr} from '../../core/errors';
-import getAssetFilestats from '../get-file-sizes';
+import getFilesSizes from '../get-file-sizes';
 
 const subject = ({
   getFileStats = () => Promise.resolve({size: 200}),
   filepaths = []
-} = {}) => getAssetFilestats(filepaths).run({getFileStats});
+} = {}) => getFilesSizes(filepaths).run({getFileStats});
 
 test('returns filepath with file size', () => subject({
   getFileStats: () => Promise.resolve({size: 400}),

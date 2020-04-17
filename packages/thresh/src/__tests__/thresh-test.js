@@ -2,7 +2,7 @@ import test from 'ava';
 import expect, {createSpy} from 'expect';
 import {Maybe} from 'monet';
 import ReaderPromise from '@danny.andrews/reader-promise';
-import {NoAssetStatsArtifactFoundErr, NoRecentBuildsFoundErr}
+import {NoTargetStatsArtifactFoundErr, NoRecentBuildsFoundErr}
   from '@danny.andrews/thresh-artifact-store-circleci';
 import TOML from '@iarna/toml';
 
@@ -27,7 +27,7 @@ const subject = ({
 
   // Dependencies
   artifactStore = {
-    getAssetStats: () => Promise.resolve([])
+    getTargetStats: () => Promise.resolve([])
   },
   getCommandLineArgs = () => Promise.resolve({'config-path': 'config.toml'}),
   getFileStats = () => Promise.resolve({size: 200}),
@@ -75,7 +75,7 @@ const subject = ({
   writeFile
 }).catch(console.error);
 
-test('posts pending commit status, writes asset stats to file, writes asset diffs to file, and posts success commit status', () => {
+test('posts pending commit status, writes target stats to file, writes target diffs to file, and posts success commit status', () => {
   const buildSha = 'dkg93hdk';
   const pr = '99';
   const mkdirSpy = createSpy().andReturn(Promise.resolve());
@@ -84,7 +84,7 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
     Promise.resolve(['dist/app.3u3232.js'])
   );
   const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
-  const getAssetStatsSpy = createSpy().andReturn(
+  const getTargetStatsSpy = createSpy().andReturn(
     Promise.resolve([
       {filepath: 'dist/app.h9832h.js', size: 500}
     ])
@@ -103,7 +103,7 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
 
     // Dependencies
     artifactStore: {
-      getAssetStats: getAssetStatsSpy
+      getTargetStats: getTargetStatsSpy
     },
     getFileStats: getFileStatsSpy,
     makeGitHubRequest: fakeGitHubRequest(
@@ -127,14 +127,14 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
     expect(resolveGlobSpy).toHaveBeenCalledWith('dist/app.*.js');
     expect(getFileStatsSpy).toHaveBeenCalledWith('dist/app.3u3232.js');
     expect(writeFileSpy).toHaveBeenCalledWith(
-      'djeh9h/artifacts/thresh/asset-stats.json',
+      'djeh9h/artifacts/thresh/target-stats.json',
       serializeForFile([{
         filepath: 'dist/app.3u3232.js',
         size: 400
       }])
     );
     expect(writeFileSpy).toHaveBeenCalledWith(
-      'djeh9h/artifacts/thresh/asset-diffs.json',
+      'djeh9h/artifacts/thresh/target-diffs.json',
       serializeForFile({
         diffs: [{
           targets: ['dist/app.*.js'],
@@ -153,8 +153,8 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
         body: {
           state: 'pending',
           targetUrl: 'http://circle.com/build/78#artifacts',
-          context: 'Asset Sizes',
-          description: 'Calculating asset diffs and threshold failures (if any)...'
+          context: 'Target Sizes',
+          description: 'Calculating target diffs and threshold failures (if any)...'
         }
       }
     );
@@ -165,19 +165,19 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
         body: {
           state: 'success',
           targetUrl: 'http://circle.com/build/78#artifacts',
-          context: 'Asset Sizes',
+          context: 'Target Sizes',
           description: 'dist/app.*.js: 400B (-100B, -20.00%)'
         }
       }
     );
     expect(postCommitStatusSpy.calls.length).toBe(2);
-    expect(getAssetStatsSpy).toHaveBeenCalledWith('master', 'asset-stats.json');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith('master', 'target-stats.json');
   });
 });
 
 test('writes message to the console when no previous stat found for given filepath', () => {
   const logMessageSpy = createSpy();
-  const getAssetStatsSpy = createSpy().andReturn(
+  const getTargetStatsSpy = createSpy().andReturn(
     Promise.resolve([
       {filepath: 'dist/app.hfdsy4.js', size: 300}
     ])
@@ -192,13 +192,13 @@ test('writes message to the console when no previous stat found for given filepa
 
     // Dependencies
     artifactStore: {
-      getAssetStats: getAssetStatsSpy
+      getTargetStats: getTargetStatsSpy
     },
     logMessage: logMessageSpy,
     resolveGlob: () => Promise.resolve(['dist/vendor.fdjsayr.js'])
   }).then(() => {
     expect(logMessageSpy).toHaveBeenCalledWith('No previous stats found for dist/vendor.fdjsayr.js. Did you rename that file recently?');
-    expect(getAssetStatsSpy).toHaveBeenCalledWith('develop', 'asset-stats.json');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith('develop', 'target-stats.json');
   });
 });
 
@@ -209,9 +209,9 @@ test('posts error commit status and logs message when previous build has no stat
   const buildNumber = '78';
   const logMessageSpy = createSpy();
   const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
-  const getAssetStatsSpy = createSpy().andReturn(
+  const getTargetStatsSpy = createSpy().andReturn(
     Promise.reject(
-      NoAssetStatsArtifactFoundErr(baseBranch, buildNumber)
+      NoTargetStatsArtifactFoundErr(baseBranch, buildNumber)
     )
   );
 
@@ -222,7 +222,7 @@ test('posts error commit status and logs message when previous build has no stat
 
     // Dependencies
     artifactStore: {
-      getAssetStats: getAssetStatsSpy
+      getTargetStats: getTargetStatsSpy
     },
     logMessage: logMessageSpy,
     makeGitHubRequest: fakeGitHubRequest(
@@ -249,13 +249,13 @@ test('posts error commit status and logs message when previous build has no stat
         body: {
           state: 'error',
           targetUrl: 'http://circle.com/build/78#artifacts',
-          context: 'Asset Sizes',
-          description: 'No asset stats artifact found for latest build of: `master`. Build number: `78`.'
+          context: 'Target Sizes',
+          description: 'No target stats artifact found for latest build of: `master`. Build number: `78`.'
         }
       }
     );
-    expect(logMessageSpy).toHaveBeenCalledWith('No asset stats artifact found for latest build of: `master`. Build number: `78`.');
-    expect(getAssetStatsSpy).toHaveBeenCalledWith(baseBranch, 'asset-stats.json');
+    expect(logMessageSpy).toHaveBeenCalledWith('No target stats artifact found for latest build of: `master`. Build number: `78`.');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith(baseBranch, 'target-stats.json');
   });
 });
 
@@ -265,7 +265,7 @@ test('posts error commit status and logs message when no previous builds are fou
   const buildSha = 'ng832hfd';
   const logMessageSpy = createSpy();
   const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
-  const getAssetStatsSpy = createSpy().andReturn(
+  const getTargetStatsSpy = createSpy().andReturn(
     Promise.reject(
       NoRecentBuildsFoundErr(baseBranch)
     )
@@ -278,7 +278,7 @@ test('posts error commit status and logs message when no previous builds are fou
 
     // Dependencies
     artifactStore: {
-      getAssetStats: getAssetStatsSpy
+      getTargetStats: getTargetStatsSpy
     },
     logMessage: logMessageSpy,
     makeGitHubRequest: fakeGitHubRequest(
@@ -302,17 +302,17 @@ test('posts error commit status and logs message when no previous builds are fou
         body: {
           state: 'error',
           targetUrl: 'http://circle.com/build/139#artifacts',
-          context: 'Asset Sizes',
+          context: 'Target Sizes',
           description: 'No recent successful builds found for the base branch: `develop`.'
         }
       }
     );
     expect(logMessageSpy).toHaveBeenCalledWith('No recent successful builds found for the base branch: `develop`.');
-    expect(getAssetStatsSpy).toHaveBeenCalledWith(baseBranch, 'asset-stats.json');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith(baseBranch, 'target-stats.json');
   });
 });
 
-test('writes asset stats and posts success commit status with asset stats (and a note explaining that diffs could not be calculated) when open pull request is not found', () => {
+test('writes target stats and posts success commit status with target stats (and a note explaining that diffs could not be calculated) when open pull request is not found', () => {
   const writeFileSpy = createSpy();
   const buildSha = 'ljghay3h';
   const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
@@ -339,7 +339,7 @@ test('writes asset stats and posts success commit status with asset stats (and a
     writeFile: writeFileSpy
   }).then(() => {
     expect(writeFileSpy).toHaveBeenCalledWith(
-      '83jgs3/artifacts/thresh/asset-stats.json',
+      '83jgs3/artifacts/thresh/target-stats.json',
       serializeForFile([
         {
           filepath: 'build/main.38552hd3.js',
@@ -355,24 +355,24 @@ test('writes asset stats and posts success commit status with asset stats (and a
         body: {
           state: 'success',
           targetUrl: 'http://circle.com/build/29#artifacts',
-          context: 'Asset Sizes',
+          context: 'Target Sizes',
           description: 'build/main.38552hd3.js: 258B (no open PR; cannot calculate diffs)'
         }
       }
     );
     expect(postCommitStatusSpy.calls.length).toBe(2);
-    expect(logMessageSpy).toHaveBeenCalledWith('No open pull request found. Skipping asset diff step.');
+    expect(logMessageSpy).toHaveBeenCalledWith('No open pull request found. Skipping target diff step.');
   });
 });
 
 test('posts failure commit status when thresholds are not met', () => {
   const buildSha = 'fjdk29uw';
   const pr = '200';
-  const assetPath = 'build.3u3232.js';
+  const targetPath = 'build.3u3232.js';
   const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
-  const getAssetStatsSpy = createSpy().andReturn(
+  const getTargetStatsSpy = createSpy().andReturn(
     Promise.resolve([
-      {filepath: assetPath, size: 200}
+      {filepath: targetPath, size: 200}
     ])
   );
 
@@ -387,7 +387,7 @@ test('posts failure commit status when thresholds are not met', () => {
 
     // Dependencies
     artifactStore: {
-      getAssetStats: getAssetStatsSpy
+      getTargetStats: getTargetStatsSpy
     },
     getFileStats: () => Promise.resolve({size: 400}),
     makeGitHubRequest: fakeGitHubRequest(
@@ -403,7 +403,7 @@ test('posts failure commit status when thresholds are not met', () => {
         ]
       ])
     ),
-    resolveGlob: () => Promise.resolve([assetPath])
+    resolveGlob: () => Promise.resolve([targetPath])
   }).then(() => {
     expect(postCommitStatusSpy).toHaveBeenCalledWith(
       'statuses/fjdk29uw',
@@ -412,23 +412,23 @@ test('posts failure commit status when thresholds are not met', () => {
         body: {
           state: 'failure',
           targetUrl: 'http://circle.com/build/21#artifacts',
-          context: 'Asset Sizes',
+          context: 'Target Sizes',
           description: 'The total size of ["build.3u3232.js"] (400B) must be less than or equal to 300B!'
         }
       }
     );
-    expect(getAssetStatsSpy).toHaveBeenCalledWith('master', 'asset-stats.json');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith('master', 'target-stats.json');
   });
 });
 
 test('posts success commit status when failure thresholds are met', () => {
   const buildSha = 'algh83he';
   const pr = '200';
-  const assetPath = 'app.dj39hf.js';
+  const targetPath = 'app.dj39hf.js';
   const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
-  const getAssetStatsSpy = createSpy().andReturn(
+  const getTargetStatsSpy = createSpy().andReturn(
     Promise.resolve([
-      {filepath: assetPath, size: 400}
+      {filepath: targetPath, size: 400}
     ])
   );
 
@@ -443,7 +443,7 @@ test('posts success commit status when failure thresholds are met', () => {
 
     // Dependencies
     artifactStore: {
-      getAssetStats: getAssetStatsSpy
+      getTargetStats: getTargetStatsSpy
     },
     getFileStats: () => Promise.resolve({size: 267}),
     makeGitHubRequest: fakeGitHubRequest(
@@ -459,7 +459,7 @@ test('posts success commit status when failure thresholds are met', () => {
         ]
       ])
     ),
-    resolveGlob: () => Promise.resolve([assetPath])
+    resolveGlob: () => Promise.resolve([targetPath])
   }).then(() => {
     expect(postCommitStatusSpy).toHaveBeenCalledWith(
       'statuses/algh83he',
@@ -468,12 +468,12 @@ test('posts success commit status when failure thresholds are met', () => {
         body: {
           state: 'success',
           targetUrl: 'http://circle.com/build/29#artifacts',
-          context: 'Asset Sizes',
+          context: 'Target Sizes',
           description: '*.js: 267B (-133B, -33.25%)'
         }
       }
     );
-    expect(getAssetStatsSpy).toHaveBeenCalledWith('master', 'asset-stats.json');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith('master', 'target-stats.json');
   });
 });
 
@@ -516,7 +516,7 @@ test('posts failure commit status and logs a message when a threshold does not r
         body: {
           state: 'error',
           targetUrl: 'http://circle.com/build/29#artifacts',
-          context: 'Asset Sizes',
+          context: 'Target Sizes',
           description: 'Invalid failure threshold provided. No files found for target(s): [*.js]'
         }
       }

@@ -1,7 +1,7 @@
 import ReaderPromise from '@danny.andrews/reader-promise';
 import R from 'ramda';
 
-import {NoRecentBuildsFoundErr, NoAssetStatsArtifactFoundErr} from './errors';
+import {NoRecentBuildsFoundErr, NoTargetStatsArtifactFoundErr} from './errors';
 
 const BuildStatuses = {SUCCESS: 'success', FIXED: 'fixed'};
 
@@ -14,7 +14,7 @@ const makeCircleRequest = (...args) => ReaderPromise.asks(
   config => config.makeCircleRequest(...args).run(config)
 );
 
-export default (baseBranch, assetStatsFilepath) => {
+export default (baseBranch, targetStatsFilepath) => {
   const getLatestSuccessfulBuildNumber = () =>
     makeCircleRequest({path: `tree/${baseBranch}`}).chain(recentBuilds => {
       if(recentBuilds.length === 0) {
@@ -33,26 +33,26 @@ export default (baseBranch, assetStatsFilepath) => {
       return ReaderPromise.of(buildNumber);
     });
 
-  const getAssetSizeArtifactUrl = buildNumber =>
+  const getTargetSizeArtifactUrl = buildNumber =>
     makeCircleRequest({path: `${buildNumber}/artifacts`})
       .chain(buildArtifacts => {
-        const artifactPathRegExp = new RegExp(`${assetStatsFilepath}$`, 'u');
-        const assetSizeArtifact = buildArtifacts
+        const artifactPathRegExp = new RegExp(`${targetStatsFilepath}$`, 'u');
+        const targetSizeArtifact = buildArtifacts
           .find(artifact => artifact.path.match(artifactPathRegExp));
-        if(!assetSizeArtifact) {
-          return NoAssetStatsArtifactFoundErr(baseBranch, buildNumber)
+        if(!targetSizeArtifact) {
+          return NoTargetStatsArtifactFoundErr(baseBranch, buildNumber)
             |> ReaderPromise.fromError;
         }
 
-        return ReaderPromise.of(assetSizeArtifact.url);
+        return ReaderPromise.of(targetSizeArtifact.url);
       });
 
-  const getAssetSizeArtifact = assetSizeArtifactUrl => makeCircleRequest({
-    url: assetSizeArtifactUrl,
+  const getTargetSizeArtifact = targetSizeArtifactUrl => makeCircleRequest({
+    url: targetSizeArtifactUrl,
     raw: true
   });
 
   return getLatestSuccessfulBuildNumber()
-    .chain(getAssetSizeArtifactUrl)
-    .chain(getAssetSizeArtifact);
+    .chain(getTargetSizeArtifactUrl)
+    .chain(getTargetSizeArtifact);
 };

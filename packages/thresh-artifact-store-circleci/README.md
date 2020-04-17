@@ -2,7 +2,7 @@
 
 ## What it does
 
-When used with thresh, this plugin uses CircleCI as a storage facility for asset diff and/or stat files. It stores them in the `$CIRCLE_ARTIFACTS/thresh/` directory.
+When used with thresh, this plugin uses CircleCI as a storage facility for target diff and/or stat files. It stores them in the `$CIRCLE_ARTIFACTS/thresh/` directory.
 
 ## Required Environment Variables
 

@@ -1,22 +1,22 @@
 import test from 'ava';
 import expect, {createSpy} from 'expect';
 
-import writeAssetDiffs from '../write-asset-diffs';
-import {AssetDiffsWriteErr} from '../../core/errors';
+import writeTargetDiffs from '../write-target-diffs';
+import {TargetDiffsWriteErr} from '../../core/errors';
 
 const subject = ({
   writeFile = () => Promise.resolve(),
   resolve = (...args) => args.join('/'),
   rootPath = 'root',
-  assetDiffs = {},
+  targetDiffs = {},
   thresholdFailures = {}
-} = {}) => writeAssetDiffs({
+} = {}) => writeTargetDiffs({
   rootPath,
-  assetDiffs,
+  targetDiffs,
   thresholdFailures
 }).run({writeFile, resolve});
 
-test('writes asset stats file', () => {
+test('writes target stats file', () => {
   const writeFileSpy = createSpy().andReturn(Promise.resolve());
   const diffs = {
     'app.css': {
@@ -28,25 +28,25 @@ test('writes asset stats file', () => {
   };
   const failures = [{
     message: 'app.css should be less than 3MB',
-    offendingAssets: ['app.css']
+    offendingTargets: ['app.css']
   }];
 
   return subject({
     rootPath: 'dist',
-    assetDiffs: diffs,
+    targetDiffs: diffs,
     thresholdFailures: failures,
     writeFile: writeFileSpy
   }).then(() => {
     expect(writeFileSpy).toHaveBeenCalledWith(
-      'dist/thresh/asset-diffs.json',
+      'dist/thresh/target-diffs.json',
       JSON.stringify({diffs, failures}, null, 2)
     );
   });
 });
 
-test('returns error when an error is encountered writing asset diffs file', () => subject({
+test('returns error when an error is encountered writing target diffs file', () => subject({
   writeFile: () => Promise.reject(Error())
 }).catch(({message, constructor}) => {
-  expect(message).toEqual('Error writing asset diffs artifact');
-  expect(constructor).toEqual(AssetDiffsWriteErr);
+  expect(message).toEqual('Error writing target diffs artifact');
+  expect(constructor).toEqual(TargetDiffsWriteErr);
 }));

@@ -1,7 +1,1 @@
-Use property tests where you can.
-
-Develop better API for request.
-
 Break out Github-specific code into thresh-repository-adapter-github.
-
-Test coverage.

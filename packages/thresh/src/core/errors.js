@@ -17,9 +17,9 @@ export const FileSizeReadErr = CreateErrorFactory('Error reading file size for f
 
 export const ArtifactDirectoryCreationErr = CreateErrorFactory('Error creating artifact directory');
 
-export const AssetStatsWriteErr = CreateErrorFactory('Error writing asset stats artifact');
+export const TargetStatsWriteErr = CreateErrorFactory('Error writing target stats artifact');
 
-export const AssetDiffsWriteErr = CreateErrorFactory('Error writing asset diffs artifact');
+export const TargetDiffsWriteErr = CreateErrorFactory('Error writing target diffs artifact');
 
 export const MissingEnvVarErr = CreateErrorFactory('Environment variable %s is required!');
 
@@ -29,6 +29,6 @@ export const GitHubAuthorizationErr = CreateErrorFactory('Authorization failed f
 
 export const GitHubInvalidResponseErr = CreateErrorFactory('Error making request to GitHub %s: %s');
 
-export const NoOpenPullRequestFoundErr = CreateErrorFactory('No open pull request found. Skipping asset diff step.');
+export const NoOpenPullRequestFoundErr = CreateErrorFactory('No open pull request found. Skipping target diff step.');
 
 export const NoPreviousStatsFoundForFilepath = CreateErrorFactory('No previous stats found for %s. Did you rename that file recently?');

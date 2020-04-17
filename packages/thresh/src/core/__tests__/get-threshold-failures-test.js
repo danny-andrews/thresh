@@ -7,23 +7,23 @@ import subject from '../get-threshold-failures';
 
 const testSets = [
   {
-    title: 'singleton target, asset with size > maxSize',
+    title: 'singleton target, target with size > maxSize',
     input: [
       {resolvedTargets: ['app.js'], maxSize: 2, size: 35}
     ],
     output: [
-      {offendingAssets: ['app.js']}
+      {offendingTargets: ['app.js']}
     ]
   },
   {
-    title: 'asset with size < maxSize',
+    title: 'target with size < maxSize',
     input: [
       {resolvedTargets: ['app.js'], maxSize: 80, size: 21}
     ],
     output: []
   },
   {
-    title: 'asset with size === maxSize',
+    title: 'target with size === maxSize',
     input: [
       {resolvedTargets: ['app.js'], maxSize: 80, size: 80}
     ],
@@ -35,7 +35,7 @@ const testSets = [
       {resolvedTargets: ['app.js', 'vendor.js'], maxSize: 400, size: 489}
     ],
     output: [
-      {offendingAssets: ['app.js', 'vendor.js']}
+      {offendingTargets: ['app.js', 'vendor.js']}
     ]
   },
   {
@@ -52,8 +52,8 @@ const testSets = [
       {resolvedTargets: ['vendor.js'], maxSize: 400, size: 900}
     ],
     output: [
-      {offendingAssets: ['app.js']},
-      {offendingAssets: ['vendor.js']}
+      {offendingTargets: ['app.js']},
+      {offendingTargets: ['vendor.js']}
     ]
   },
   {
@@ -63,16 +63,16 @@ const testSets = [
       {resolvedTargets: ['vendor.js'], maxSize: 400, size: 502}
     ],
     output: [
-      {offendingAssets: ['vendor.js']}
+      {offendingTargets: ['vendor.js']}
     ]
   },
   {
-    title: 'no thresholds or assetStats',
+    title: 'no thresholds or targetStats',
     input: [],
     output: []
   },
   {
-    title: 'no matching asset',
+    title: 'no matching target',
     input: [
       {resolvedTargets: [], maxSize: 200, size: 3532}
     ],
@@ -93,7 +93,7 @@ R.forEach(
 
         R.forEach(
           ([actual, expected]) =>
-            expect(actual.offendingAssets).toEqual(expected.offendingAssets),
+            expect(actual.offendingTargets).toEqual(expected.offendingTargets),
           R.zip(actuals.right(), expecteds)
         );
       }
