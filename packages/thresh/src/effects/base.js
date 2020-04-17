@@ -2,35 +2,36 @@
 import ReaderPromise from '@danny.andrews/reader-promise';
 import R from 'ramda';
 
-const readerDependencyInvoker1 = ReaderPromise.invokeAt(R.identity);
-
-const readerDependencyAtPropInvoker = R.pipe(R.prop, readerDependencyInvoker1);
-
-export const mkdir = readerDependencyAtPropInvoker('mkdir');
-
-export const getFileStats = readerDependencyAtPropInvoker('getFileStats');
-
-export const readFile = readerDependencyAtPropInvoker('readFile');
-
-export const writeFile = readerDependencyAtPropInvoker('writeFile');
-
-export const request = readerDependencyAtPropInvoker('request');
-
-export const resolveGlob = readerDependencyAtPropInvoker('resolveGlob');
-
-export const logMessage = ReaderPromise.invokeAt(
-  a => Promise.resolve(a),
-  R.prop('logMessage')
+const readerDependencyProxy = selector => (...args) => ReaderPromise.asks(
+  config => selector(config)(...args)
 );
 
-export const resolve = ReaderPromise.invokeAt(
-  a => Promise.resolve(a),
-  R.prop('resolve')
+const readerDependencyAtPropProxy = a => readerDependencyProxy(R.prop(a));
+
+export const mkdir = readerDependencyAtPropProxy('mkdir');
+
+export const getFileStats = readerDependencyAtPropProxy('getFileStats');
+
+export const readFile = readerDependencyAtPropProxy('readFile');
+
+export const writeFile = readerDependencyAtPropProxy('writeFile');
+
+export const request = readerDependencyAtPropProxy('request');
+
+export const resolveGlob = readerDependencyAtPropProxy('resolveGlob');
+
+const resolvePromise = a => Promise.resolve(a);
+
+export const logMessage = (...args) => ReaderPromise.asks(
+  config => resolvePromise(config.logMessage(...args))
 );
 
-export const makeGitHubRequest = ReaderPromise.invokeAt(
-  (result, config) => result.run(config),
-  R.prop('makeGitHubRequest')
+export const resolve = (...args) => ReaderPromise.asks(
+  config => resolvePromise(config.resolve(...args))
+);
+
+export const makeGitHubRequest = (...args) => ReaderPromise.asks(
+  config => config.makeGitHubRequest(...args).run(config)
 );
 
 export const getCommandLineArgs = () => ReaderPromise.asks(

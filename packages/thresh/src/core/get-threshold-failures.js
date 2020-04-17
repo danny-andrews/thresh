@@ -8,12 +8,12 @@ import {InvalidThresholdErr} from './errors';
 const formatFilesize = size => filesize(size, {spacer: ''});
 
 export default sizedThresholds => {
-  const emptyResolvedTargets = sizedThresholds.find(
+  const emptyThreshold = sizedThresholds.find(
     ({resolvedTargets}) => R.isEmpty(resolvedTargets)
   );
 
-  if(!R.isNil(emptyResolvedTargets)) {
-    return InvalidThresholdErr(emptyResolvedTargets) |> Either.Left;
+  if(!R.isNil(emptyThreshold)) {
+    return InvalidThresholdErr(emptyThreshold.targets) |> Either.Left;
   }
 
   return R.chain(

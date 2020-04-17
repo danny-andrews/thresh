@@ -96,3 +96,11 @@ test(
     expect(response.message).toBe('No asset stats artifact found for latest build of: `lq3i7t42ug`. Build number: `6390`.');
   })
 );
+
+test(
+  'returns error when no recent builds are found',
+  () => subject({buildNum: null, baseBranch: 'release/22'})
+    .catch(response => {
+      expect(response.message).toBe('No recent successful builds found for the base branch: `release/22`.');
+    })
+);
