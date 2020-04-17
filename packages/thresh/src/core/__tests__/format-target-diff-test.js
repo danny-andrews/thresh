@@ -1,7 +1,7 @@
 import test from 'ava';
 import expect from 'expect';
 
-import subject from '../format-asset-diff';
+import subject from '../format-target-diff';
 
 test('no difference', () => {
   const actual = subject({

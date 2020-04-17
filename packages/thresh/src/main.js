@@ -5,7 +5,7 @@ import {sprintf} from 'sprintf-js';
 
 import validateThresholdSchema from './core/validate-threshold-schema';
 import diffTargets from './core/diff-targets';
-import formatAssetDiff, {formatAsset} from './core/format-asset-diff';
+import formatTargetDiff, {formatTarget} from './core/format-target-diff';
 import getThresholdFailures from './core/get-threshold-failures';
 import {NoPreviousStatsFoundForFilepath, NoOpenPullRequestFoundErr}
   from './core/errors';
@@ -49,7 +49,9 @@ export default ({
       );
     }
 
-    return postSuccess(assetDiffs.map(formatAssetDiff) |> formatStatusMessages);
+    return assetDiffs.map(formatTargetDiff)
+      |> formatStatusMessages
+      |> postSuccess;
   };
 
   const validateThresholdSchemaWrapped = R.pipe(
@@ -78,7 +80,7 @@ export default ({
   );
 
   const postNoPrFoundCommitStatus = assetSizes => postSuccess(
-    assetSizes.map(({filepath, size}) => formatAsset(filepath, size))
+    assetSizes.map(({filepath, size}) => formatTarget(filepath, size))
       |> formatStatusMessages
       |> (stats => sprintf(NO_PR_FOUND_STATUS_MESSAGE_TEMPLATE, stats))
   );

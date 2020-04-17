@@ -1,7 +1,7 @@
 import filesize from 'filesize';
 import {sprintf} from 'sprintf-js';
 
-export const formatAsset = (filepath, size) => sprintf(
+export const formatTarget = (filepath, size) => sprintf(
   '%s: %s',
   filepath,
   filesize(size, {spacer: ''})
@@ -22,6 +22,6 @@ export const formatDiff = (difference, percentChange) => {
 
 export default ({targets, difference, current, percentChange}) => sprintf(
   '%s (%s)',
-  formatAsset(targets, current),
+  formatTarget(targets, current),
   formatDiff(difference, percentChange)
 );
