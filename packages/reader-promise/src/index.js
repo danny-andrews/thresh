@@ -64,15 +64,6 @@ ReaderPromise.parallel = readerPromises => ReaderPromise.asks(
   )
 );
 
-ReaderPromise.invokeAt = R.curry(
-  (transform, select) => (...args) => ReaderPromise.asks(
-    config => transform(
-      select(config)(...args),
-      config
-    )
-  )
-);
-
 ReaderPromise.fromError = e => Promise.reject(e) |> ReaderPromise.fromPromise;
 
 ReaderPromise.fromEither = either => either.cata(

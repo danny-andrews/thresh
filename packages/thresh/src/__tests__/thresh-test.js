@@ -27,7 +27,7 @@ const subject = ({
 
   // Dependencies
   artifactStore = {
-    getAssetStats: () => Promise.resolve({})
+    getAssetStats: () => Promise.resolve([])
   },
   getCommandLineArgs = () => Promise.resolve({'config-path': 'config.toml'}),
   getFileStats = () => Promise.resolve({size: 200}),
@@ -366,7 +366,6 @@ test('writes asset stats and posts success commit status with asset stats (and a
 });
 
 test('posts failure commit status when thresholds are not met', () => {
-  const writeFileSpy = createSpy();
   const buildSha = 'fjdk29uw';
   const pr = '200';
   const assetPath = 'build.3u3232.js';
@@ -404,8 +403,7 @@ test('posts failure commit status when thresholds are not met', () => {
         ]
       ])
     ),
-    resolveGlob: () => Promise.resolve([assetPath]),
-    writeFile: writeFileSpy
+    resolveGlob: () => Promise.resolve([assetPath])
   }).then(() => {
     expect(postCommitStatusSpy).toHaveBeenCalledWith(
       'statuses/fjdk29uw',
@@ -424,7 +422,6 @@ test('posts failure commit status when thresholds are not met', () => {
 });
 
 test('posts success commit status when failure thresholds are met', () => {
-  const writeFileSpy = createSpy();
   const buildSha = 'algh83he';
   const pr = '200';
   const assetPath = 'app.dj39hf.js';
@@ -462,8 +459,7 @@ test('posts success commit status when failure thresholds are met', () => {
         ]
       ])
     ),
-    resolveGlob: () => Promise.resolve([assetPath]),
-    writeFile: writeFileSpy
+    resolveGlob: () => Promise.resolve([assetPath])
   }).then(() => {
     expect(postCommitStatusSpy).toHaveBeenCalledWith(
       'statuses/algh83he',
@@ -478,5 +474,53 @@ test('posts success commit status when failure thresholds are met', () => {
       }
     );
     expect(getAssetStatsSpy).toHaveBeenCalledWith('master', 'asset-stats.json');
+  });
+});
+
+test('posts failure commit status and logs a message when a threshold does not resolve to any files', () => {
+  const buildSha = 'algh83he';
+  const pr = '325';
+  const logMessageSpy = createSpy();
+  const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
+
+  return subject({
+    buildSha,
+    buildUrl: 'http://circle.com/build/29',
+    pullRequestId: Maybe.of(pr),
+    thresholds: [{
+      maxSize: 300,
+      targets: '*.js'
+    }],
+
+    // Dependencies
+    logMessage: logMessageSpy,
+    makeGitHubRequest: fakeGitHubRequest(
+      new Map([
+        [`statuses/${buildSha}`, postCommitStatusSpy],
+        [
+          `pulls/${pr}`,
+          () => ReaderPromise.of({
+            base: {
+              ref: 'master'
+            }
+          })
+        ]
+      ])
+    ),
+    resolveGlob: () => Promise.resolve([])
+  }).then(() => {
+    expect(postCommitStatusSpy).toHaveBeenCalledWith(
+      'statuses/algh83he',
+      {
+        method: 'POST',
+        body: {
+          state: 'error',
+          targetUrl: 'http://circle.com/build/29#artifacts',
+          context: 'Asset Sizes',
+          description: 'Invalid failure threshold provided. No files found for target(s): [*.js]'
+        }
+      }
+    );
+    expect(logMessageSpy).toHaveBeenCalledWith('Invalid failure threshold provided. No files found for target(s): [*.js]');
   });
 });
