@@ -90,7 +90,7 @@ type Threshold = {
 where:
 
 - `targets` - The target(s) of the threshold. Each target can be either a file path or a glob.
-- `maxSize` - The max size of the total of all the files.
+- `maxSize` - The max size of the total of all the files selected by `targets`.
 
 <details>
   <summary>Example config file:</summary>
@@ -109,7 +109,7 @@ This example would post a failed GitHub status if the total size of all JavaScri
   - Must have read access to repository (`public_repo` scope for public repos, and `repo` scope for private repos)
   - Must have `repo:status` scope
 
-(Check out the README's for the artifact store plugin you are using for any additional required environment variables.)
+(Check out the README of the artifact store plugin you are using for any additional environment variable requirements.)
 
 ## Comparison with Other Offerings
 
@@ -162,4 +162,4 @@ type TargetStat = {
 
 ## Future Plans
 
-Creating more plugins for different CI environments.
+Create more plugins for different CI environments.
