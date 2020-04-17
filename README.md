@@ -1,14 +1,16 @@
 # thresh
 
-## Separate the wheat from the chaff in your build files
+## Separate the wheat from the chaff in your build files!
 
-A CI integration for tracking file size changes across builds. Pluggable for different CI providers. (Currently plugins only exist for CircleCI.)
+![Example PR Status](public/pr-status-example.png)
+
+`thresh` is a CI integration for tracking file size changes across builds. Pluggable for different CI providers. (Currently plugins only exist for CircleCI.)
 
 ## What it Does
 
 At its core, thresh does two things:
 1. Outputs file sizes of files targeted by your thresh config. (Where and how these are output depends on the `artifactStore` plugin you use.)
-1. If the current bulid is associated with an existing PR, posts a commit status. This status will be `success` if there are no target files which violate size thresholds defined in your thresh config, `failure` if there are target files which violate sizes thresholds, and `error` if any errors were encountered. The contents of this status will contain target diffs if they could be calculated.
+1. If the current bulid is associated with an existing PR, it posts a commit status. This status will be `success` if there are no target files which violate size thresholds defined in your thresh config, `failure` if there are target files which violate sizes thresholds, and `error` if any errors were encountered. The contents of this status will contain target diffs if they could be calculated.
 
 <details>
   <summary>Example target-sizes.json:</summary>
@@ -88,7 +90,7 @@ type Threshold = {
 where:
 
 - `targets` - The target(s) of the threshold. Each target can be either a file path or a glob.
-- `maxSize` - The max size of the total of all the files.
+- `maxSize` - The max size of the total of all the files selected by `targets`.
 
 <details>
   <summary>Example config file:</summary>
@@ -107,7 +109,7 @@ This example would post a failed GitHub status if the total size of all JavaScri
   - Must have read access to repository (`public_repo` scope for public repos, and `repo` scope for private repos)
   - Must have `repo:status` scope
 
-(Check out the README's for the artifact store plugin you are using for any additional required environment variables.)
+(Check out the README of the artifact store plugin you are using for any additional environment variable requirements.)
 
 ## Comparison with Other Offerings
 
@@ -160,4 +162,4 @@ type TargetStat = {
 
 ## Future Plans
 
-Creating more plugins for different CI environments.
+Create more plugins for different CI environments.
