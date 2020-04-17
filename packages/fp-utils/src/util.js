@@ -1,14 +1,5 @@
-import R from 'ramda';
 import {Either} from 'monet';
 import {sprintf} from 'sprintf-js';
-
-const executeIfFunction = f => R.is(Function, f) ? f() : f;
-
-export const switchCase = cases => defaultCase => key =>
-  cases.has(key) ? cases.get(key) : defaultCase;
-
-export const switchCaseF = cases => defaultCase => key =>
-  executeIfFunction(switchCase(cases)(defaultCase)(key));
 
 export const unthrow = fn => (...args) => {
   try {
