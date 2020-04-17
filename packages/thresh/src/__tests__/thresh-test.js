@@ -2,7 +2,7 @@ import test from 'ava';
 import expect, {createSpy} from 'expect';
 import {Maybe} from 'monet';
 import ReaderPromise from '@danny.andrews/reader-promise';
-import {NoAssetStatsArtifactFoundErr, NoRecentBuildsFoundErr}
+import {NoTargetStatsArtifactFoundErr, NoRecentBuildsFoundErr}
   from '@danny.andrews/thresh-artifact-store-circleci';
 import TOML from '@iarna/toml';
 
@@ -211,7 +211,7 @@ test('posts error commit status and logs message when previous build has no stat
   const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
   const getTargetStatsSpy = createSpy().andReturn(
     Promise.reject(
-      NoAssetStatsArtifactFoundErr(baseBranch, buildNumber)
+      NoTargetStatsArtifactFoundErr(baseBranch, buildNumber)
     )
   );
 
@@ -250,11 +250,11 @@ test('posts error commit status and logs message when previous build has no stat
           state: 'error',
           targetUrl: 'http://circle.com/build/78#artifacts',
           context: 'Asset Sizes',
-          description: 'No asset stats artifact found for latest build of: `master`. Build number: `78`.'
+          description: 'No target stats artifact found for latest build of: `master`. Build number: `78`.'
         }
       }
     );
-    expect(logMessageSpy).toHaveBeenCalledWith('No asset stats artifact found for latest build of: `master`. Build number: `78`.');
+    expect(logMessageSpy).toHaveBeenCalledWith('No target stats artifact found for latest build of: `master`. Build number: `78`.');
     expect(getTargetStatsSpy).toHaveBeenCalledWith(baseBranch, 'asset-stats.json');
   });
 });
