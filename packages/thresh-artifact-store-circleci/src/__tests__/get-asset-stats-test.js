@@ -2,7 +2,7 @@ import test from 'ava';
 import expect from 'expect';
 import ReaderPromise from '@danny.andrews/reader-promise';
 
-import getPreviousAssetStats from '../get-asset-stats';
+import getTargetStats from '../get-target-stats';
 
 const createFakeMakeCircleRequest = ({
   baseBranch,
@@ -10,7 +10,7 @@ const createFakeMakeCircleRequest = ({
   artifactUrl,
   getRecentBuildsResponse,
   getBuildArtifactsResponse,
-  getAssetSizeArtifactResponse
+  getTargetSizeArtifactResponse
 } = {}) => ({path, url, raw}) => {
   if(path === `tree/${baseBranch}`) {
     return ReaderPromise.of(getRecentBuildsResponse);
@@ -19,7 +19,7 @@ const createFakeMakeCircleRequest = ({
     return ReaderPromise.of(getBuildArtifactsResponse);
   }
   if(raw === true && url === artifactUrl) {
-    return ReaderPromise.of(getAssetSizeArtifactResponse);
+    return ReaderPromise.of(getTargetSizeArtifactResponse);
   }
 
   throw new Error(`Unexpected call to makeCircleRequest: path=${path}, url=${url}, raw=${raw}`);
@@ -30,25 +30,25 @@ const subject = ({
   buildStatus = 'success',
   artifactUrl = 'http://circle-artifacts/my-url/84jhdfhads.json',
   baseBranch = 'master',
-  assetStatsFilepath = 'asset-stats.json',
+  targetStatsFilepath = 'target-stats.json',
   getRecentBuildsResponse = [{buildNum, status: buildStatus}],
-  getBuildArtifactsResponse = [{path: assetStatsFilepath, url: artifactUrl}],
-  getAssetSizeArtifactResponse
-} = {}) => getPreviousAssetStats(baseBranch, assetStatsFilepath).run({
+  getBuildArtifactsResponse = [{path: targetStatsFilepath, url: artifactUrl}],
+  getTargetSizeArtifactResponse
+} = {}) => getTargetStats(baseBranch, targetStatsFilepath).run({
   makeCircleRequest: createFakeMakeCircleRequest({
     baseBranch,
     buildNum,
     artifactUrl,
     getRecentBuildsResponse,
     getBuildArtifactsResponse,
-    getAssetSizeArtifactResponse
+    getTargetSizeArtifactResponse
   })
 });
 
 test(
   'returns artifact body',
   () => subject({
-    getAssetSizeArtifactResponse: 'artifact text'
+    getTargetSizeArtifactResponse: 'artifact text'
   }).then(artifact => {
     expect(artifact).toBe('artifact text');
   })
@@ -72,7 +72,7 @@ test(
         status: 'success'
       }
     ],
-    getAssetSizeArtifactResponse: 'artifact body'
+    getTargetSizeArtifactResponse: 'artifact body'
   }).then(artifact => {
     expect(artifact).toBe('artifact body');
   })
@@ -87,13 +87,13 @@ test(
 );
 
 test(
-  'returns error when there is no asset stats artifact found for latest build of base branch',
+  'returns error when there is no target stats artifact found for latest build of base branch',
   () => subject({
     baseBranch: 'lq3i7t42ug',
     buildNum: '6390',
     getBuildArtifactsResponse: []
   }).catch(response => {
-    expect(response.message).toBe('No asset stats artifact found for latest build of: `lq3i7t42ug`. Build number: `6390`.');
+    expect(response.message).toBe('No target stats artifact found for latest build of: `lq3i7t42ug`. Build number: `6390`.');
   })
 );
 

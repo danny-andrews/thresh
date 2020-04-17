@@ -2,7 +2,7 @@ export * from './base';
 export {default as CommitStatusPoster} from './commit-status-poster';
 export {default as getBaseBranch} from './get-base-branch';
 export {default as getFileSizes} from './get-file-sizes';
-export {default as getPreviousAssetStats} from './get-previous-asset-stats';
+export {default as getPreviousTargetStats} from './get-previous-target-stats';
 export {default as makeArtifactDirectory} from './make-artifact-directory';
 export {default as MakeGitHubRequest} from './make-github-request';
 export {default as normalizeThresholds} from './normalize-thresholds';

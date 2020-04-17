@@ -16,7 +16,7 @@ import {
   writeAssetDiffs,
   writeAssetStats,
   logMessage,
-  getPreviousAssetStats,
+  getPreviousTargetStats,
   normalizeThresholds
 } from './effects';
 import {sumReduce, listToMap} from './shared';
@@ -83,9 +83,9 @@ export default ({
       |> (stats => sprintf(NO_PR_FOUND_STATUS_MESSAGE_TEMPLATE, stats))
   );
 
-  const getPreviousAssetStats0 = () => pullRequestId.cata(
+  const getPreviousTargetStats0 = () => pullRequestId.cata(
     R.pipe(Maybe.None, ReaderPromise.of),
-    prId => getPreviousAssetStats(prId).map(Maybe.Some)
+    prId => getPreviousTargetStats(prId).map(Maybe.Some)
   );
 
   const getFileSizesForResolvedThresholds = R.pipe(
@@ -98,7 +98,7 @@ export default ({
     .chain(
       resolvedThresholds => ReaderPromise.parallel([
         getFileSizesForResolvedThresholds(resolvedThresholds),
-        getPreviousAssetStats0(),
+        getPreviousTargetStats0(),
         ReaderPromise.of(resolvedThresholds),
         postPending(),
         makeArtifactDirectory(artifactsDirectory)

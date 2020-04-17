@@ -27,7 +27,7 @@ const subject = ({
 
   // Dependencies
   artifactStore = {
-    getAssetStats: () => Promise.resolve([])
+    getTargetStats: () => Promise.resolve([])
   },
   getCommandLineArgs = () => Promise.resolve({'config-path': 'config.toml'}),
   getFileStats = () => Promise.resolve({size: 200}),
@@ -84,7 +84,7 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
     Promise.resolve(['dist/app.3u3232.js'])
   );
   const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
-  const getAssetStatsSpy = createSpy().andReturn(
+  const getTargetStatsSpy = createSpy().andReturn(
     Promise.resolve([
       {filepath: 'dist/app.h9832h.js', size: 500}
     ])
@@ -103,7 +103,7 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
 
     // Dependencies
     artifactStore: {
-      getAssetStats: getAssetStatsSpy
+      getTargetStats: getTargetStatsSpy
     },
     getFileStats: getFileStatsSpy,
     makeGitHubRequest: fakeGitHubRequest(
@@ -171,13 +171,13 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
       }
     );
     expect(postCommitStatusSpy.calls.length).toBe(2);
-    expect(getAssetStatsSpy).toHaveBeenCalledWith('master', 'asset-stats.json');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith('master', 'asset-stats.json');
   });
 });
 
 test('writes message to the console when no previous stat found for given filepath', () => {
   const logMessageSpy = createSpy();
-  const getAssetStatsSpy = createSpy().andReturn(
+  const getTargetStatsSpy = createSpy().andReturn(
     Promise.resolve([
       {filepath: 'dist/app.hfdsy4.js', size: 300}
     ])
@@ -192,13 +192,13 @@ test('writes message to the console when no previous stat found for given filepa
 
     // Dependencies
     artifactStore: {
-      getAssetStats: getAssetStatsSpy
+      getTargetStats: getTargetStatsSpy
     },
     logMessage: logMessageSpy,
     resolveGlob: () => Promise.resolve(['dist/vendor.fdjsayr.js'])
   }).then(() => {
     expect(logMessageSpy).toHaveBeenCalledWith('No previous stats found for dist/vendor.fdjsayr.js. Did you rename that file recently?');
-    expect(getAssetStatsSpy).toHaveBeenCalledWith('develop', 'asset-stats.json');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith('develop', 'asset-stats.json');
   });
 });
 
@@ -209,7 +209,7 @@ test('posts error commit status and logs message when previous build has no stat
   const buildNumber = '78';
   const logMessageSpy = createSpy();
   const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
-  const getAssetStatsSpy = createSpy().andReturn(
+  const getTargetStatsSpy = createSpy().andReturn(
     Promise.reject(
       NoAssetStatsArtifactFoundErr(baseBranch, buildNumber)
     )
@@ -222,7 +222,7 @@ test('posts error commit status and logs message when previous build has no stat
 
     // Dependencies
     artifactStore: {
-      getAssetStats: getAssetStatsSpy
+      getTargetStats: getTargetStatsSpy
     },
     logMessage: logMessageSpy,
     makeGitHubRequest: fakeGitHubRequest(
@@ -255,7 +255,7 @@ test('posts error commit status and logs message when previous build has no stat
       }
     );
     expect(logMessageSpy).toHaveBeenCalledWith('No asset stats artifact found for latest build of: `master`. Build number: `78`.');
-    expect(getAssetStatsSpy).toHaveBeenCalledWith(baseBranch, 'asset-stats.json');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith(baseBranch, 'asset-stats.json');
   });
 });
 
@@ -265,7 +265,7 @@ test('posts error commit status and logs message when no previous builds are fou
   const buildSha = 'ng832hfd';
   const logMessageSpy = createSpy();
   const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
-  const getAssetStatsSpy = createSpy().andReturn(
+  const getTargetStatsSpy = createSpy().andReturn(
     Promise.reject(
       NoRecentBuildsFoundErr(baseBranch)
     )
@@ -278,7 +278,7 @@ test('posts error commit status and logs message when no previous builds are fou
 
     // Dependencies
     artifactStore: {
-      getAssetStats: getAssetStatsSpy
+      getTargetStats: getTargetStatsSpy
     },
     logMessage: logMessageSpy,
     makeGitHubRequest: fakeGitHubRequest(
@@ -308,7 +308,7 @@ test('posts error commit status and logs message when no previous builds are fou
       }
     );
     expect(logMessageSpy).toHaveBeenCalledWith('No recent successful builds found for the base branch: `develop`.');
-    expect(getAssetStatsSpy).toHaveBeenCalledWith(baseBranch, 'asset-stats.json');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith(baseBranch, 'asset-stats.json');
   });
 });
 
@@ -370,7 +370,7 @@ test('posts failure commit status when thresholds are not met', () => {
   const pr = '200';
   const assetPath = 'build.3u3232.js';
   const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
-  const getAssetStatsSpy = createSpy().andReturn(
+  const getTargetStatsSpy = createSpy().andReturn(
     Promise.resolve([
       {filepath: assetPath, size: 200}
     ])
@@ -387,7 +387,7 @@ test('posts failure commit status when thresholds are not met', () => {
 
     // Dependencies
     artifactStore: {
-      getAssetStats: getAssetStatsSpy
+      getTargetStats: getTargetStatsSpy
     },
     getFileStats: () => Promise.resolve({size: 400}),
     makeGitHubRequest: fakeGitHubRequest(
@@ -417,7 +417,7 @@ test('posts failure commit status when thresholds are not met', () => {
         }
       }
     );
-    expect(getAssetStatsSpy).toHaveBeenCalledWith('master', 'asset-stats.json');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith('master', 'asset-stats.json');
   });
 });
 
@@ -426,7 +426,7 @@ test('posts success commit status when failure thresholds are met', () => {
   const pr = '200';
   const assetPath = 'app.dj39hf.js';
   const postCommitStatusSpy = createSpy().andReturn(ReaderPromise.of());
-  const getAssetStatsSpy = createSpy().andReturn(
+  const getTargetStatsSpy = createSpy().andReturn(
     Promise.resolve([
       {filepath: assetPath, size: 400}
     ])
@@ -443,7 +443,7 @@ test('posts success commit status when failure thresholds are met', () => {
 
     // Dependencies
     artifactStore: {
-      getAssetStats: getAssetStatsSpy
+      getTargetStats: getTargetStatsSpy
     },
     getFileStats: () => Promise.resolve({size: 267}),
     makeGitHubRequest: fakeGitHubRequest(
@@ -473,7 +473,7 @@ test('posts success commit status when failure thresholds are met', () => {
         }
       }
     );
-    expect(getAssetStatsSpy).toHaveBeenCalledWith('master', 'asset-stats.json');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith('master', 'asset-stats.json');
   });
 });
 
