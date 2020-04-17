@@ -25,7 +25,7 @@ test('writes asset stats file', () => {
     writeFile: writeFileSpy
   }).then(() => {
     expect(writeFileSpy).toHaveBeenCalledWith(
-      'dist/thresh/asset-stats.json',
+      'dist/thresh/target-stats.json',
       JSON.stringify({
         'app.css': {
           size: 213,

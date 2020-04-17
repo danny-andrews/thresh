@@ -28,7 +28,7 @@ At its core, thresh does two things:
 </details>
 
 <details>
-  <summary>Example asset-diffs.json:</summary>
+  <summary>Example target-diffs.json:</summary>
 
 ```json
 {

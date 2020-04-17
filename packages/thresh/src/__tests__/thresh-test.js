@@ -127,14 +127,14 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
     expect(resolveGlobSpy).toHaveBeenCalledWith('dist/app.*.js');
     expect(getFileStatsSpy).toHaveBeenCalledWith('dist/app.3u3232.js');
     expect(writeFileSpy).toHaveBeenCalledWith(
-      'djeh9h/artifacts/thresh/asset-stats.json',
+      'djeh9h/artifacts/thresh/target-stats.json',
       serializeForFile([{
         filepath: 'dist/app.3u3232.js',
         size: 400
       }])
     );
     expect(writeFileSpy).toHaveBeenCalledWith(
-      'djeh9h/artifacts/thresh/asset-diffs.json',
+      'djeh9h/artifacts/thresh/target-diffs.json',
       serializeForFile({
         diffs: [{
           targets: ['dist/app.*.js'],
@@ -171,7 +171,7 @@ test('posts pending commit status, writes asset stats to file, writes asset diff
       }
     );
     expect(postCommitStatusSpy.calls.length).toBe(2);
-    expect(getTargetStatsSpy).toHaveBeenCalledWith('master', 'asset-stats.json');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith('master', 'target-stats.json');
   });
 });
 
@@ -198,7 +198,7 @@ test('writes message to the console when no previous stat found for given filepa
     resolveGlob: () => Promise.resolve(['dist/vendor.fdjsayr.js'])
   }).then(() => {
     expect(logMessageSpy).toHaveBeenCalledWith('No previous stats found for dist/vendor.fdjsayr.js. Did you rename that file recently?');
-    expect(getTargetStatsSpy).toHaveBeenCalledWith('develop', 'asset-stats.json');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith('develop', 'target-stats.json');
   });
 });
 
@@ -255,7 +255,7 @@ test('posts error commit status and logs message when previous build has no stat
       }
     );
     expect(logMessageSpy).toHaveBeenCalledWith('No target stats artifact found for latest build of: `master`. Build number: `78`.');
-    expect(getTargetStatsSpy).toHaveBeenCalledWith(baseBranch, 'asset-stats.json');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith(baseBranch, 'target-stats.json');
   });
 });
 
@@ -308,7 +308,7 @@ test('posts error commit status and logs message when no previous builds are fou
       }
     );
     expect(logMessageSpy).toHaveBeenCalledWith('No recent successful builds found for the base branch: `develop`.');
-    expect(getTargetStatsSpy).toHaveBeenCalledWith(baseBranch, 'asset-stats.json');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith(baseBranch, 'target-stats.json');
   });
 });
 
@@ -339,7 +339,7 @@ test('writes asset stats and posts success commit status with asset stats (and a
     writeFile: writeFileSpy
   }).then(() => {
     expect(writeFileSpy).toHaveBeenCalledWith(
-      '83jgs3/artifacts/thresh/asset-stats.json',
+      '83jgs3/artifacts/thresh/target-stats.json',
       serializeForFile([
         {
           filepath: 'build/main.38552hd3.js',
@@ -417,7 +417,7 @@ test('posts failure commit status when thresholds are not met', () => {
         }
       }
     );
-    expect(getTargetStatsSpy).toHaveBeenCalledWith('master', 'asset-stats.json');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith('master', 'target-stats.json');
   });
 });
 
@@ -473,7 +473,7 @@ test('posts success commit status when failure thresholds are met', () => {
         }
       }
     );
-    expect(getTargetStatsSpy).toHaveBeenCalledWith('master', 'asset-stats.json');
+    expect(getTargetStatsSpy).toHaveBeenCalledWith('master', 'target-stats.json');
   });
 });
 

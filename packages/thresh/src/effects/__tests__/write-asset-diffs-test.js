@@ -38,7 +38,7 @@ test('writes asset stats file', () => {
     writeFile: writeFileSpy
   }).then(() => {
     expect(writeFileSpy).toHaveBeenCalledWith(
-      'dist/thresh/asset-diffs.json',
+      'dist/thresh/target-diffs.json',
       JSON.stringify({diffs, failures}, null, 2)
     );
   });
