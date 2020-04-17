@@ -10,6 +10,8 @@ At its core, thresh does two things:
 1. Outputs file sizes of files targeted by your thresh config. (Where and how these are output depends on the `artifactStore` plugin you use.)
 1. If the current bulid is associated with an existing PR, posts a commit status. This status will be `success` if there are no target files which violate size thresholds defined in your thresh config, `failure` if there are target files which violate sizes thresholds, and `error` if any errors were encountered. The contents of this status will contain target diffs if they could be calculated.
 
+![Example PR Status](public/example-pr-status.png)
+
 <details>
   <summary>Example target-sizes.json:</summary>
 
