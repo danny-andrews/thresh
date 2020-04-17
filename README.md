@@ -2,7 +2,7 @@
 
 ## Separate the wheat from the chaff in your build files
 
-An CI integration for tracking file size changes across builds. Pluggable for different CI providers. (Currently plugins only exist for CircleCI.)
+A CI integration for tracking file size changes across builds. Pluggable for different CI providers. (Currently plugins only exist for CircleCI.)
 
 ## What it Does
 
