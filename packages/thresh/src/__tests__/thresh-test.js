@@ -75,7 +75,7 @@ const subject = ({
   writeFile
 }).catch(console.error);
 
-test('posts pending commit status, writes asset stats to file, writes asset diffs to file, and posts success commit status', () => {
+test('posts pending commit status, writes asset stats to file, writes asset diffs to file, and posts success commit status when thresholds are met', () => {
   const buildSha = 'dkg93hdk';
   const pr = '99';
   const mkdirSpy = createSpy().andReturn(Promise.resolve());
