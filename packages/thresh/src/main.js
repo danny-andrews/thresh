@@ -7,8 +7,7 @@ import validateThresholdSchema from './core/validate-threshold-schema';
 import diffTargets from './core/diff-targets';
 import formatTargetDiff, {formatTarget} from './core/format-target-diff';
 import getThresholdFailures from './core/get-threshold-failures';
-import {NoPreviousStatsFoundForFilepath, NoOpenPullRequestFoundErr}
-  from './core/errors';
+import {MatchedTargetsMismatch, NoOpenPullRequestFoundErr} from './core/errors';
 import {
   getFileSizes,
   makeArtifactDirectory,
@@ -23,7 +22,7 @@ import {sumReduce, listToMap} from './shared';
 import {NO_PR_FOUND_STATUS_MESSAGE_TEMPLATE} from './core/constants';
 
 // Types
-// TargetStat          :: { filepath: String, size: Int }
+// TargetStat         :: { filepath: String, size: Int }
 // Threshold          :: { maxSize: Int, targets: [String] }
 // ResolvedThreshold  :: { Threshold, resolvedTargets: [String] }
 // SizedThreshold     :: { ResolvedThreshold, size: Int }
@@ -74,8 +73,11 @@ export default ({
 
   const writeMismatchErrors = mismatchedTargetSets => ReaderPromise.parallel(
     mismatchedTargetSets.map(
-      filepath => NoPreviousStatsFoundForFilepath(filepath).message
-        |> logMessage
+      ({targets, currentTargets, previousTargets}) => MatchedTargetsMismatch(
+        targets,
+        currentTargets,
+        previousTargets
+      ).message |> logMessage
     )
   );
 
@@ -92,6 +94,7 @@ export default ({
 
   const getFileSizesForResolvedThresholds = R.pipe(
     R.chain(R.prop('resolvedTargets')),
+    R.uniq,
     getFileSizes
   );
 

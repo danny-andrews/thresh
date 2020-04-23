@@ -21,7 +21,7 @@ test('writes target stats file', () => {
   const diffs = {
     'app.css': {
       current: 52336,
-      original: 52336,
+      previous: 52336,
       difference: 0,
       percentChange: 0
     }

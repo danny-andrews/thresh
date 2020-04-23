@@ -11,33 +11,33 @@ test('empty', () => {
   expect(actual).toEqual([[], []]);
 });
 
-test('calculates stats properly', () => {
+test('calculates stats properly with globs', () => {
   const [diffs, mismatchedTargetSets] = subject(
     [
-      {targets: ['target1.js'], resolvedTargets: ['target1.js'], size: 5},
-      {targets: ['target2.js'], resolvedTargets: ['target2.js'], size: 80}
+      {targets: ['*.js'], resolvedTargets: ['app.js', 'vendor.js'], size: 300},
+      {targets: ['vendor.js'], resolvedTargets: ['vendor.js'], size: 80}
     ],
     [
-      {filepath: 'target1.js', size: 4},
-      {filepath: 'target2.js', size: 100}
+      {filepath: 'app.js', size: 100},
+      {filepath: 'vendor.js', size: 100}
     ]
   );
 
   expect(diffs).toMatch([
     {
-      targets: ['target1.js'],
-      current: 5,
-      original: 4,
-      difference: 1
+      targets: ['*.js'],
+      current: 300,
+      previous: 200,
+      difference: 100
     },
     {
-      targets: ['target2.js'],
+      targets: ['vendor.js'],
       current: 80,
-      original: 100,
+      previous: 100,
       difference: -20
     }
   ]);
-  expect(diffs[0].percentChange - 25).toBeLessThan(FLOAT_PERCISION);
+  expect(diffs[0].percentChange - 50).toBeLessThan(FLOAT_PERCISION);
   expect(diffs[1].percentChange - (-20)).toBeLessThan(FLOAT_PERCISION);
   expect(mismatchedTargetSets).toEqual([]);
 });
@@ -45,43 +45,28 @@ test('calculates stats properly', () => {
 test('calculates diff correctly even when mismatch found', () => {
   const [diffs, mismatchedTargetSets] = subject(
     [
-      {targets: ['target1.js'], resolvedTargets: ['target1.js'], size: 6},
-      {targets: ['target2.js'], resolvedTargets: ['target2.js'], size: 424}
+      {targets: ['app.js'], resolvedTargets: ['app.js'], size: 6},
+      {targets: ['app.css'], resolvedTargets: ['app.css', 'vendor.css'], size: 424}
     ],
     [
-      {filepath: 'target1.js', size: 16}
+      {filepath: 'app.js', size: 16},
+      {filepath: 'app.css', size: 50}
     ]
   );
 
   expect(diffs).toMatch([
     {
-      targets: ['target1.js'],
+      targets: ['app.js'],
       current: 6,
-      original: 16,
+      previous: 16,
       difference: -10
     }
   ]);
   expect(diffs[0].percentChange - 0.625)
     .toBeLessThan(FLOAT_PERCISION);
-  expect(mismatchedTargetSets).toEqual([['target2.js']]);
-});
-
-test('calculates mismatches correctly', () => {
-  const [, mismatchedTargetSets] = subject(
-    [
-      {
-        targets: ['new-target.js'],
-        resolvedTargets: ['new-target.js'],
-        size: 37
-      },
-      {
-        targets: ['new-target.css'],
-        resolvedTargets: ['new-target.css'],
-        size: 200
-      }
-    ],
-    []
-  );
-
-  expect(mismatchedTargetSets).toEqual([['new-target.js'], ['new-target.css']]);
+  expect(mismatchedTargetSets).toEqual([{
+    targets: ['app.css'],
+    previousTargets: ['app.css'],
+    currentTargets: ['app.css', 'vendor.css']
+  }]);
 });

@@ -138,7 +138,7 @@ test('posts pending commit status, writes target stats to file, writes target di
       serializeForFile({
         diffs: [{
           targets: ['dist/app.*.js'],
-          original: 500,
+          previous: 500,
           current: 400,
           difference: -100,
           percentChange: -20
@@ -175,7 +175,7 @@ test('posts pending commit status, writes target stats to file, writes target di
   });
 });
 
-test('writes message to the console when no previous stat found for given filepath', () => {
+test('writes message to the console there is a target mismatch', () => {
   const logMessageSpy = createSpy();
   const getTargetStatsSpy = createSpy().andReturn(
     Promise.resolve([
@@ -197,7 +197,7 @@ test('writes message to the console when no previous stat found for given filepa
     logMessage: logMessageSpy,
     resolveGlob: () => Promise.resolve(['dist/vendor.fdjsayr.js'])
   }).then(() => {
-    expect(logMessageSpy).toHaveBeenCalledWith('No previous stats found for dist/vendor.fdjsayr.js. Did you rename that file recently?');
+    expect(logMessageSpy).toHaveBeenCalledWith('The number of files matched by `targets: [dist/vendor.*.js]` is greater than the files matched from the previous build. Current matched files: [dist/vendor.fdjsayr.js]. Previous matched files: []');
     expect(getTargetStatsSpy).toHaveBeenCalledWith('develop', 'target-stats.json');
   });
 });

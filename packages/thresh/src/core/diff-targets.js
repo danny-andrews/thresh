@@ -3,38 +3,48 @@ import micromatch from 'micromatch';
 
 import {sumReduce, listToMap} from '../shared';
 
-export default (currentSizedTargetSets, originalTargetStats) => {
-  const originalFilepaths = originalTargetStats.map(R.prop('filepath'));
-  const originalTargetStatsMap = listToMap(
+export default (currentSizedTargetSets, previousTargetStats) => {
+  const previousFilepaths = previousTargetStats.map(R.prop('filepath'));
+  const previousTargetStatsMap = listToMap(
     R.prop('filepath'),
-    originalTargetStats
+    previousTargetStats
   );
 
   return currentSizedTargetSets.reduce(
     ([diffs, mismatchedTargets], {targets, resolvedTargets, size}) => {
-      const originalResolvedTargets = micromatch(
-        originalFilepaths,
+      const previousResolvedTargets = micromatch(
+        previousFilepaths,
         targets
       );
 
-      if(originalResolvedTargets.length !== resolvedTargets.length) {
-        return [diffs, R.append(resolvedTargets, mismatchedTargets)];
+      if(previousResolvedTargets.length !== resolvedTargets.length) {
+        return [
+          diffs,
+          R.append(
+            {
+              currentTargets: resolvedTargets,
+              previousTargets: previousResolvedTargets,
+              targets
+            },
+            mismatchedTargets
+          )
+        ];
       }
 
-      const originalSize = sumReduce(
-        filepath => originalTargetStatsMap[filepath].size,
-        originalResolvedTargets
+      const previousSize = sumReduce(
+        filepath => previousTargetStatsMap[filepath].size,
+        previousResolvedTargets
       );
-      const difference = size - originalSize;
+      const difference = size - previousSize;
 
       return [
         R.append(
           {
             targets,
-            original: originalSize,
+            previous: previousSize,
             current: size,
             difference,
-            percentChange: difference / originalSize * 100
+            percentChange: difference / previousSize * 100
           },
           diffs
         ),

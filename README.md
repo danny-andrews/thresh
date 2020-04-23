@@ -39,7 +39,7 @@ At its core, thresh does two things:
       "targets": [
         "example/dist/*.js"
       ],
-      "original": 148,
+      "previous": 148,
       "current": 148,
       "difference": 0,
       "percentChange": 0
