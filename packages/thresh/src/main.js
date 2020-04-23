@@ -23,7 +23,7 @@ import {sumReduce, listToMap} from './shared';
 import {NO_PR_FOUND_STATUS_MESSAGE_TEMPLATE} from './core/constants';
 
 // Types
-// TargetStat          :: { filepath: String, size: Int }
+// TargetStat         :: { filepath: String, size: Int }
 // Threshold          :: { maxSize: Int, targets: [String] }
 // ResolvedThreshold  :: { Threshold, resolvedTargets: [String] }
 // SizedThreshold     :: { ResolvedThreshold, size: Int }

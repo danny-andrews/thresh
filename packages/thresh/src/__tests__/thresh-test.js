@@ -524,3 +524,5 @@ test('posts failure commit status and logs a message when a threshold does not r
     expect(logMessageSpy).toHaveBeenCalledWith('Invalid failure threshold provided. No files found for target(s): [*.js]');
   });
 });
+
+// Write test validating mismatch error logging
