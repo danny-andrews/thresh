@@ -31,4 +31,4 @@ export const GitHubInvalidResponseErr = CreateErrorFactory('Error making request
 
 export const NoOpenPullRequestFoundErr = CreateErrorFactory('No open pull request found. Skipping target diff step.');
 
-export const NoPreviousStatsFoundForFilepath = CreateErrorFactory('No previous stats found for %s. Did you rename that file recently?');
+export const MatchedTargetsMismatch = CreateErrorFactory('The number of files matched by `targets: [%s]` is greater than the files matched from the previous build. Current matched files: [%s]. Previous matched files: [%s]');
