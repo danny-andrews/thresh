@@ -91,7 +91,7 @@ export default ({
   );
 
   const getFileSizesForResolvedThresholds = R.pipe(
-    R.chain(R.prop('resolvedTargets')),
+    R.chain(R.prop('resolvedTargets')) |> R.uniq,
     getFileSizes
   );
 
